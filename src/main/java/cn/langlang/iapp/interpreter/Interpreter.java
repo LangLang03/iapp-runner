@@ -287,6 +287,7 @@ public class Interpreter implements IInterpreter {
                             }
 
                             context.setVariable(stmt.getVariableName(), item, TokenType.KEYWORD_S);
+                            context.declareVariable(stmt.getVariableName());
 
                             for (Statement s : stmt.getBody()) {
                                 executeStatement(s, context);
@@ -303,6 +304,7 @@ public class Interpreter implements IInterpreter {
                             }
 
                             context.setVariable(stmt.getVariableName(), item, TokenType.KEYWORD_S);
+                            context.declareVariable(stmt.getVariableName());
 
                             for (Statement s : stmt.getBody()) {
                                 executeStatement(s, context);
