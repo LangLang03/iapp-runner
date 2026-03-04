@@ -212,6 +212,7 @@ public class Interpreter implements IInterpreter {
                             varName = varExpr.getName();
                         }
                         if (varName != null) {
+                            context.declareVariable(varName);
                             for (Object item : array) {
                                 if (context.isEndCodeRequested()) break;
 
@@ -234,6 +235,7 @@ public class Interpreter implements IInterpreter {
                             varName = varExpr.getName();
                         }
                         if (varName != null) {
+                            context.declareVariable(varName);
                             for (Object item : list) {
                                 if (context.isEndCodeRequested()) break;
 
