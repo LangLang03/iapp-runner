@@ -207,41 +207,53 @@ java -jar build/libs/iAppPC.jar hello.iyu
 
 ## mjava 模块
 
-**mjava** 是裕语言的模块化扩展机制，允许你用 Java 语法编写可复用的模块。
+**mjava** 是裕语言的模块化扩展机制，允许你用标准 Java 语法编写可复用的模块。
 
 ### 创建 mjava 模块
 
-在脚本目录下创建 `mjava` 文件夹，然后创建模块文件：
+在脚本目录下创建 `mjava` 文件夹，然后创建 `.mjava` 文件：
 
 ```
 your_project/
 ├── main.iyu
 └── mjava/
-    └── utils.myu
+    └── test.mjava
 ```
 
-`utils.myu` 示例：
+`test.mjava` 示例：
 
 ```java
-// 定义模块方法
-fn formatDate(timestamp) {
-    java(date, null, "java.util.Date", "long", timestamp)
-    java(str, date, "java.util.Date.toString")
-    s str, str
-end fn
+// 标准 Java 语法
+public String greet(String name) {
+    return "Hello, " + name + "!";
+}
 
-fn readFile(path) {
-    fr(path, content)
-    s content, content
-end fn
+public int add(int a, int b) {
+    return a + b;
+}
+
+public void printMessage(String message) {
+    System.out.println("[MJAVA] " + message);
+}
 ```
 
 ### 使用 mjava 模块
 
+使用 `call` 函数调用 mjava 模块方法：
+
 ```java
-// 在主脚本中调用
-fn utils.formatDate(1700000000000)
-fn utils.readFile("%config.txt")
+// call(结果变量, "mjava", "模块名.方法名", 参数...)
+
+// 调用 greet 方法，返回字符串
+call(greetResult, "mjava", "test.greet", "iApp")
+syso(greetResult)  // 输出: Hello, iApp!
+
+// 调用 add 方法，返回整数
+call(addResult, "mjava", "test.add", 5, 3)
+syso(addResult)    // 输出: 8
+
+// 调用无返回值方法
+call(printResult, "mjava", "test.printMessage", "测试消息")
 ```
 
 ---
