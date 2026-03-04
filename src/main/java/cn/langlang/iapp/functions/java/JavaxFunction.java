@@ -1,13 +1,16 @@
 package cn.langlang.iapp.functions.java;
 
-import bsh.Interpreter;
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-public class JavaxFunction implements IFunction {
+public class JavaxFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "javax";
@@ -15,7 +18,7 @@ public class JavaxFunction implements IFunction {
     
     @Override
     public int getMinParameters() {
-        return 3;
+        return 4;
     }
     
     @Override
@@ -25,40 +28,88 @@ public class JavaxFunction implements IFunction {
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        Object resultVar = arguments.get(0);
-        Object targetObj = arguments.get(1);
+        Object instanceObj = arguments.get(0);
+        Object classObj = arguments.get(1);
         String methodName = toString(arguments.get(2));
         
+        Class<?> clazz;
+        Object targetInstance;
+        
+        if (classObj instanceof Class) {
+            clazz = (Class<?>) classObj;
+            targetInstance = instanceObj;
+        } else if (classObj instanceof String) {
+            try {
+                clazz = Class.forName((String) classObj);
+                targetInstance = instanceObj;
+            } catch (ClassNotFoundException e) {
+                throw new FunctionException("Class not found: " + classObj, e);
+            }
+        } else if (classObj == null) {
+            throw new FunctionException("Class parameter cannot be null");
+        } else {
+            throw new FunctionException("Invalid class parameter");
+        }
+        
+        List<Class<?>> paramTypes = new ArrayList<>();
+        List<Object> paramValues = new ArrayList<>();
+        
+        for (int i = 3; i < arguments.size(); i += 2) {
+            if (i + 1 < arguments.size()) {
+                String typeName = toString(arguments.get(i));
+                Object value = arguments.get(i + 1);
+                
+                Class<?> paramType = parseType(typeName);
+                paramTypes.add(paramType);
+                paramValues.add(value);
+            }
+        }
+        
         try {
-            Interpreter interpreter = context.getBeanShellInterpreter();
-            
-            Object[] args = null;
-            if (arguments.size() > 3) {
-                args = new Object[arguments.size() - 3];
-                for (int i = 3; i < arguments.size(); i++) {
-                    args[i - 3] = arguments.get(i);
-                    interpreter.set("_arg" + (i - 3), arguments.get(i));
-                }
-            }
-            
-            StringBuilder call = new StringBuilder();
-            if (targetObj != null) {
-                interpreter.set("_target", targetObj);
-                call.append("_target.");
-            }
-            call.append(methodName).append("(");
-            
-            if (args != null) {
-                for (int i = 0; i < args.length; i++) {
-                    if (i > 0) call.append(", ");
-                    call.append("_arg").append(i);
-                }
-            }
-            call.append(")");
-            
-            return interpreter.eval(call.toString());
+            Method method = findMethod(clazz, methodName, paramTypes);
+            method.setAccessible(true);
+            return method.invoke(targetInstance, paramValues.toArray());
         } catch (Exception e) {
             throw new FunctionException("Javax function call failed: " + methodName, e);
+        }
+    }
+    
+    private Class<?> parseType(String typeName) throws FunctionException {
+        switch (typeName) {
+            case "int": return int.class;
+            case "long": return long.class;
+            case "short": return short.class;
+            case "byte": return byte.class;
+            case "float": return float.class;
+            case "double": return double.class;
+            case "boolean": return boolean.class;
+            case "char": return char.class;
+            case "String": return String.class;
+            case "int[]": return int[].class;
+            case "long[]": return long[].class;
+            case "String[]": return String[].class;
+            case "Object": return Object.class;
+            case "Object[]": return Object[].class;
+            default:
+                try {
+                    return Class.forName(typeName);
+                } catch (ClassNotFoundException e) {
+                    throw new FunctionException("Unknown type: " + typeName);
+                }
+        }
+    }
+    
+    private Method findMethod(Class<?> clazz, String methodName, List<Class<?>> paramTypes) throws NoSuchMethodException {
+        try {
+            return clazz.getMethod(methodName, paramTypes.toArray(new Class<?>[0]));
+        } catch (NoSuchMethodException e) {
+            for (Method method : clazz.getDeclaredMethods()) {
+                if (method.getName().equals(methodName) && 
+                    method.getParameterCount() == paramTypes.size()) {
+                    return method;
+                }
+            }
+            throw e;
         }
     }
     
@@ -67,12 +118,7 @@ public class JavaxFunction implements IFunction {
     }
     
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.OBJECT, ParamType.OBJECT, ParamType.STRING, ParamType.STRING, ParamType.OBJECT);
     }
 }

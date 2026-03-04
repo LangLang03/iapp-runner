@@ -59,6 +59,7 @@ public class Main {
             List<Token> tokens = lexer.tokenizeInternal();
             
             Parser parser = new Parser(tokens);
+            parser.setFunctionRegistry(context.getFunctionRegistry());
             Program program = parser.parse();
             
             Interpreter interpreter = new Interpreter(context);

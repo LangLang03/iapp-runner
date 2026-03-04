@@ -1,12 +1,13 @@
 package cn.langlang.iapp.functions.array;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.util.List;
 
-public class SgszFunction implements IFunction {
+public class SgszFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "sgsz";
@@ -53,12 +54,7 @@ public class SgszFunction implements IFunction {
     }
     
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.ARRAY, ParamType.INT, ParamType.OUTPUT);
     }
 }

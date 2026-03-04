@@ -1,12 +1,13 @@
 package cn.langlang.iapp.functions.string;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.util.List;
 
-public class SlowerFunction implements IFunction {
+public class SlowerFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "slower";
@@ -24,21 +25,12 @@ public class SlowerFunction implements IFunction {
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        String source = toString(arguments.get(0));
-        return source.toLowerCase();
-    }
-    
-    private String toString(Object value) {
-        return value != null ? value.toString() : "";
+        String str = arguments.get(0) != null ? arguments.get(0).toString() : "";
+        return str.toLowerCase();
     }
     
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.STRING, ParamType.OUTPUT);
     }
 }

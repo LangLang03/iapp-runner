@@ -1,13 +1,15 @@
 package cn.langlang.iapp.functions.math;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-public class SranFunction implements IFunction {
+public class SranFunction extends AbstractFunction {
     private final Random random;
     
     public SranFunction() {
@@ -55,12 +57,7 @@ public class SranFunction implements IFunction {
     }
     
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return Arrays.asList(ParamType.INT, ParamType.INT, ParamType.OUTPUT);
     }
 }

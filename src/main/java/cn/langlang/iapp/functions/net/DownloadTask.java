@@ -38,7 +38,7 @@ public class DownloadTask {
         for (DownloadItem item : items.values()) {
             if (item.getStatus() == 0) {
                 item.setStatus(1);
-                HdflFunction.getDownloadExecutor().submit(() -> downloadItem(item));
+                executor.submit(() -> downloadItem(item));
             }
         }
     }

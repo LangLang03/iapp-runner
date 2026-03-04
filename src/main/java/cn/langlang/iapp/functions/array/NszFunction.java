@@ -1,12 +1,13 @@
 package cn.langlang.iapp.functions.array;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.util.List;
 
-public class NszFunction implements IFunction {
+public class NszFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "nsz";
@@ -19,7 +20,7 @@ public class NszFunction implements IFunction {
     
     @Override
     public int getMaxParameters() {
-        return 1;
+        return 2;
     }
     
     @Override
@@ -40,12 +41,7 @@ public class NszFunction implements IFunction {
     }
     
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.INT, ParamType.OUTPUT);
     }
 }

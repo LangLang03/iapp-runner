@@ -1,12 +1,14 @@
 package cn.langlang.iapp.functions.java;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
+import java.util.Arrays;
 import java.util.List;
 
-public class ClsFunction implements IFunction {
+public class ClsFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "cls";
@@ -19,7 +21,7 @@ public class ClsFunction implements IFunction {
     
     @Override
     public int getMaxParameters() {
-        return 1;
+        return 2;
     }
     
     @Override
@@ -38,12 +40,7 @@ public class ClsFunction implements IFunction {
     }
     
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return Arrays.asList(ParamType.STRING, ParamType.OUTPUT);
     }
 }

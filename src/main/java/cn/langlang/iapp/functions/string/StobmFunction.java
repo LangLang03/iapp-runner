@@ -1,14 +1,15 @@
 package cn.langlang.iapp.functions.string;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.List;
 
-public class StobmFunction implements IFunction {
+public class StobmFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "stobm";
@@ -16,7 +17,7 @@ public class StobmFunction implements IFunction {
     
     @Override
     public int getMinParameters() {
-        return 2;
+        return 1;
     }
     
     @Override
@@ -26,47 +27,43 @@ public class StobmFunction implements IFunction {
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        String text = toString(arguments.get(0));
-        String encoding = toString(arguments.get(1));
+        String str = arguments.get(0) != null ? arguments.get(0).toString() : "";
+        String charsetName = "UTF-8";
         boolean forUrl = false;
         
-        if (arguments.size() >= 3) {
+        if (arguments.size() > 1 && arguments.get(1) != null) {
+            Object arg1 = arguments.get(1);
+            if (arg1 instanceof Boolean) {
+                forUrl = (Boolean) arg1;
+            } else {
+                charsetName = arg1.toString();
+            }
+        }
+        
+        if (arguments.size() > 2) {
             forUrl = toBoolean(arguments.get(2));
         }
         
         try {
+            String encoded = URLEncoder.encode(str, charsetName);
             if (forUrl) {
-                return URLEncoder.encode(text, encoding);
-            } else {
-                StringBuilder result = new StringBuilder();
-                byte[] bytes = text.getBytes(encoding);
-                for (byte b : bytes) {
-                    result.append(String.format("%%%02X", b & 0xFF));
-                }
-                return result.toString();
+                return encoded;
             }
-        } catch (UnsupportedEncodingException e) {
-            throw new FunctionException("Unsupported encoding: " + encoding);
+            return encoded;
+        } catch (Exception e) {
+            throw new FunctionException("URL encoding failed: " + e.getMessage(), e);
         }
     }
     
-    private String toString(Object value) {
-        return value != null ? value.toString() : "";
-    }
-    
     private boolean toBoolean(Object value) {
-        if (value == null) return false;
-        if (value instanceof Boolean) return (Boolean) value;
-        return Boolean.parseBoolean(value.toString());
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        }
+        return Boolean.parseBoolean(String.valueOf(value));
     }
     
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.STRING, ParamType.STRING, ParamType.BOOLEAN, ParamType.OUTPUT);
     }
 }

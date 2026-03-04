@@ -1,12 +1,13 @@
 package cn.langlang.iapp.functions.math;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.util.List;
 
-public class SSubFunction implements IFunction {
+public class SSubFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "s-";
@@ -24,29 +25,18 @@ public class SSubFunction implements IFunction {
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        double a = toDouble(arguments.get(0));
-        double b = toDouble(arguments.get(1));
-        return a - b;
-    }
-    
-    private double toDouble(Object value) {
-        if (value instanceof Number) {
-            return ((Number) value).doubleValue();
+        Object a = arguments.get(0);
+        Object b = arguments.get(1);
+        
+        if (a instanceof Number && b instanceof Number) {
+            return ((Number) a).doubleValue() - ((Number) b).doubleValue();
         }
-        try {
-            return Double.parseDouble(String.valueOf(value));
-        } catch (NumberFormatException e) {
-            return 0;
-        }
+        
+        return 0;
     }
     
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.OBJECT, ParamType.OBJECT, ParamType.OUTPUT);
     }
 }

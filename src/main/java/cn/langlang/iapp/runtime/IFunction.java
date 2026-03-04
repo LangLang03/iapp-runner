@@ -14,4 +14,6 @@ public interface IFunction {
     boolean isSupported();
     
     String getUnsupportedReason();
+    
+    List<ParamType> getParamTypes();
 }

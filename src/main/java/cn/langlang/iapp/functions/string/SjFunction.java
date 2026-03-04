@@ -1,12 +1,13 @@
 package cn.langlang.iapp.functions.string;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.util.List;
 
-public class SjFunction implements IFunction {
+public class SjFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "sj";
@@ -14,54 +15,48 @@ public class SjFunction implements IFunction {
     
     @Override
     public int getMinParameters() {
-        return 3;
+        return 1;
     }
     
     @Override
     public int getMaxParameters() {
-        return 5;
+        return Integer.MAX_VALUE;
     }
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        String source = toString(arguments.get(0));
-        String start = arguments.get(1) != null ? toString(arguments.get(1)) : null;
-        String end = arguments.get(2) != null ? toString(arguments.get(2)) : null;
+        if (arguments.size() < 3) {
+            throw new FunctionException("sj function requires at least 3 arguments");
+        }
+        
+        String source = arguments.get(0) != null ? arguments.get(0).toString() : "";
+        String prefix = arguments.get(1) != null ? arguments.get(1).toString() : null;
+        String suffix = arguments.get(2) != null ? arguments.get(2).toString() : null;
         
         int startIndex = 0;
         int endIndex = source.length();
         
-        if (start != null) {
-            int pos = source.indexOf(start);
-            if (pos >= 0) {
-                startIndex = pos + start.length();
+        if (prefix != null) {
+            int pos = source.indexOf(prefix);
+            if (pos == -1) {
+                return "";
             }
+            startIndex = pos + prefix.length();
         }
         
-        if (end != null) {
-            int pos = source.indexOf(end, startIndex);
-            if (pos >= 0) {
-                endIndex = pos;
+        if (suffix != null) {
+            int pos = source.indexOf(suffix, startIndex);
+            if (pos == -1) {
+                return "";
             }
+            endIndex = pos;
         }
         
-        if (startIndex < endIndex && startIndex < source.length()) {
-            return source.substring(startIndex, endIndex);
-        }
-        return "";
-    }
-    
-    private String toString(Object value) {
-        return value != null ? value.toString() : "";
+        return source.substring(startIndex, endIndex);
     }
     
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.STRING, ParamType.STRING, ParamType.STRING, ParamType.OUTPUT);
     }
 }

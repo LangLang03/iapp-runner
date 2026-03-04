@@ -8,29 +8,16 @@ import java.util.List;
 public class FunctionCallStatement extends Statement {
     private final String functionName;
     private final List<Expression> arguments;
-    private final String resultVariable;
+    private final List<String> outputVariables;
     private final TokenType resultScope;
-    private final String potentialOutputVariable;
     
     public FunctionCallStatement(int line, String functionName, List<Expression> arguments, 
-                                  String resultVariable, TokenType resultScope) {
+                                  List<String> outputVariables, TokenType resultScope) {
         super(line);
         this.functionName = functionName;
         this.arguments = arguments;
-        this.resultVariable = resultVariable;
+        this.outputVariables = outputVariables;
         this.resultScope = resultScope;
-        this.potentialOutputVariable = null;
-    }
-    
-    public FunctionCallStatement(int line, String functionName, List<Expression> arguments, 
-                                  String resultVariable, TokenType resultScope, 
-                                  String potentialOutputVariable) {
-        super(line);
-        this.functionName = functionName;
-        this.arguments = arguments;
-        this.resultVariable = resultVariable;
-        this.resultScope = resultScope;
-        this.potentialOutputVariable = potentialOutputVariable;
     }
     
     public String getFunctionName() {
@@ -41,24 +28,16 @@ public class FunctionCallStatement extends Statement {
         return arguments;
     }
     
-    public String getResultVariable() {
-        return resultVariable;
+    public List<String> getOutputVariables() {
+        return outputVariables;
     }
     
     public TokenType getResultScope() {
         return resultScope;
     }
     
-    public String getPotentialOutputVariable() {
-        return potentialOutputVariable;
-    }
-    
-    public boolean hasResultVariable() {
-        return resultVariable != null && !resultVariable.isEmpty();
-    }
-    
-    public boolean hasPotentialOutputVariable() {
-        return potentialOutputVariable != null && !potentialOutputVariable.isEmpty();
+    public boolean hasOutputVariables() {
+        return outputVariables != null && !outputVariables.isEmpty();
     }
     
     @Override

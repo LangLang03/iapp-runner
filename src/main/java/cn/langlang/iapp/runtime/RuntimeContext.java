@@ -32,7 +32,79 @@ public class RuntimeContext {
         this.userFunctions = new HashMap<>();
         this.currentDirectory = System.getProperty("user.dir");
         this.endCodeRequested = false;
+        registerBuiltinFunctions();
         initializeBeanShell();
+    }
+    
+    private void registerBuiltinFunctions() {
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.output.SysoFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.output.TwFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.string.SsFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.string.SrFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.string.SjFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.string.SlFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.string.SsgFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.string.SlgFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.string.StrimFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.string.SlowerFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.string.SupperFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.string.SiofFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.string.SlofFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.string.StobmFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.string.Sutf8toFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.math.SAddFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.math.SSubFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.math.SMulFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.math.SDivFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.math.SModFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.math.SFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.math.S2Function());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.math.SnFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.math.SranFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.array.NszFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.array.SgszFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.array.SsszFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.array.SgszlFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.file.FdFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.file.FeFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.file.FsFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.file.FrFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.file.FwFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.file.FcFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.file.FlFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.file.FtFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.file.FdirFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.file.FuzFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.file.FuzsFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.file.FjFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.file.FoFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.file.FiFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.net.HsFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.net.HdFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.net.HdflFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.net.HufFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.net.HwFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.net.HwsFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.time.TimeFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.other.StopFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.java.JavaFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.java.JavaxFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.java.JavanewFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.java.JavagsFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.java.JavassFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.java.ClsFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.other.CallFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.list.AslistFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.list.SslistFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.list.GslistFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.list.GslistlFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.list.DslistFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.list.GslistszFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.list.GslistisFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.list.GslistiofFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.list.GslistlofFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.clipboard.SxbFunction());
+        functionRegistry.registerFunction(new cn.langlang.iapp.functions.clipboard.ShbFunction());
     }
     
     private void initializeBeanShell() {
@@ -61,7 +133,7 @@ public class RuntimeContext {
     }
     
     public void setVariable(String name, Object value) {
-        variableManager.setLocalVariable(name, value);
+        variableManager.setVariable(name, value);
     }
     
     public void setVariable(String name, Object value, TokenType scope) {
@@ -161,14 +233,6 @@ public class RuntimeContext {
     
     public boolean hasUserFunction(String name) {
         return userFunctions.containsKey(name);
-    }
-    
-    public void declareVariable(String name) {
-        variableManager.declareVariable(name);
-    }
-    
-    public boolean isVariableDeclared(String name) {
-        return variableManager.isVariableDeclared(name);
     }
     
     public static class BreakContext {

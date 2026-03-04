@@ -1,15 +1,14 @@
 package cn.langlang.iapp.functions.file;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-public class FwFunction implements IFunction {
+public class FwFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "fw";
@@ -27,48 +26,24 @@ public class FwFunction implements IFunction {
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        String path = toString(arguments.get(0));
-        String content = toString(arguments.get(1));
-        
-        boolean append = false;
-        if (arguments.size() > 2) {
-            append = toBoolean(arguments.get(2));
-        }
-        
+        String path = arguments.get(0) != null ? arguments.get(0).toString() : "";
+        String content = arguments.get(1) != null ? arguments.get(1).toString() : "";
         path = context.resolvePath(path);
         
-        File file = new File(path);
-        File parent = file.getParentFile();
-        if (parent != null && !parent.exists()) {
-            parent.mkdirs();
-        }
-        
-        try (FileWriter writer = new FileWriter(file, StandardCharsets.UTF_8, append)) {
+        try {
+            File file = new File(path);
+            file.getParentFile().mkdirs();
+            java.io.FileWriter writer = new java.io.FileWriter(file);
             writer.write(content);
+            writer.close();
             return true;
         } catch (Exception e) {
             throw new FunctionException("Failed to write file: " + path, e);
         }
     }
     
-    private String toString(Object value) {
-        return value != null ? value.toString() : "";
-    }
-    
-    private boolean toBoolean(Object value) {
-        if (value instanceof Boolean) {
-            return (Boolean) value;
-        }
-        return Boolean.parseBoolean(String.valueOf(value));
-    }
-    
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.STRING, ParamType.STRING, ParamType.OUTPUT);
     }
 }

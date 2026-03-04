@@ -1,14 +1,17 @@
 package cn.langlang.iapp.functions.net;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
-import java.awt.Desktop;
-import java.net.URI;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.List;
 
-public class HwsFunction implements IFunction {
+public class HwsFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "hws";
@@ -21,47 +24,44 @@ public class HwsFunction implements IFunction {
     
     @Override
     public int getMaxParameters() {
-        return 1;
+        return Integer.MAX_VALUE;
     }
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        String url = toString(arguments.get(0));
+        String urlStr = arguments.get(0) != null ? arguments.get(0).toString() : "";
+        String charset = "UTF-8";
+        
+        if (arguments.size() > 1) {
+            charset = arguments.get(1) != null ? arguments.get(1).toString() : "UTF-8";
+        }
         
         try {
-            String os = System.getProperty("os.name").toLowerCase();
+            URL url = new URL(urlStr);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(10000);
             
-            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-                Desktop.getDesktop().browse(new URI(url));
-                return true;
-            } else if (os.contains("win")) {
-                Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + url);
-                return true;
-            } else if (os.contains("mac")) {
-                Runtime.getRuntime().exec("open " + url);
-                return true;
-            } else if (os.contains("nix") || os.contains("nux")) {
-                Runtime.getRuntime().exec("xdg-open " + url);
-                return true;
+            int responseCode = conn.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), charset));
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line).append("\n");
+                }
+                reader.close();
+                return response.toString();
             }
-            
-            return false;
+            return "";
         } catch (Exception e) {
-            throw new FunctionException("Failed to open browser: " + e.getMessage());
+            throw new FunctionException("HTTP request failed: " + e.getMessage(), e);
         }
     }
     
-    private String toString(Object value) {
-        return value != null ? value.toString() : "";
-    }
-    
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.STRING, ParamType.STRING);
     }
 }

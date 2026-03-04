@@ -19,80 +19,6 @@ public class Interpreter implements IInterpreter {
     
     public Interpreter(RuntimeContext context) {
         this.context = context;
-        registerBuiltinFunctions();
-    }
-    
-    private void registerBuiltinFunctions() {
-        FunctionRegistry registry = context.getFunctionRegistry();
-        
-        registry.registerFunction(new cn.langlang.iapp.functions.output.SysoFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.output.TwFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.string.SsFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.string.SrFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.string.SjFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.string.SlFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.string.SsgFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.string.SlgFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.string.StrimFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.string.SlowerFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.string.SupperFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.string.SiofFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.string.SlofFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.string.StobmFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.string.Sutf8toFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.math.SAddFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.math.SSubFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.math.SMulFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.math.SDivFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.math.SModFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.math.SFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.math.S2Function());
-        registry.registerFunction(new cn.langlang.iapp.functions.math.SnFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.math.SranFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.array.NszFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.array.SgszFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.array.SsszFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.array.SgszlFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.file.FdFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.file.FeFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.file.FsFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.file.FrFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.file.FwFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.file.FcFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.file.FlFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.file.FtFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.file.FdirFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.file.FuzFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.file.FuzsFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.file.FjFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.file.FoFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.file.FiFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.net.HsFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.net.HdFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.net.HdflFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.net.HufFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.net.HwFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.net.HwsFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.time.TimeFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.other.StopFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.java.JavaFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.java.JavaxFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.java.JavanewFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.java.JavagsFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.java.JavassFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.java.ClsFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.other.CallFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.list.AslistFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.list.SslistFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.list.GslistFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.list.GslistlFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.list.DslistFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.list.GslistszFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.list.GslistisFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.list.GslistiofFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.list.GslistlofFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.clipboard.SxbFunction());
-        registry.registerFunction(new cn.langlang.iapp.functions.clipboard.ShbFunction());
     }
     
     @Override
@@ -117,7 +43,6 @@ public class Interpreter implements IInterpreter {
                     value = evaluateExpression(stmt.getInitialValue(), context);
                 }
                 context.setVariable(stmt.getVariableName(), value, stmt.getScope());
-                context.declareVariable(stmt.getVariableName());
                 return null;
             }
 
@@ -212,7 +137,6 @@ public class Interpreter implements IInterpreter {
                             varName = varExpr.getName();
                         }
                         if (varName != null) {
-                            context.declareVariable(varName);
                             for (Object item : array) {
                                 if (context.isEndCodeRequested()) break;
 
@@ -235,7 +159,6 @@ public class Interpreter implements IInterpreter {
                             varName = varExpr.getName();
                         }
                         if (varName != null) {
-                            context.declareVariable(varName);
                             for (Object item : list) {
                                 if (context.isEndCodeRequested()) break;
 
@@ -289,7 +212,6 @@ public class Interpreter implements IInterpreter {
                             }
 
                             context.setVariable(stmt.getVariableName(), item, TokenType.KEYWORD_S);
-                            context.declareVariable(stmt.getVariableName());
 
                             for (Statement s : stmt.getBody()) {
                                 executeStatement(s, context);
@@ -306,7 +228,6 @@ public class Interpreter implements IInterpreter {
                             }
 
                             context.setVariable(stmt.getVariableName(), item, TokenType.KEYWORD_S);
-                            context.declareVariable(stmt.getVariableName());
 
                             for (Statement s : stmt.getBody()) {
                                 executeStatement(s, context);
@@ -324,19 +245,6 @@ public class Interpreter implements IInterpreter {
                 try {
                     String functionName = stmt.getFunctionName();
                     List<Object> args = new ArrayList<>();
-                    
-                    String actualOutputVariable = stmt.getResultVariable();
-                    
-                    if (stmt.hasPotentialOutputVariable()) {
-                        String potentialVar = stmt.getPotentialOutputVariable();
-                        if (!context.isVariableDeclared(potentialVar)) {
-                            actualOutputVariable = potentialVar;
-                            logger.debug("潜在输出变量 {} 未声明，作为输出变量处理", potentialVar);
-                        } else {
-                            args.add(context.getVariable(potentialVar));
-                            logger.debug("潜在输出变量 {} 已声明，作为参数处理", potentialVar);
-                        }
-                    }
 
                     for (Expression arg : stmt.getArguments()) {
                         args.add(evaluateExpression(arg, context));
@@ -356,9 +264,12 @@ public class Interpreter implements IInterpreter {
                         }
                     }
 
-                    if (actualOutputVariable != null && !actualOutputVariable.isEmpty()) {
-                        context.setVariable(actualOutputVariable, result, stmt.getResultScope());
-                        context.declareVariable(actualOutputVariable);
+                    if (stmt.hasOutputVariables()) {
+                        List<String> outputVars = stmt.getOutputVariables();
+                        for (int i = 0; i < outputVars.size(); i++) {
+                            String varName = outputVars.get(i);
+                            context.setVariable(varName, result, stmt.getResultScope());
+                        }
                     }
 
                     return result;
@@ -602,7 +513,6 @@ public class Interpreter implements IInterpreter {
                 String paramName = parameters.get(i);
                 Object argValue = i < args.size() ? args.get(i) : null;
                 context.setVariable(paramName, argValue, TokenType.KEYWORD_S);
-                context.declareVariable(paramName);
             }
             
             Object result = null;

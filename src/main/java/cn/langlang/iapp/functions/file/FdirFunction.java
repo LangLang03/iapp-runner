@@ -1,13 +1,13 @@
 package cn.langlang.iapp.functions.file;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
-import java.io.File;
 import java.util.List;
 
-public class FdirFunction implements IFunction {
+public class FdirFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "fdir";
@@ -34,11 +34,11 @@ public class FdirFunction implements IFunction {
             case "app":
                 return context.getCurrentDirectory();
             case "data":
-                return new File(context.getCurrentDirectory(), "data").getAbsolutePath();
+                return context.getCurrentDirectory() + "/data";
             case "cache":
-                return new File(context.getCurrentDirectory(), "cache").getAbsolutePath();
+                return context.getCurrentDirectory() + "/cache";
             case "files":
-                return new File(context.getCurrentDirectory(), "files").getAbsolutePath();
+                return context.getCurrentDirectory() + "/files";
             case "external":
                 return System.getProperty("user.dir");
             default:
@@ -51,12 +51,7 @@ public class FdirFunction implements IFunction {
     }
     
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.STRING, ParamType.OUTPUT);
     }
 }

@@ -1,13 +1,15 @@
 package cn.langlang.iapp.functions.java;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.List;
 
-public class JavagsFunction implements IFunction {
+public class JavagsFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "javags";
@@ -15,32 +17,47 @@ public class JavagsFunction implements IFunction {
     
     @Override
     public int getMinParameters() {
-        return 2;
+        return 3;
     }
     
     @Override
     public int getMaxParameters() {
-        return 2;
+        return 4;
     }
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        Object targetObj = arguments.get(0);
-        String fieldName = toString(arguments.get(1));
+        Object instanceObj = arguments.get(0);
+        Object classObj = arguments.get(1);
+        String fieldName = toString(arguments.get(2));
         
-        if (targetObj == null) {
-            return null;
+        Class<?> clazz;
+        Object targetInstance;
+        
+        if (classObj == null) {
+            throw new FunctionException("Class parameter cannot be null");
+        } else if (classObj instanceof Class) {
+            clazz = (Class<?>) classObj;
+            targetInstance = instanceObj;
+        } else if (classObj instanceof String) {
+            try {
+                clazz = Class.forName((String) classObj);
+                targetInstance = instanceObj;
+            } catch (ClassNotFoundException e) {
+                throw new FunctionException("Class not found: " + classObj, e);
+            }
+        } else {
+            throw new FunctionException("Invalid class parameter: " + classObj.getClass().getName());
         }
         
         try {
-            Class<?> clazz = targetObj.getClass();
             Field field = clazz.getField(fieldName);
-            return field.get(targetObj);
+            return field.get(targetInstance);
         } catch (NoSuchFieldException e) {
             try {
-                Field field = targetObj.getClass().getDeclaredField(fieldName);
+                Field field = clazz.getDeclaredField(fieldName);
                 field.setAccessible(true);
-                return field.get(targetObj);
+                return field.get(targetInstance);
             } catch (Exception ex) {
                 throw new FunctionException("Failed to get field: " + fieldName, ex);
             }
@@ -54,12 +71,7 @@ public class JavagsFunction implements IFunction {
     }
     
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.OBJECT, ParamType.OBJECT, ParamType.STRING, ParamType.OUTPUT);
     }
 }

@@ -1,27 +1,13 @@
 package cn.langlang.iapp.functions.math;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import java.util.List;
 
-public class SnFunction implements IFunction {
-    private ScriptEngine engine;
-    private boolean engineAvailable = false;
-    
-    public SnFunction() {
-        try {
-            ScriptEngineManager manager = new ScriptEngineManager();
-            this.engine = manager.getEngineByName("js");
-            this.engineAvailable = (engine != null);
-        } catch (Exception e) {
-            this.engineAvailable = false;
-        }
-    }
-    
+public class SnFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "sn";
@@ -34,45 +20,24 @@ public class SnFunction implements IFunction {
     
     @Override
     public int getMaxParameters() {
-        return 1;
+        return 2;
     }
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        Object arg = arguments.get(0);
-        
-        if (arg instanceof Number) {
-            return ((Number) arg).doubleValue();
+        Object value = arguments.get(0);
+        if (value instanceof Number) {
+            return -((Number) value).doubleValue();
         }
-        
-        String expression = toString(arg);
-        
-        if (engineAvailable && engine != null) {
-            try {
-                Object result = engine.eval(expression);
-                if (result instanceof Number) {
-                    return ((Number) result).doubleValue();
-                }
-                return result;
-            } catch (Exception e) {
-                return Double.parseDouble(expression);
-            }
-        } else {
-            return Double.parseDouble(expression);
+        try {
+            return -Double.parseDouble(String.valueOf(value));
+        } catch (NumberFormatException e) {
+            return 0;
         }
     }
     
-    private String toString(Object value) {
-        return value != null ? value.toString() : "";
-    }
-    
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.OBJECT, ParamType.OUTPUT);
     }
 }

@@ -1,12 +1,13 @@
 package cn.langlang.iapp.functions.string;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.util.List;
 
-public class SupperFunction implements IFunction {
+public class SupperFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "supper";
@@ -24,21 +25,12 @@ public class SupperFunction implements IFunction {
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        String source = toString(arguments.get(0));
-        return source.toUpperCase();
-    }
-    
-    private String toString(Object value) {
-        return value != null ? value.toString() : "";
+        String str = arguments.get(0) != null ? arguments.get(0).toString() : "";
+        return str.toUpperCase();
     }
     
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.STRING, ParamType.OUTPUT);
     }
 }

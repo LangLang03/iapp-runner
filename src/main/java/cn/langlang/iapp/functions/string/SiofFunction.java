@@ -1,12 +1,13 @@
 package cn.langlang.iapp.functions.string;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.util.List;
 
-public class SiofFunction implements IFunction {
+public class SiofFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "siof";
@@ -24,39 +25,13 @@ public class SiofFunction implements IFunction {
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        String source = toString(arguments.get(0));
-        String search = toString(arguments.get(1));
-        int startIndex = 0;
-        
-        if (arguments.size() >= 3) {
-            startIndex = toInt(arguments.get(2));
-        }
-        
-        int index = source.indexOf(search, startIndex);
-        return (long) index;
-    }
-    
-    private String toString(Object value) {
-        return value != null ? value.toString() : "";
-    }
-    
-    private int toInt(Object value) {
-        if (value == null) return 0;
-        if (value instanceof Number) return ((Number) value).intValue();
-        try {
-            return Integer.parseInt(value.toString());
-        } catch (NumberFormatException e) {
-            return 0;
-        }
+        String source = arguments.get(0) != null ? arguments.get(0).toString() : "";
+        String target = arguments.get(1) != null ? arguments.get(1).toString() : "";
+        return (long) source.indexOf(target);
     }
     
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.STRING, ParamType.STRING, ParamType.OUTPUT);
     }
 }

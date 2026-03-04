@@ -1,12 +1,13 @@
 package cn.langlang.iapp.functions.math;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.util.List;
 
-public class SDivFunction implements IFunction {
+public class SDivFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "s/";
@@ -24,32 +25,22 @@ public class SDivFunction implements IFunction {
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        double a = toDouble(arguments.get(0));
-        double b = toDouble(arguments.get(1));
-        if (b == 0) {
-            throw new FunctionException("Division by zero");
+        Object a = arguments.get(0);
+        Object b = arguments.get(1);
+        
+        if (a instanceof Number && b instanceof Number) {
+            double divisor = ((Number) b).doubleValue();
+            if (divisor == 0) {
+                return 0.0;
+            }
+            return ((Number) a).doubleValue() / divisor;
         }
-        return a / b;
-    }
-    
-    private double toDouble(Object value) {
-        if (value instanceof Number) {
-            return ((Number) value).doubleValue();
-        }
-        try {
-            return Double.parseDouble(String.valueOf(value));
-        } catch (NumberFormatException e) {
-            return 0;
-        }
+        
+        return 0;
     }
     
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.OBJECT, ParamType.OBJECT, ParamType.OUTPUT);
     }
 }

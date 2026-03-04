@@ -6,10 +6,10 @@
         </encoder>
     </appender>
     
-    <logger name="cn.langlang.iapp.lexer.Lexer" level="DEBUG"/>
-    <logger name="cn.langlang.iapp.parser.Parser" level="DEBUG"/>
+    <logger name="cn.langlang.iapp.lexer.Lexer" level="INFO"/>
+    <logger name="cn.langlang.iapp.parser.Parser" level="INFO"/>
     
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="CONSOLE"/>
     </root>
 </configuration>

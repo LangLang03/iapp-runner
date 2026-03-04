@@ -1,15 +1,16 @@
 package cn.langlang.iapp.functions.clipboard;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
 import java.util.List;
 
-public class ShbFunction implements IFunction {
+public class ShbFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "shb";
@@ -27,22 +28,20 @@ public class ShbFunction implements IFunction {
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+        String text = arguments.get(0) != null ? arguments.get(0).toString() : "";
+        
         try {
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-            Object data = clipboard.getData(DataFlavor.stringFlavor);
-            return data != null ? data.toString() : "";
+            StringSelection selection = new StringSelection(text);
+            clipboard.setContents(selection, null);
+            return true;
         } catch (Exception e) {
-            return "";
+            throw new FunctionException("Failed to set clipboard: " + e.getMessage(), e);
         }
     }
     
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.STRING);
     }
 }

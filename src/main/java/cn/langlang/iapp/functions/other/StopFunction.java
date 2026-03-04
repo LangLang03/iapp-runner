@@ -1,12 +1,13 @@
 package cn.langlang.iapp.functions.other;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.util.List;
 
-public class StopFunction implements IFunction {
+public class StopFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "stop";
@@ -14,7 +15,7 @@ public class StopFunction implements IFunction {
     
     @Override
     public int getMinParameters() {
-        return 1;
+        return 0;
     }
     
     @Override
@@ -24,33 +25,25 @@ public class StopFunction implements IFunction {
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        long millis = toLong(arguments.get(0));
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+        if (arguments.isEmpty()) {
+            context.requestEndCode();
+        } else {
+            Object arg = arguments.get(0);
+            if (arg instanceof Number) {
+                try {
+                    Thread.sleep(((Number) arg).longValue());
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            } else {
+                context.requestEndCode();
+            }
         }
         return null;
     }
     
-    private long toLong(Object value) {
-        if (value instanceof Number) {
-            return ((Number) value).longValue();
-        }
-        try {
-            return Long.parseLong(String.valueOf(value));
-        } catch (NumberFormatException e) {
-            return 0;
-        }
-    }
-    
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.INT);
     }
 }

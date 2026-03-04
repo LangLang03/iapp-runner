@@ -1,12 +1,13 @@
 package cn.langlang.iapp.functions.string;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.util.List;
 
-public class SsgFunction implements IFunction {
+public class SsgFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "ssg";
@@ -19,29 +20,18 @@ public class SsgFunction implements IFunction {
     
     @Override
     public int getMaxParameters() {
-        return 3;
+        return 4;
     }
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        String source = toString(arguments.get(0));
+        String str = arguments.get(0) != null ? arguments.get(0).toString() : "";
         int start = toInt(arguments.get(1));
-        
+        int end = str.length();
         if (arguments.size() > 2) {
-            int end = toInt(arguments.get(2));
-            if (start >= 0 && end <= source.length() && start <= end) {
-                return source.substring(start, end);
-            }
-        } else {
-            if (start >= 0 && start <= source.length()) {
-                return source.substring(start);
-            }
+            end = toInt(arguments.get(2));
         }
-        return null;
-    }
-    
-    private String toString(Object value) {
-        return value != null ? value.toString() : "";
+        return str.substring(start, Math.min(end, str.length()));
     }
     
     private int toInt(Object value) {
@@ -56,12 +46,7 @@ public class SsgFunction implements IFunction {
     }
     
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.STRING, ParamType.INT, ParamType.INT, ParamType.OUTPUT);
     }
 }

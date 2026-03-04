@@ -1,12 +1,13 @@
 package cn.langlang.iapp.functions.string;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.util.List;
 
-public class SsFunction implements IFunction {
+public class SsFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "ss";
@@ -14,32 +15,22 @@ public class SsFunction implements IFunction {
     
     @Override
     public int getMinParameters() {
-        return 2;
+        return 1;
     }
     
     @Override
     public int getMaxParameters() {
-        return Integer.MAX_VALUE;
+        return 2;
     }
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        StringBuilder result = new StringBuilder();
-        for (Object arg : arguments) {
-            if (arg != null) {
-                result.append(arg.toString());
-            }
-        }
-        return result.toString();
+        Object value = arguments.get(0);
+        return value != null ? value.toString() : "";
     }
     
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.OBJECT, ParamType.OUTPUT);
     }
 }

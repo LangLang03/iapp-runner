@@ -1,13 +1,15 @@
 package cn.langlang.iapp.functions.file;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.List;
 
-public class FiFunction implements IFunction {
+public class FiFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "fi";
@@ -25,24 +27,19 @@ public class FiFunction implements IFunction {
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        String path = toString(arguments.get(0));
+        String path = arguments.get(0) != null ? arguments.get(0).toString() : "";
         path = context.resolvePath(path);
         
-        File file = new File(path);
-        return file.isDirectory();
-    }
-    
-    private String toString(Object value) {
-        return value != null ? value.toString() : "";
-    }
-    
-    @Override
-    public boolean isSupported() {
-        return true;
+        try {
+            File file = new File(path);
+            return file.isDirectory();
+        } catch (Exception e) {
+            return false;
+        }
     }
     
     @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.STRING);
     }
 }

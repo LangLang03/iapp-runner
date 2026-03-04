@@ -1,15 +1,20 @@
 package cn.langlang.iapp.functions.net;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.List;
+import java.util.Map;
 
-public class HufFunction implements IFunction {
+public class HufFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "huf";
@@ -17,150 +22,83 @@ public class HufFunction implements IFunction {
     
     @Override
     public int getMinParameters() {
-        return 4;
+        return 2;
     }
     
     @Override
     public int getMaxParameters() {
-        return 6;
+        return 4;
     }
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        String urlStr = toString(arguments.get(0));
-        String formData = toString(arguments.get(1));
-        String filePaths = toString(arguments.get(2));
-        String encoding = toString(arguments.get(3));
-        String headers = null;
+        String urlStr = arguments.get(0) != null ? arguments.get(0).toString() : "";
+        Object params = arguments.get(1);
+        String charset = "UTF-8";
+        String method = "POST";
         
-        if (arguments.size() >= 5) {
-            headers = toString(arguments.get(4));
-            if ("null".equals(headers)) headers = null;
+        if (arguments.size() > 2) {
+            charset = arguments.get(2) != null ? arguments.get(2).toString() : "UTF-8";
+        }
+        if (arguments.size() > 3) {
+            method = arguments.get(3) != null ? arguments.get(3).toString() : "POST";
         }
         
-        String boundary = "----iAppBoundary" + System.currentTimeMillis();
-        String lineEnd = "\r\n";
-        String twoHyphens = "--";
-        
         try {
-            URL url = new URL(urlStr);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setDoInput(true);
-            conn.setDoOutput(true);
-            conn.setUseCaches(false);
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Connection", "Keep-Alive");
-            conn.setRequestProperty("Charset", encoding);
-            conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
-            
-            if (headers != null) {
-                String[] headerPairs = headers.split("\\|\\|");
-                for (String pair : headerPairs) {
-                    int eqIdx = pair.indexOf('=');
-                    if (eqIdx > 0) {
-                        String key = pair.substring(0, eqIdx).trim();
-                        String value = pair.substring(eqIdx + 1).trim();
-                        conn.setRequestProperty(key, value);
-                    }
+            StringBuilder postData = new StringBuilder();
+            if (params instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> paramMap = (Map<String, Object>) params;
+                boolean first = true;
+                for (Map.Entry<String, Object> entry : paramMap.entrySet()) {
+                    if (!first) postData.append("&");
+                    postData.append(URLEncoder.encode(entry.getKey(), charset));
+                    postData.append("=");
+                    postData.append(URLEncoder.encode(String.valueOf(entry.getValue()), charset));
+                    first = false;
+                }
+            } else if (params instanceof Object[]) {
+                Object[] arr = (Object[]) params;
+                for (int i = 0; i < arr.length - 1; i += 2) {
+                    if (i > 0) postData.append("&");
+                    postData.append(URLEncoder.encode(String.valueOf(arr[i]), charset));
+                    postData.append("=");
+                    postData.append(URLEncoder.encode(String.valueOf(arr[i + 1]), charset));
                 }
             }
             
-            try (DataOutputStream dos = new DataOutputStream(conn.getOutputStream())) {
-                if (formData != null && !formData.isEmpty()) {
-                    String[] pairs = formData.split("&");
-                    for (String pair : pairs) {
-                        int eqIdx = pair.indexOf('=');
-                        if (eqIdx > 0) {
-                            String key = pair.substring(0, eqIdx);
-                            String value = eqIdx < pair.length() - 1 ? pair.substring(eqIdx + 1) : "";
-                            
-                            dos.writeBytes(twoHyphens + boundary + lineEnd);
-                            dos.writeBytes("Content-Disposition: form-data; name=\"" + key + "\"" + lineEnd);
-                            dos.writeBytes(lineEnd);
-                            dos.writeBytes(value);
-                            dos.writeBytes(lineEnd);
-                        }
-                    }
-                }
-                
-                if (filePaths != null && !filePaths.isEmpty()) {
-                    String[] files = filePaths.split("\\|");
-                    for (String fileInfo : files) {
-                        String fileName = "file";
-                        String filePath;
-                        
-                        if (fileInfo.contains("\n")) {
-                            String[] parts = fileInfo.split("\n", 2);
-                            fileName = parts[0];
-                            filePath = parts[1];
-                        } else {
-                            filePath = fileInfo;
-                        }
-                        
-                        filePath = context.resolvePath(filePath);
-                        File file = new File(filePath);
-                        if (!file.exists()) continue;
-                        
-                        String fileDisplayName = file.getName();
-                        
-                        dos.writeBytes(twoHyphens + boundary + lineEnd);
-                        dos.writeBytes("Content-Disposition: form-data; name=\"" + fileName + "\"; filename=\"" + fileDisplayName + "\"" + lineEnd);
-                        dos.writeBytes("Content-Type: application/octet-stream" + lineEnd);
-                        dos.writeBytes(lineEnd);
-                        
-                        try (FileInputStream fis = new FileInputStream(file)) {
-                            byte[] buffer = new byte[8192];
-                            int len;
-                            while ((len = fis.read(buffer)) > 0) {
-                                dos.write(buffer, 0, len);
-                            }
-                        }
-                        dos.writeBytes(lineEnd);
-                    }
-                }
-                
-                dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
-                dos.flush();
+            URL url = new URL(urlStr);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod(method);
+            conn.setDoOutput(true);
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(10000);
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            
+            try (DataOutputStream out = new DataOutputStream(conn.getOutputStream())) {
+                out.writeBytes(postData.toString());
+                out.flush();
             }
             
             int responseCode = conn.getResponseCode();
-            if (responseCode >= 200 && responseCode < 300) {
-                try (InputStream is = conn.getInputStream();
-                     BufferedReader reader = new BufferedReader(new InputStreamReader(is, encoding))) {
-                    StringBuilder response = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        response.append(line).append("\n");
-                    }
-                    return response.toString().trim();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), charset));
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
                 }
-            } else {
-                try (InputStream es = conn.getErrorStream();
-                     BufferedReader reader = new BufferedReader(new InputStreamReader(es, encoding))) {
-                    StringBuilder error = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        error.append(line).append("\n");
-                    }
-                    return "Error " + responseCode + ": " + error.toString().trim();
-                }
+                reader.close();
+                return response.toString();
             }
+            return "";
         } catch (Exception e) {
-            throw new FunctionException("Upload failed: " + e.getMessage());
+            throw new FunctionException("HTTP request failed: " + e.getMessage(), e);
         }
     }
     
-    private String toString(Object value) {
-        return value != null ? value.toString() : "";
-    }
-    
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.STRING, ParamType.OBJECT, ParamType.STRING, ParamType.STRING);
     }
 }

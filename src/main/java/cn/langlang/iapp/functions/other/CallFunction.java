@@ -1,12 +1,14 @@
 package cn.langlang.iapp.functions.other;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
+import java.util.Arrays;
 import java.util.List;
 
-public class CallFunction implements IFunction {
+public class CallFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "call";
@@ -14,7 +16,7 @@ public class CallFunction implements IFunction {
     
     @Override
     public int getMinParameters() {
-        return 3;
+        return 2;
     }
     
     @Override
@@ -24,45 +26,30 @@ public class CallFunction implements IFunction {
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        Object resultVar = arguments.get(0);
-        String callType = toString(arguments.get(1));
-        String target = toString(arguments.get(2));
+        if (arguments.size() < 2) {
+            throw new FunctionException("call function requires at least 2 arguments");
+        }
+        
+        String module = arguments.get(0) != null ? arguments.get(0).toString() : "";
+        String method = arguments.get(1) != null ? arguments.get(1).toString() : "";
         
         Object[] args = null;
-        if (arguments.size() > 3) {
-            args = new Object[arguments.size() - 3];
-            for (int i = 3; i < arguments.size(); i++) {
-                args[i - 3] = arguments.get(i);
+        if (arguments.size() > 2) {
+            args = new Object[arguments.size() - 2];
+            for (int i = 2; i < arguments.size(); i++) {
+                args[i - 2] = arguments.get(i);
             }
         }
         
         try {
-            if ("mjava".equalsIgnoreCase(callType)) {
-                if (target.contains(".")) {
-                    String[] parts = target.split("\\.", 2);
-                    String moduleName = parts[0];
-                    String methodName = parts[1];
-                    return context.executeMjavaMethod(moduleName, methodName, args);
-                }
-            }
-            
-            return null;
+            return context.executeMjavaMethod(module, method, args);
         } catch (Exception e) {
-            throw new FunctionException("Call failed: " + target, e);
+            throw new FunctionException("Failed to call " + module + "." + method + ": " + e.getMessage(), e);
         }
     }
     
-    private String toString(Object value) {
-        return value != null ? value.toString() : "";
-    }
-    
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.STRING, ParamType.STRING, ParamType.OBJECT);
     }
 }

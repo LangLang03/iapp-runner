@@ -1,13 +1,14 @@
 package cn.langlang.iapp.functions.string;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.util.List;
 import java.util.regex.Pattern;
 
-public class SlFunction implements IFunction {
+public class SlFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "sl";
@@ -29,8 +30,8 @@ public class SlFunction implements IFunction {
         String delimiter = toString(arguments.get(1));
         
         boolean useRegex = false;
-        if (arguments.size() > 2) {
-            useRegex = toBoolean(arguments.get(2));
+        if (arguments.size() > 2 && arguments.get(2) instanceof Boolean) {
+            useRegex = (Boolean) arguments.get(2);
         }
         
         if (useRegex) {
@@ -44,20 +45,8 @@ public class SlFunction implements IFunction {
         return value != null ? value.toString() : "";
     }
     
-    private boolean toBoolean(Object value) {
-        if (value instanceof Boolean) {
-            return (Boolean) value;
-        }
-        return Boolean.parseBoolean(String.valueOf(value));
-    }
-    
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.STRING, ParamType.STRING, ParamType.BOOLEAN, ParamType.OUTPUT);
     }
 }

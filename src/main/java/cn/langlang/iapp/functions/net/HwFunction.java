@@ -1,14 +1,17 @@
 package cn.langlang.iapp.functions.net;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
-import java.awt.Desktop;
-import java.net.URI;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.List;
 
-public class HwFunction implements IFunction {
+public class HwFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "hw";
@@ -21,56 +24,33 @@ public class HwFunction implements IFunction {
     
     @Override
     public int getMaxParameters() {
-        return 3;
+        return 2;
     }
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        String url = toString(arguments.get(0));
-        String titleColor = null;
-        String bottomColor = null;
+        String urlStr = arguments.get(0) != null ? arguments.get(0).toString() : "";
+        String charset = "UTF-8";
         
-        if (arguments.size() >= 2) {
-            titleColor = toString(arguments.get(1));
-        }
-        if (arguments.size() >= 3) {
-            bottomColor = toString(arguments.get(2));
+        if (arguments.size() > 1) {
+            charset = arguments.get(1) != null ? arguments.get(1).toString() : "UTF-8";
         }
         
         try {
-            String os = System.getProperty("os.name").toLowerCase();
+            URL url = new URL(urlStr);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(10000);
             
-            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-                Desktop.getDesktop().browse(new URI(url));
-                return true;
-            } else if (os.contains("win")) {
-                Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + url);
-                return true;
-            } else if (os.contains("mac")) {
-                Runtime.getRuntime().exec("open " + url);
-                return true;
-            } else if (os.contains("nix") || os.contains("nux")) {
-                Runtime.getRuntime().exec("xdg-open " + url);
-                return true;
-            }
-            
-            return false;
+            return (long) conn.getResponseCode();
         } catch (Exception e) {
-            throw new FunctionException("Failed to open browser: " + e.getMessage());
+            return 0L;
         }
     }
     
-    private String toString(Object value) {
-        return value != null ? value.toString() : "";
-    }
-    
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.STRING, ParamType.STRING);
     }
 }

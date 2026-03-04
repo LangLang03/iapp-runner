@@ -1,21 +1,18 @@
 package cn.langlang.iapp.functions.net;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.*;
 
-public class HdflFunction implements IFunction {
-    private static final ExecutorService downloadExecutor = Executors.newCachedThreadPool();
-    private static final Map<String, DownloadTask> downloadTasks = new ConcurrentHashMap<>();
-    private static long taskIdCounter = 0;
-    
+public class HdflFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "hdfl";
@@ -23,96 +20,50 @@ public class HdflFunction implements IFunction {
     
     @Override
     public int getMinParameters() {
-        return 1;
+        return 2;
     }
     
     @Override
     public int getMaxParameters() {
-        return 6;
+        return 2;
     }
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        String saveDir = null;
-        String tempDir = null;
-        int threadCount = 3;
-        int connectTimeout = 25000;
-        boolean overwrite = true;
+        String urlStr = arguments.get(0) != null ? arguments.get(0).toString() : "";
+        String filePath = arguments.get(1) != null ? arguments.get(1).toString() : "";
+        filePath = context.resolvePath(filePath);
         
-        if (arguments.size() >= 1) {
-            String first = toString(arguments.get(0));
-            if (arguments.size() == 1) {
-                saveDir = context.resolvePath(first);
-            } else {
-                tempDir = context.resolvePath(first);
-            }
-        }
-        if (arguments.size() >= 2) {
-            saveDir = context.resolvePath(toString(arguments.get(1)));
-        }
-        if (arguments.size() >= 3) {
-            threadCount = toInt(arguments.get(2));
-        }
-        if (arguments.size() >= 4) {
-            connectTimeout = toInt(arguments.get(3));
-        }
-        if (arguments.size() >= 5) {
-            overwrite = toBoolean(arguments.get(4));
-        }
-        
-        if (tempDir == null) {
-            tempDir = saveDir;
-        }
-        
-        new File(saveDir).mkdirs();
-        new File(tempDir).mkdirs();
-        
-        String taskId = "dl_" + (++taskIdCounter);
-        DownloadTask task = new DownloadTask(taskId, saveDir, tempDir, threadCount, connectTimeout, overwrite);
-        downloadTasks.put(taskId, task);
-        
-        return taskId;
-    }
-    
-    public static DownloadTask getTask(String taskId) {
-        return downloadTasks.get(taskId);
-    }
-    
-    public static void removeTask(String taskId) {
-        downloadTasks.remove(taskId);
-    }
-    
-    public static ExecutorService getDownloadExecutor() {
-        return downloadExecutor;
-    }
-    
-    private String toString(Object value) {
-        return value != null ? value.toString() : "";
-    }
-    
-    private int toInt(Object value) {
-        if (value == null) return 0;
-        if (value instanceof Number) return ((Number) value).intValue();
         try {
-            return Integer.parseInt(value.toString());
-        } catch (NumberFormatException e) {
-            return 0;
+            URL url = new URL(urlStr);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(30000);
+            conn.setReadTimeout(30000);
+            
+            int responseCode = conn.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                File file = new File(filePath);
+                file.getParentFile().mkdirs();
+                
+                try (InputStream in = conn.getInputStream();
+                     FileOutputStream out = new FileOutputStream(file)) {
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
+                    while ((bytesRead = in.read(buffer)) != -1) {
+                        out.write(buffer, 0, bytesRead);
+                    }
+                }
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            throw new FunctionException("Download failed: " + e.getMessage(), e);
         }
     }
     
-    private boolean toBoolean(Object value) {
-        if (value == null) return false;
-        if (value instanceof Boolean) return (Boolean) value;
-        return Boolean.parseBoolean(value.toString());
-    }
-    
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.STRING, ParamType.STRING);
     }
 }

@@ -1,28 +1,13 @@
 package cn.langlang.iapp.functions.math;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import java.text.DecimalFormat;
 import java.util.List;
 
-public class S2Function implements IFunction {
-    private ScriptEngine engine;
-    private boolean engineAvailable = false;
-    
-    public S2Function() {
-        try {
-            ScriptEngineManager manager = new ScriptEngineManager();
-            this.engine = manager.getEngineByName("js");
-            this.engineAvailable = (engine != null);
-        } catch (Exception e) {
-            this.engineAvailable = false;
-        }
-    }
-    
+public class S2Function extends AbstractFunction {
     @Override
     public String getName() {
         return "s2";
@@ -35,49 +20,24 @@ public class S2Function implements IFunction {
     
     @Override
     public int getMaxParameters() {
-        return 1;
+        return 2;
     }
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        Object arg = arguments.get(0);
-        double value;
-        
-        if (arg instanceof Number) {
-            value = ((Number) arg).doubleValue();
-        } else {
-            String expression = toString(arg);
-            if (engineAvailable && engine != null) {
-                try {
-                    Object result = engine.eval(expression);
-                    if (result instanceof Number) {
-                        value = ((Number) result).doubleValue();
-                    } else {
-                        value = Double.parseDouble(toString(result));
-                    }
-                } catch (Exception e) {
-                    value = Double.parseDouble(expression);
-                }
-            } else {
-                value = Double.parseDouble(expression);
-            }
+        Object value = arguments.get(0);
+        if (value instanceof Number) {
+            return ((Number) value).doubleValue();
         }
-        
-        DecimalFormat df = new DecimalFormat("#.00");
-        return df.format(value);
-    }
-    
-    private String toString(Object value) {
-        return value != null ? value.toString() : "";
-    }
-    
-    @Override
-    public boolean isSupported() {
-        return true;
+        try {
+            return Double.parseDouble(String.valueOf(value));
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
     }
     
     @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.OBJECT, ParamType.OUTPUT);
     }
 }

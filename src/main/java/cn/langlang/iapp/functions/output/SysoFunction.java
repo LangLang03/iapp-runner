@@ -1,12 +1,13 @@
 package cn.langlang.iapp.functions.output;
 
+import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.util.List;
 
-public class SysoFunction implements IFunction {
+public class SysoFunction extends AbstractFunction {
     @Override
     public String getName() {
         return "syso";
@@ -30,12 +31,7 @@ public class SysoFunction implements IFunction {
     }
     
     @Override
-    public boolean isSupported() {
-        return true;
-    }
-    
-    @Override
-    public String getUnsupportedReason() {
-        return null;
+    public List<ParamType> getParamTypes() {
+        return types(ParamType.OBJECT);
     }
 }

@@ -3,6 +3,9 @@ package cn.langlang.iapp.parser;
 import cn.langlang.iapp.ast.*;
 import cn.langlang.iapp.lexer.Token;
 import cn.langlang.iapp.lexer.TokenType;
+import cn.langlang.iapp.runtime.FunctionRegistry;
+import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.runtime.ParamType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,17 +22,24 @@ public class Parser implements IParser {
     private List<Token> tokens;
     private int current;
     private final Set<String> definedFunctions;
+    private FunctionRegistry functionRegistry;
     
     public Parser() {
         this.tokens = null;
         this.current = 0;
         this.definedFunctions = new HashSet<>();
+        this.functionRegistry = new FunctionRegistry();
     }
     
     public Parser(List<Token> tokens) {
         this.tokens = tokens;
         this.current = 0;
         this.definedFunctions = new HashSet<>();
+        this.functionRegistry = new FunctionRegistry();
+    }
+    
+    public void setFunctionRegistry(FunctionRegistry functionRegistry) {
+        this.functionRegistry = functionRegistry;
     }
     
     @Override
@@ -128,37 +138,56 @@ public class Parser implements IParser {
         advance();
         consume(TokenType.LPAREN, "Expected '(' after function name");
         List<Expression> arguments = new ArrayList<>();
-        String resultVariable = null;
+        List<String> outputVariables = new ArrayList<>();
         TokenType resultScope = funcToken.getType();
-        boolean hasArguments = false;
-        String potentialOutputVariable = null;
+        
+        String functionName = funcToken.getValue();
         
         if (!check(TokenType.RPAREN)) {
+            int paramIndex = 0;
             do {
-                Token currentToken = peek();
-                logger.trace("解析参数 - 当前token: {} '{}', 下一个token: {}", 
-                    currentToken.getType(), currentToken.getValue(), 
-                    peekNext() != null ? peekNext().getType() : "null");
-                    
-                if (hasArguments && check(TokenType.IDENTIFIER) && peekNext() != null && peekNext().getType() == TokenType.RPAREN) {
+                boolean isOutputParam = isOutputParameter(functionName, paramIndex);
+                
+                if (isOutputParam && check(TokenType.IDENTIFIER)) {
                     Token varToken = advance();
-                    resultVariable = varToken.getValue();
-                    resultScope = funcToken.getType();
-                    logger.debug("函数 {} 的输出变量: {}", funcToken.getValue(), resultVariable);
-                } else if (!hasArguments && check(TokenType.IDENTIFIER) && peekNext() != null && peekNext().getType() == TokenType.RPAREN) {
-                    Token varToken = advance();
-                    potentialOutputVariable = varToken.getValue();
-                    logger.debug("函数 {} 的潜在输出变量: {}", funcToken.getValue(), potentialOutputVariable);
+                    outputVariables.add(varToken.getValue());
+                    logger.debug("函数 {} 的输出变量: {}", functionName, varToken.getValue());
                 } else {
                     arguments.add(parseExpression());
-                    hasArguments = true;
                 }
+                paramIndex++;
             } while (match(TokenType.COMMA));
         }
         
         consume(TokenType.RPAREN, "Expected ')' after arguments");
         
-        return new FunctionCallStatement(funcToken.getLine(), funcToken.getValue(), arguments, resultVariable, resultScope, potentialOutputVariable);
+        return new FunctionCallStatement(funcToken.getLine(), functionName, arguments, outputVariables, resultScope);
+    }
+    
+    private boolean isOutputParameter(String functionName, int paramIndex) {
+        if (functionRegistry == null) {
+            return false;
+        }
+        
+        IFunction function = functionRegistry.getFunction(functionName);
+        if (function == null) {
+            return false;
+        }
+        
+        List<ParamType> paramTypes = function.getParamTypes();
+        if (paramTypes == null || paramTypes.isEmpty()) {
+            return false;
+        }
+        
+        if (paramIndex < paramTypes.size()) {
+            return paramTypes.get(paramIndex) == ParamType.OUTPUT;
+        }
+        
+        if (paramTypes.get(paramTypes.size() - 1) == ParamType.OUTPUT) {
+            return true;
+        }
+        
+        return false;
     }
     
     private Statement parseVariableDeclaration() throws ParserException {
@@ -399,7 +428,7 @@ public class Parser implements IParser {
         consume(TokenType.RPAREN, "Expected ')' after arguments");
         
         if (definedFunctions.contains(fullName)) {
-            return new FunctionCallStatement(fnToken.getLine(), fullName, callArguments, null, TokenType.KEYWORD_S);
+            return new FunctionCallStatement(fnToken.getLine(), fullName, callArguments, new ArrayList<>(), TokenType.KEYWORD_S);
         }
         
         for (Expression arg : callArguments) {
@@ -603,36 +632,33 @@ public class Parser implements IParser {
         consume(TokenType.RPAREN, "Expected ')' after arguments");
         
         String fullName = objectName + "." + methodName;
-        return new FunctionCallStatement(line, fullName, arguments, null, null);
+        return new FunctionCallStatement(line, fullName, arguments, new ArrayList<>(), TokenType.KEYWORD_S);
     }
     
     private Statement parseFunctionCallWithIdentifier(String functionName, int line) throws ParserException {
         List<Expression> arguments = new ArrayList<>();
-        String resultVariable = null;
+        List<String> outputVariables = new ArrayList<>();
         TokenType resultScope = TokenType.KEYWORD_S;
-        boolean hasArguments = false;
-        String potentialOutputVariable = null;
         
         if (!check(TokenType.RPAREN)) {
+            int paramIndex = 0;
             do {
-                if (hasArguments && check(TokenType.IDENTIFIER) && peekNext() != null && peekNext().getType() == TokenType.RPAREN) {
+                boolean isOutputParam = isOutputParameter(functionName, paramIndex);
+                
+                if (isOutputParam && check(TokenType.IDENTIFIER)) {
                     Token varToken = advance();
-                    resultVariable = varToken.getValue();
-                    logger.trace("函数 {} 的输出变量: {}", functionName, resultVariable);
-                } else if (!hasArguments && check(TokenType.IDENTIFIER) && peekNext() != null && peekNext().getType() == TokenType.RPAREN) {
-                    Token varToken = advance();
-                    potentialOutputVariable = varToken.getValue();
-                    logger.debug("函数 {} 的潜在输出变量: {}", functionName, potentialOutputVariable);
+                    outputVariables.add(varToken.getValue());
+                    logger.debug("函数 {} 的输出变量: {}", functionName, varToken.getValue());
                 } else {
                     arguments.add(parseExpression());
-                    hasArguments = true;
                 }
+                paramIndex++;
             } while (match(TokenType.COMMA));
         }
         
         consume(TokenType.RPAREN, "Expected ')' after arguments");
         
-        return new FunctionCallStatement(line, functionName, arguments, resultVariable, resultScope, potentialOutputVariable);
+        return new FunctionCallStatement(line, functionName, arguments, outputVariables, resultScope);
     }
     
     private Expression parseExpression() throws ParserException {
@@ -924,24 +950,28 @@ public class Parser implements IParser {
         consume(TokenType.LPAREN, "Expected '(' after function name");
         
         List<Expression> arguments = new ArrayList<>();
-        String resultVariable = null;
+        List<String> outputVariables = new ArrayList<>();
         TokenType resultScope = scopeToken.getType();
         
         if (!check(TokenType.RPAREN)) {
+            int paramIndex = 0;
             do {
-                if (check(TokenType.IDENTIFIER) && peekNext() != null && peekNext().getType() == TokenType.RPAREN) {
+                boolean isOutputParam = isOutputParameter(scopeToken.getValue() + operatorToken.getValue(), paramIndex);
+                
+                if (isOutputParam && check(TokenType.IDENTIFIER)) {
                     Token varToken = advance();
-                    resultVariable = varToken.getValue();
-                    logger.trace("数学函数 {} 的输出变量: {}", scopeToken.getValue() + operatorToken.getValue(), resultVariable);
+                    outputVariables.add(varToken.getValue());
+                    logger.trace("数学函数 {} 的输出变量: {}", scopeToken.getValue() + operatorToken.getValue(), varToken.getValue());
                 } else {
                     arguments.add(parseExpression());
                 }
+                paramIndex++;
             } while (match(TokenType.COMMA));
         }
         
         consume(TokenType.RPAREN, "Expected ')' after arguments");
         
         String functionName = scopeToken.getValue() + operatorToken.getValue();
-        return new FunctionCallStatement(scopeToken.getLine(), functionName, arguments, resultVariable, resultScope);
+        return new FunctionCallStatement(scopeToken.getLine(), functionName, arguments, outputVariables, resultScope);
     }
 }
