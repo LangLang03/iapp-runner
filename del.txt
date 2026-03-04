@@ -1,0 +1,57 @@
+不支持的函数 : 原因
+
+ssj : 设置或修改控件事件代码 - 需要Android界面控件支持
+ug : 获取控件属性 - 需要Android界面控件支持
+us : 设置控件属性 - 需要Android界面控件支持
+uigo : 跳转界面 - 需要Android界面管理支持
+utw : 弹出界面 - 需要Android对话框组件支持
+endutw : 关闭弹出界面 - 需要Android对话框组件支持
+end : 结束界面 - 需要Android界面管理支持
+ends : 显示桌面 - 需要Android系统接口支持
+bfm : 播放音频 - 需要音频播放器实现
+ula : 列表操作内容 - 需要Android列表控件支持
+uls : 列表显示内容 - 需要Android列表控件支持
+ulag : 获取列表内容数据 - 需要Android列表控件支持
+ulas : 更新列表内容数据 - 需要Android列表控件支持
+usms : 发送短信 - 需要Android短信功能支持
+ucall : 拨打电话 - 需要Android电话功能支持
+swh : 获取屏幕分辨率 - 需要Android屏幕接口支持
+uycl : 隐藏状态栏/修改状态栏颜色 - 需要Android状态栏接口支持
+ushsp : 设置横屏或竖屏 - 需要Android屏幕方向接口支持
+bfv : 播放视频 - 需要视频播放器实现
+ftz : 发送通知栏 - 需要Android通知功能支持
+uapp : 打开App应用或游戏 - 需要Android应用启动接口
+uapplist : 获取App列表 - 需要Android应用管理接口
+uapplistgo : 获取正在运行的App列表 - 需要Android任务管理接口
+uninapp : 卸载应用 - 需要Android应用管理接口
+nvw : 创建动态控件 - 需要Android动态UI支持
+uall : 获取子控件 - 需要Android控件树操作支持
+urvw : 移除控件 - 需要Android控件操作支持
+sbp : 图像分割 - 需要图像处理功能实现
+bfs : 保存图像 - 需要图像保存功能实现
+sdeg : 启动调试模式 - 需要调试日志系统实现
+tot : 获取控件图标 - 需要Android图像控件支持
+tzz : 图像旋转 - 需要图像处理功能实现
+tsf : 图像缩放 - 需要图像处理功能实现
+tfz : 图像反转 - 需要图像处理功能实现
+tcc : 获取图像变量尺寸 - 需要图像处理功能实现
+usjxm : 手机休眠 - 需要Android电源管理接口支持
+bfvs : 播放视频 - 需要视频播放控件实现
+bfvss : 播放视频控制 - 需要视频播放控件实现
+addv : 加载界面 - 需要Android界面加载支持
+gvs : 获取控件对象 - 需要Android控件操作支持
+nuibs : 背景选择器 - 需要Android背景绘制支持
+ngde : 背景调控器 - 需要Android背景绘制支持
+sit : 目标的设置 - 需要Android Intent操作支持
+uit : 目标的执行 - 需要Android Intent操作支持
+git : 目标获取参数 - 需要Android Intent操作支持
+uqr : 二维码扫描 - 需要二维码扫描功能实现
+zdp : dip转换px - 需要Android尺寸转换接口
+zpd : px转换dip - 需要Android尺寸转换接口
+zps : px转换sp - 需要Android尺寸转换接口
+zsp : sp转换px - 需要Android尺寸转换接口
+lan : 跳转界面动画 - 需要Android界面动画支持
+sjxx : 获取设备信息 - 需要Android设备信息接口
+simsi : 获取设备imsi - 需要Android设备标识接口
+simei : 获取设备imei - 需要Android设备标识接口
+endkeyboard : 强制隐藏虚拟键盘 - 需要Android软键盘接口支持
