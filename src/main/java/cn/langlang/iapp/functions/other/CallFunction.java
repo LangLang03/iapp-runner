@@ -5,7 +5,6 @@ import cn.langlang.iapp.runtime.FunctionException;
 import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class CallFunction extends AbstractFunction {
@@ -30,8 +29,8 @@ public class CallFunction extends AbstractFunction {
             throw new FunctionException("call function requires at least 2 arguments");
         }
         
-        String module = arguments.get(0) != null ? arguments.get(0).toString() : "";
-        String method = arguments.get(1) != null ? arguments.get(1).toString() : "";
+        String language = arguments.get(0) != null ? arguments.get(0).toString() : "";
+        String fullMethodName = arguments.get(1) != null ? arguments.get(1).toString() : "";
         
         Object[] args = null;
         if (arguments.size() > 2) {
@@ -41,15 +40,24 @@ public class CallFunction extends AbstractFunction {
             }
         }
         
+        String moduleName = "";
+        String methodName = fullMethodName;
+        
+        int dotIndex = fullMethodName.lastIndexOf('.');
+        if (dotIndex > 0) {
+            moduleName = fullMethodName.substring(0, dotIndex);
+            methodName = fullMethodName.substring(dotIndex + 1);
+        }
+        
         try {
-            return context.executeMjavaMethod(module, method, args);
+            return context.executeMjavaMethod(moduleName, methodName, args);
         } catch (Exception e) {
-            throw new FunctionException("Failed to call " + module + "." + method + ": " + e.getMessage(), e);
+            throw new FunctionException("Failed to call " + language + "." + fullMethodName + ": " + e.getMessage(), e);
         }
     }
     
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.STRING, ParamType.STRING, ParamType.OBJECT);
+        return types(ParamType.OUTPUT, ParamType.STRING, ParamType.STRING, ParamType.OBJECT);
     }
 }

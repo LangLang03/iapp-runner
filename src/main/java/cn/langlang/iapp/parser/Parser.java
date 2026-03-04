@@ -174,17 +174,23 @@ public class Parser implements IParser {
             return false;
         }
         
-        List<ParamType> paramTypes = function.getParamTypes();
-        if (paramTypes == null || paramTypes.isEmpty()) {
+        List<List<ParamType>> paramTypeLists = function.getParamTypeLists();
+        if (paramTypeLists == null || paramTypeLists.isEmpty()) {
             return false;
         }
         
-        if (paramIndex < paramTypes.size()) {
-            return paramTypes.get(paramIndex) == ParamType.OUTPUT;
-        }
-        
-        if (paramTypes.get(paramTypes.size() - 1) == ParamType.OUTPUT) {
-            return true;
+        for (List<ParamType> paramTypes : paramTypeLists) {
+            if (paramTypes == null || paramTypes.isEmpty()) {
+                continue;
+            }
+            
+            if (paramIndex < paramTypes.size()) {
+                if (paramTypes.get(paramIndex) == ParamType.OUTPUT) {
+                    return true;
+                }
+            } else if (paramTypes.get(paramTypes.size() - 1) == ParamType.OUTPUT) {
+                return true;
+            }
         }
         
         return false;
@@ -766,7 +772,7 @@ public class Parser implements IParser {
             if (value.contains(".")) {
                 return new NumberLiteralExpression(token.getLine(), Double.parseDouble(value));
             } else {
-                return new NumberLiteralExpression(token.getLine(), Long.parseLong(value));
+                return new NumberLiteralExpression(token.getLine(), Integer.parseInt(value));
             }
         }
         

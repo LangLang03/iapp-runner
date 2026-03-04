@@ -20,36 +20,63 @@ public class HsFunction extends AbstractFunction {
     
     @Override
     public int getMinParameters() {
-        return 2;
+        return 1;
     }
     
     @Override
     public int getMaxParameters() {
-        return 3;
+        return 6;
     }
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
         String urlStr = arguments.get(0) != null ? arguments.get(0).toString() : "";
-        String postData = arguments.get(1) != null ? arguments.get(1).toString() : "";
-        String charset = "UTF-8";
         
-        if (arguments.size() > 2) {
-            charset = arguments.get(2) != null ? arguments.get(2).toString() : "UTF-8";
+        String postData = null;
+        String charset = "UTF-8";
+        String cookie = null;
+        boolean autoCookie = false;
+        
+        if (arguments.size() > 1 && arguments.get(1) != null) {
+            postData = arguments.get(1).toString();
+        }
+        
+        if (arguments.size() > 2 && arguments.get(2) != null) {
+            charset = arguments.get(2).toString();
+        }
+        
+        if (arguments.size() > 3 && arguments.get(3) != null) {
+            cookie = arguments.get(3).toString();
+        }
+        
+        if (arguments.size() > 4 && arguments.get(4) instanceof Boolean) {
+            autoCookie = (Boolean) arguments.get(4);
         }
         
         try {
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setDoOutput(true);
+            
+            if (postData != null && !postData.isEmpty()) {
+                conn.setRequestMethod("POST");
+                conn.setDoOutput(true);
+                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            } else {
+                conn.setRequestMethod("GET");
+            }
+            
             conn.setConnectTimeout(10000);
             conn.setReadTimeout(10000);
-            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
             
-            try (DataOutputStream out = new DataOutputStream(conn.getOutputStream())) {
-                out.writeBytes(postData);
-                out.flush();
+            if (cookie != null) {
+                conn.setRequestProperty("Cookie", cookie);
+            }
+            
+            if (postData != null && !postData.isEmpty()) {
+                try (DataOutputStream out = new DataOutputStream(conn.getOutputStream())) {
+                    out.writeBytes(postData);
+                    out.flush();
+                }
             }
             
             int responseCode = conn.getResponseCode();
@@ -65,12 +92,22 @@ public class HsFunction extends AbstractFunction {
             }
             return "";
         } catch (Exception e) {
-            throw new FunctionException("HTTP POST request failed: " + e.getMessage(), e);
+            throw new FunctionException("HTTP request failed: " + e.getMessage(), e);
         }
     }
     
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.STRING, ParamType.STRING, ParamType.STRING);
+        return types(ParamType.STRING, ParamType.OUTPUT);
+    }
+    
+    @Override
+    public List<List<ParamType>> getParamTypeLists() {
+        return typeLists(
+            types(ParamType.STRING, ParamType.OUTPUT),
+            types(ParamType.STRING, ParamType.STRING, ParamType.STRING, ParamType.OUTPUT),
+            types(ParamType.STRING, ParamType.STRING, ParamType.STRING, ParamType.STRING, ParamType.OUTPUT),
+            types(ParamType.STRING, ParamType.STRING, ParamType.STRING, ParamType.STRING, ParamType.BOOLEAN, ParamType.OUTPUT)
+        );
     }
 }

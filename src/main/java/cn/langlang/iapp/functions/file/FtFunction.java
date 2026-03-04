@@ -16,29 +16,37 @@ public class FtFunction extends AbstractFunction {
     
     @Override
     public int getMinParameters() {
-        return 1;
+        return 2;
     }
     
     @Override
     public int getMaxParameters() {
-        return 1;
+        return 3;
     }
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        String path = arguments.get(0) != null ? arguments.get(0).toString() : "";
-        path = context.resolvePath(path);
+        String sourcePath = arguments.get(0) != null ? arguments.get(0).toString() : "";
+        String destPath = arguments.get(1) != null ? arguments.get(1).toString() : "";
+        sourcePath = context.resolvePath(sourcePath);
+        destPath = context.resolvePath(destPath);
         
         try {
-            File file = new File(path);
-            return file.lastModified();
+            File sourceFile = new File(sourcePath);
+            File destFile = new File(destPath);
+            
+            if (!sourceFile.exists()) {
+                return false;
+            }
+            
+            return sourceFile.renameTo(destFile);
         } catch (Exception e) {
-            return 0L;
+            return false;
         }
     }
     
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.STRING);
+        return types(ParamType.STRING, ParamType.STRING, ParamType.OUTPUT);
     }
 }

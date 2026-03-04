@@ -15,12 +15,12 @@ public class SjFunction extends AbstractFunction {
     
     @Override
     public int getMinParameters() {
-        return 1;
+        return 3;
     }
     
     @Override
     public int getMaxParameters() {
-        return Integer.MAX_VALUE;
+        return 4;
     }
     
     @Override

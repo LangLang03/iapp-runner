@@ -82,7 +82,8 @@ public class MjavaModuleLoader {
                 }
                 
                 String paramName = "_arg" + i;
-                interpreter.set(paramName, args[i]);
+                Object argValue = args[i];
+                interpreter.set(paramName, argValue);
                 call.append(paramName);
             }
         }

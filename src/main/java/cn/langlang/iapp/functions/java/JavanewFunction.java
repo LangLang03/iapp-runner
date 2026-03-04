@@ -109,6 +109,6 @@ public class JavanewFunction extends AbstractFunction {
     
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.OBJECT, ParamType.STRING, ParamType.OBJECT);
+        return types(ParamType.OUTPUT, ParamType.OBJECT);
     }
 }

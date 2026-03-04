@@ -41,16 +41,19 @@ public class TimeFunction extends AbstractFunction {
                     sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     break;
                 case 1:
-                    sdf = new SimpleDateFormat("yyyy-MM-dd");
+                    sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                     break;
                 case 2:
-                    sdf = new SimpleDateFormat("HH:mm:ss");
+                    sdf = new SimpleDateFormat("yyyy-MM-dd");
                     break;
                 case 3:
-                    sdf = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
+                    sdf = new SimpleDateFormat("HH:mm:ss");
                     break;
                 case 4:
-                    sdf = new SimpleDateFormat("yyyy年MM月dd日");
+                    sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+                    break;
+                case 5:
+                    sdf = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
                     break;
                 default:
                     sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -71,6 +74,16 @@ public class TimeFunction extends AbstractFunction {
     
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.OBJECT, ParamType.LONG, ParamType.OUTPUT);
+        return types(ParamType.OBJECT, ParamType.OUTPUT);
+    }
+    
+    @Override
+    public List<List<ParamType>> getParamTypeLists() {
+        return typeLists(
+            types(ParamType.OUTPUT),
+            types(ParamType.INT, ParamType.OUTPUT),
+            types(ParamType.STRING, ParamType.OUTPUT),
+            types(ParamType.STRING, ParamType.LONG, ParamType.OUTPUT)
+        );
     }
 }

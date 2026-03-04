@@ -21,7 +21,7 @@ public class Sutf8toFunction extends AbstractFunction {
     
     @Override
     public int getMaxParameters() {
-        return 4;
+        return 3;
     }
     
     @Override
@@ -45,6 +45,14 @@ public class Sutf8toFunction extends AbstractFunction {
     
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.STRING, ParamType.STRING, ParamType.BOOLEAN, ParamType.OUTPUT);
+        return types(ParamType.STRING, ParamType.OUTPUT);
+    }
+    
+    @Override
+    public List<List<ParamType>> getParamTypeLists() {
+        return typeLists(
+            types(ParamType.STRING, ParamType.OUTPUT),
+            types(ParamType.STRING, ParamType.STRING, ParamType.OUTPUT)
+        );
     }
 }

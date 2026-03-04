@@ -21,7 +21,7 @@ public class FsFunction extends AbstractFunction {
     
     @Override
     public int getMaxParameters() {
-        return 1;
+        return 2;
     }
     
     @Override
@@ -31,14 +31,17 @@ public class FsFunction extends AbstractFunction {
         
         try {
             File file = new File(path);
-            return file.delete();
+            if (file.exists() && file.isFile()) {
+                return file.length();
+            }
+            return -1L;
         } catch (Exception e) {
-            return false;
+            return -1L;
         }
     }
     
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.STRING);
+        return types(ParamType.STRING, ParamType.OUTPUT);
     }
 }

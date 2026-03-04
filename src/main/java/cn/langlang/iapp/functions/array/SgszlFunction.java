@@ -15,7 +15,7 @@ public class SgszlFunction extends AbstractFunction {
     
     @Override
     public int getMinParameters() {
-        return 2;
+        return 1;
     }
     
     @Override
@@ -26,51 +26,19 @@ public class SgszlFunction extends AbstractFunction {
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
         Object array = arguments.get(0);
-        int index = toInt(arguments.get(1));
         
         if (array instanceof Object[]) {
             Object[] arr = (Object[]) array;
-            if (index >= 0 && index < arr.length) {
-                Object val = arr[index];
-                if (val instanceof Number) {
-                    return ((Number) val).longValue();
-                }
-                try {
-                    return Long.parseLong(String.valueOf(val));
-                } catch (NumberFormatException e) {
-                    return 0L;
-                }
-            }
+            return (long) arr.length;
         } else if (array instanceof List) {
             List<?> list = (List<?>) array;
-            if (index >= 0 && index < list.size()) {
-                Object val = list.get(index);
-                if (val instanceof Number) {
-                    return ((Number) val).longValue();
-                }
-                try {
-                    return Long.parseLong(String.valueOf(val));
-                } catch (NumberFormatException e) {
-                    return 0L;
-                }
-            }
+            return (long) list.size();
         }
         return 0L;
     }
     
-    private int toInt(Object value) {
-        if (value instanceof Number) {
-            return ((Number) value).intValue();
-        }
-        try {
-            return Integer.parseInt(String.valueOf(value));
-        } catch (NumberFormatException e) {
-            return 0;
-        }
-    }
-    
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.ARRAY, ParamType.INT);
+        return types(ParamType.ARRAY, ParamType.OUTPUT);
     }
 }

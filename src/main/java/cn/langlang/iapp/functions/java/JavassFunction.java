@@ -72,6 +72,6 @@ public class JavassFunction extends AbstractFunction {
     
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.OBJECT, ParamType.OBJECT, ParamType.STRING, ParamType.OBJECT, ParamType.OUTPUT);
+        return types(ParamType.OUTPUT, ParamType.OBJECT, ParamType.OBJECT, ParamType.STRING, ParamType.OBJECT);
     }
 }

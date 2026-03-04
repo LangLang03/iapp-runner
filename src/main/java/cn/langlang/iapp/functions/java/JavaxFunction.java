@@ -46,7 +46,11 @@ public class JavaxFunction extends AbstractFunction {
                 throw new FunctionException("Class not found: " + classObj, e);
             }
         } else if (classObj == null) {
-            throw new FunctionException("Class parameter cannot be null");
+            if (instanceObj == null) {
+                throw new FunctionException("Both instance and class parameters cannot be null");
+            }
+            clazz = instanceObj.getClass();
+            targetInstance = instanceObj;
         } else {
             throw new FunctionException("Invalid class parameter");
         }
@@ -61,7 +65,7 @@ public class JavaxFunction extends AbstractFunction {
                 
                 Class<?> paramType = parseType(typeName);
                 paramTypes.add(paramType);
-                paramValues.add(value);
+                paramValues.add(convertValue(value, paramType));
             }
         }
         
@@ -99,6 +103,45 @@ public class JavaxFunction extends AbstractFunction {
         }
     }
     
+    private Object convertValue(Object value, Class<?> targetType) {
+        if (value == null) return null;
+        
+        if (targetType == int.class || targetType == Integer.class) {
+            if (value instanceof Number) return ((Number) value).intValue();
+            return Integer.parseInt(value.toString());
+        }
+        if (targetType == long.class || targetType == Long.class) {
+            if (value instanceof Number) return ((Number) value).longValue();
+            return Long.parseLong(value.toString());
+        }
+        if (targetType == short.class || targetType == Short.class) {
+            if (value instanceof Number) return ((Number) value).shortValue();
+            return Short.parseShort(value.toString());
+        }
+        if (targetType == byte.class || targetType == Byte.class) {
+            if (value instanceof Number) return ((Number) value).byteValue();
+            return Byte.parseByte(value.toString());
+        }
+        if (targetType == float.class || targetType == Float.class) {
+            if (value instanceof Number) return ((Number) value).floatValue();
+            return Float.parseFloat(value.toString());
+        }
+        if (targetType == double.class || targetType == Double.class) {
+            if (value instanceof Number) return ((Number) value).doubleValue();
+            return Double.parseDouble(value.toString());
+        }
+        if (targetType == boolean.class || targetType == Boolean.class) {
+            if (value instanceof Boolean) return value;
+            return Boolean.parseBoolean(value.toString());
+        }
+        if (targetType == char.class || targetType == Character.class) {
+            String s = value.toString();
+            return s.isEmpty() ? '\0' : s.charAt(0);
+        }
+        
+        return value;
+    }
+    
     private Method findMethod(Class<?> clazz, String methodName, List<Class<?>> paramTypes) throws NoSuchMethodException {
         try {
             return clazz.getMethod(methodName, paramTypes.toArray(new Class<?>[0]));
@@ -119,6 +162,6 @@ public class JavaxFunction extends AbstractFunction {
     
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.OBJECT, ParamType.OBJECT, ParamType.STRING, ParamType.STRING, ParamType.OBJECT);
+        return types(ParamType.OUTPUT, ParamType.OBJECT, ParamType.OBJECT, ParamType.STRING, ParamType.STRING, ParamType.OBJECT);
     }
 }

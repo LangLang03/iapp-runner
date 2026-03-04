@@ -42,7 +42,7 @@ public class FdirFunction extends AbstractFunction {
             case "external":
                 return System.getProperty("user.dir");
             default:
-                return context.getCurrentDirectory();
+                return context.resolvePath(type);
         }
     }
     
@@ -52,6 +52,14 @@ public class FdirFunction extends AbstractFunction {
     
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.STRING, ParamType.OUTPUT);
+        return types(ParamType.OUTPUT);
+    }
+    
+    @Override
+    public List<List<ParamType>> getParamTypeLists() {
+        return typeLists(
+            types(ParamType.OUTPUT),
+            types(ParamType.STRING, ParamType.OUTPUT)
+        );
     }
 }

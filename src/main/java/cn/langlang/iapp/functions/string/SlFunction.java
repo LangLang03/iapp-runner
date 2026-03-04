@@ -47,6 +47,14 @@ public class SlFunction extends AbstractFunction {
     
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.STRING, ParamType.STRING, ParamType.BOOLEAN, ParamType.OUTPUT);
+        return types(ParamType.STRING, ParamType.STRING, ParamType.OUTPUT);
+    }
+    
+    @Override
+    public List<List<ParamType>> getParamTypeLists() {
+        return typeLists(
+            types(ParamType.STRING, ParamType.STRING, ParamType.OUTPUT),
+            types(ParamType.STRING, ParamType.STRING, ParamType.BOOLEAN, ParamType.OUTPUT)
+        );
     }
 }

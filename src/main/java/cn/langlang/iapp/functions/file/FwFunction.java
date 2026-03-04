@@ -6,6 +6,9 @@ import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class FwFunction extends AbstractFunction {
@@ -21,7 +24,7 @@ public class FwFunction extends AbstractFunction {
     
     @Override
     public int getMaxParameters() {
-        return 3;
+        return 4;
     }
     
     @Override
@@ -30,20 +33,38 @@ public class FwFunction extends AbstractFunction {
         String content = arguments.get(1) != null ? arguments.get(1).toString() : "";
         path = context.resolvePath(path);
         
+        String charset = "UTF-8";
+        if (arguments.size() > 2 && arguments.get(2) != null) {
+            charset = arguments.get(2).toString();
+        }
+        
         try {
             File file = new File(path);
-            file.getParentFile().mkdirs();
-            java.io.FileWriter writer = new java.io.FileWriter(file);
-            writer.write(content);
-            writer.close();
+            File parentDir = file.getParentFile();
+            if (parentDir != null && !parentDir.exists()) {
+                parentDir.mkdirs();
+            }
+            
+            try (OutputStreamWriter writer = new OutputStreamWriter(
+                    new FileOutputStream(file), charset)) {
+                writer.write(content);
+            }
             return true;
         } catch (Exception e) {
-            throw new FunctionException("Failed to write file: " + path, e);
+            throw new FunctionException("Failed to write file: " + path + " - " + e.getMessage(), e);
         }
     }
     
     @Override
     public List<ParamType> getParamTypes() {
         return types(ParamType.STRING, ParamType.STRING, ParamType.OUTPUT);
+    }
+    
+    @Override
+    public List<List<ParamType>> getParamTypeLists() {
+        return typeLists(
+            types(ParamType.STRING, ParamType.STRING, ParamType.OUTPUT),
+            types(ParamType.STRING, ParamType.STRING, ParamType.STRING, ParamType.OUTPUT)
+        );
     }
 }
