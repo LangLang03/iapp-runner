@@ -28,6 +28,16 @@ application {
     applicationDefaultJvmArgs = ['-Xmx128m']
 }
 
+jar {
+    manifest {
+        attributes 'Main-Class': 'cn.langlang.iapp.Main'
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 test {
     useJUnitPlatform()
 }
