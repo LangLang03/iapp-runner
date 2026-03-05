@@ -326,7 +326,7 @@ public class REPL {
         System.out.println("变量:");
         for (String name : varNames) {
             IAppVariable var = script.getVariable(name);
-            Object value = var.getValue();
+            Object value = var.value();
             String valueStr = formatResult(value);
             if (valueStr.length() > 100) {
                 valueStr = valueStr.substring(0, 97) + "...";

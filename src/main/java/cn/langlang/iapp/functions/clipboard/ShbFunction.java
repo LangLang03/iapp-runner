@@ -5,12 +5,21 @@ import cn.langlang.iapp.runtime.FunctionException;
 import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.DataFlavor;
 import java.util.List;
 
 public class ShbFunction extends AbstractFunction {
+    private static final boolean IS_ANDROID;
+    
+    static {
+        boolean isAndroid = false;
+        try {
+            Class.forName("android.os.Build");
+            isAndroid = true;
+        } catch (ClassNotFoundException e) {
+        }
+        IS_ANDROID = isAndroid;
+    }
+    
     @Override
     public String getName() {
         return "shb";
@@ -23,14 +32,26 @@ public class ShbFunction extends AbstractFunction {
     
     @Override
     public int getMaxParameters() {
-        return 1;
+        return 0;
     }
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) {
+        if (IS_ANDROID) {
+            return "";
+        }
+        
         try {
-            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-            Object data = clipboard.getData(DataFlavor.stringFlavor);
+            Class<?> toolkitClass = Class.forName("java.awt.Toolkit");
+            Object toolkit = toolkitClass.getMethod("getDefaultToolkit").invoke(null);
+            
+            Class<?> clipboardClass = Class.forName("java.awt.datatransfer.Clipboard");
+            Object clipboard = toolkitClass.getMethod("getSystemClipboard").invoke(toolkit);
+            
+            Class<?> dataFlavorClass = Class.forName("java.awt.datatransfer.DataFlavor");
+            Object stringFlavor = dataFlavorClass.getField("stringFlavor").get(null);
+            
+            Object data = clipboardClass.getMethod("getData", dataFlavorClass).invoke(clipboard, stringFlavor);
             return data != null ? data.toString() : "";
         } catch (Exception e) {
             return "";
@@ -39,6 +60,6 @@ public class ShbFunction extends AbstractFunction {
     
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.OUTPUT);
+        return types();
     }
 }

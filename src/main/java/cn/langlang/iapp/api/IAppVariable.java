@@ -1,24 +1,26 @@
 package cn.langlang.iapp.api;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
-public class IAppVariable {
-    
+public record IAppVariable(String name, Object value, VariableScope scope) {
+
     public enum VariableScope {
         LOCAL("s"),
         INTERFACE("ss"),
         GLOBAL("sss");
-        
+
         private final String keyword;
-        
+
         VariableScope(String keyword) {
             this.keyword = keyword;
         }
-        
+
         public String getKeyword() {
             return keyword;
         }
-        
+
         public static VariableScope fromKeyword(String keyword) {
             if (keyword == null) return LOCAL;
             return switch (keyword) {
@@ -29,76 +31,60 @@ public class IAppVariable {
             };
         }
     }
-    
-    private final String name;
-    private final Object value;
-    private final VariableScope scope;
-    
+
     public IAppVariable(String name, Object value) {
         this(name, value, VariableScope.LOCAL);
     }
-    
+
     public IAppVariable(String name, Object value, VariableScope scope) {
         this.name = name;
         this.value = value;
         this.scope = scope != null ? scope : VariableScope.LOCAL;
     }
-    
-    public String getName() {
-        return name;
-    }
-    
-    public Object getValue() {
-        return value;
-    }
-    
-    public VariableScope getScope() {
-        return scope;
-    }
-    
+
     public boolean isNil() {
         return value == null;
     }
-    
+
     public boolean isString() {
         return value instanceof String;
     }
-    
+
     public boolean isNumber() {
         return value instanceof Number;
     }
-    
+
     public boolean isBoolean() {
         return value instanceof Boolean;
     }
-    
+
     public boolean isArray() {
         return value instanceof Object[];
     }
-    
+
     public boolean isList() {
         return value instanceof List;
     }
-    
+
     public Class<?> getType() {
         if (value == null) return null;
         return value.getClass();
     }
-    
+
     public String asString() {
         return asString(null);
     }
-    
+
     public String asString(String defaultValue) {
         if (value == null) return defaultValue;
         if (value instanceof String) return (String) value;
         return value.toString();
     }
-    
+
     public int asInt() {
         return asInt(0);
     }
-    
+
     public int asInt(int defaultValue) {
         if (value == null) return defaultValue;
         if (value instanceof Number) return ((Number) value).intValue();
@@ -111,11 +97,11 @@ public class IAppVariable {
         }
         return defaultValue;
     }
-    
+
     public long asLong() {
         return asLong(0L);
     }
-    
+
     public long asLong(long defaultValue) {
         if (value == null) return defaultValue;
         if (value instanceof Number) return ((Number) value).longValue();
@@ -128,11 +114,11 @@ public class IAppVariable {
         }
         return defaultValue;
     }
-    
+
     public double asDouble() {
         return asDouble(0.0);
     }
-    
+
     public double asDouble(double defaultValue) {
         if (value == null) return defaultValue;
         if (value instanceof Number) return ((Number) value).doubleValue();
@@ -145,11 +131,11 @@ public class IAppVariable {
         }
         return defaultValue;
     }
-    
+
     public boolean asBoolean() {
         return asBoolean(false);
     }
-    
+
     public boolean asBoolean(boolean defaultValue) {
         if (value == null) return defaultValue;
         if (value instanceof Boolean) return (Boolean) value;
@@ -162,7 +148,7 @@ public class IAppVariable {
         }
         return defaultValue;
     }
-    
+
     public Object[] asArray() {
         if (value == null) return new Object[0];
         if (value instanceof Object[]) return (Object[]) value;
@@ -172,20 +158,20 @@ public class IAppVariable {
         }
         return new Object[]{value};
     }
-    
+
     public List<?> asList() {
-        if (value == null) return java.util.Collections.emptyList();
+        if (value == null) return Collections.emptyList();
         if (value instanceof List) return (List<?>) value;
         if (value instanceof Object[]) {
-            return java.util.Arrays.asList((Object[]) value);
+            return Arrays.asList((Object[]) value);
         }
-        return java.util.Collections.singletonList(value);
+        return Collections.singletonList(value);
     }
-    
+
     public IAppValue toValue() {
         return IAppValue.valueOf(value);
     }
-    
+
     @Override
     public String toString() {
         return "IAppVariable{" +
@@ -194,7 +180,7 @@ public class IAppVariable {
                 ", scope=" + scope +
                 '}';
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -206,12 +192,5 @@ public class IAppVariable {
         }
         return false;
     }
-    
-    @Override
-    public int hashCode() {
-        int result = name.hashCode();
-        result = 31 * result + (value != null ? value.hashCode() : 0);
-        result = 31 * result + scope.hashCode();
-        return result;
-    }
+
 }
