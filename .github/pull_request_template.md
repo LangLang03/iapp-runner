@@ -28,11 +28,6 @@
 - [ ] 已手动测试 / Manually tested
 - [ ] 无需测试 / No tests needed
 
-## 截图 / Screenshots
-
-<!-- 如有 UI 变更，请添加截图 / Add screenshots if there are UI changes -->
-
-
 
 ## 检查清单 / Checklist
 
