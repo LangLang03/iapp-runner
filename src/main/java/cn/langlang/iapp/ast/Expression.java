@@ -16,11 +16,11 @@ public abstract class Expression {
     public abstract <T> T accept(ExpressionVisitor<T> visitor) throws InterpreterException;
     
     public interface ExpressionVisitor<T> {
-        T visitNumberLiteral(NumberLiteralExpression expr) throws InterpreterException;
-        T visitStringLiteral(StringLiteralExpression expr) throws InterpreterException;
-        T visitBooleanLiteral(BooleanLiteralExpression expr) throws InterpreterException;
-        T visitNullLiteral(NullLiteralExpression expr) throws InterpreterException;
-        T visitVariable(VariableExpression expr) throws InterpreterException;
+        T visitNumberLiteral(NumberLiteralExpression expr);
+        T visitStringLiteral(StringLiteralExpression expr);
+        T visitBooleanLiteral(BooleanLiteralExpression expr);
+        T visitNullLiteral(NullLiteralExpression expr);
+        T visitVariable(VariableExpression expr);
         T visitBinary(BinaryExpression expr) throws InterpreterException;
         T visitUnary(UnaryExpression expr) throws InterpreterException;
         T visitFunctionCall(FunctionCallExpression expr) throws InterpreterException;

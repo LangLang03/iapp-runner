@@ -6,7 +6,6 @@ import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.util.List;
 
 public class FiFunction extends AbstractFunction {
@@ -26,7 +25,7 @@ public class FiFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+    public Object call(RuntimeContext context, List<Object> arguments) {
         String path = arguments.get(0) != null ? arguments.get(0).toString() : "";
         path = context.resolvePath(path);
         

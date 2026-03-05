@@ -24,7 +24,7 @@ public class SlowerFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+    public Object call(RuntimeContext context, List<Object> arguments) {
         String str = arguments.get(0) != null ? arguments.get(0).toString() : "";
         return str.toLowerCase();
     }

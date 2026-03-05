@@ -27,7 +27,7 @@ public class FjFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+    public Object call(RuntimeContext context, List<Object> arguments) {
         String sourcePath = arguments.get(0) != null ? arguments.get(0).toString() : "";
         String zipPath = arguments.get(1) != null ? arguments.get(1).toString() : "";
         sourcePath = context.resolvePath(sourcePath);
@@ -61,6 +61,8 @@ public class FjFunction extends AbstractFunction {
                 zipFile(source, "", zos);
             }
             return true;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
     

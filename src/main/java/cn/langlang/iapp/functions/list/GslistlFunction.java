@@ -24,7 +24,7 @@ public class GslistlFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+    public Object call(RuntimeContext context, List<Object> arguments) {
         Object list = arguments.get(0);
         if (list instanceof List) {
             return (long) ((List<?>) list).size();

@@ -27,7 +27,7 @@ public class SxbFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+    public Object call(RuntimeContext context, List<Object> arguments) {
         try {
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             return clipboard.getData(DataFlavor.stringFlavor);

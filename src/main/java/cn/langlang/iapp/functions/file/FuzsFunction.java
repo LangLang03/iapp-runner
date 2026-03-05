@@ -27,7 +27,7 @@ public class FuzsFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+    public Object call(RuntimeContext context, List<Object> arguments) {
         String zipPath = arguments.get(0) != null ? arguments.get(0).toString() : "";
         String destPath = arguments.get(1) != null ? arguments.get(1).toString() : "";
         zipPath = context.resolvePath(zipPath);

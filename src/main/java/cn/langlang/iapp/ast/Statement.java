@@ -22,10 +22,10 @@ public abstract class Statement {
         T visitWhile(WhileStatement stmt) throws InterpreterException;
         T visitFor(ForStatement stmt) throws InterpreterException;
         T visitFunctionCall(FunctionCallStatement stmt) throws InterpreterException;
-        T visitBreak(BreakStatement stmt) throws InterpreterException;
-        T visitEndCode(EndCodeStatement stmt) throws InterpreterException;
-        T visitFunctionDefinition(FunctionDefinitionStatement stmt) throws InterpreterException;
-        T visitThread(ThreadStatement stmt) throws InterpreterException;
+        T visitBreak(BreakStatement stmt);
+        T visitEndCode(EndCodeStatement stmt);
+        T visitFunctionDefinition(FunctionDefinitionStatement stmt);
+        T visitThread(ThreadStatement stmt);
         T visitBlock(BlockStatement stmt) throws InterpreterException;
     }
 }

@@ -395,12 +395,12 @@ public class Parser implements IParser {
         throw new ParserException("for 更新语句需要标识符", identifier.getLine(), identifier.getColumn());
     }
     
-    private Statement parseBreakStatement() throws ParserException {
+    private Statement parseBreakStatement() {
         Token breakToken = advance();
         return new BreakStatement(breakToken.getLine());
     }
     
-    private Statement parseEndCodeStatement() throws ParserException {
+    private Statement parseEndCodeStatement() {
         Token endCodeToken = advance();
         return new EndCodeStatement(endCodeToken.getLine());
     }

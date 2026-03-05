@@ -24,7 +24,7 @@ public class TwFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+    public Object call(RuntimeContext context, List<Object> arguments) {
         Object message = arguments.get(0);
         System.out.println("[TW] " + (message != null ? message.toString() : "null"));
         return null;

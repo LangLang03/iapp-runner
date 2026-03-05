@@ -25,7 +25,7 @@ public class SlFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+    public Object call(RuntimeContext context, List<Object> arguments) {
         String source = toString(arguments.get(0));
         String delimiter = toString(arguments.get(1));
         

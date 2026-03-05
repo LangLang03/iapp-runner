@@ -32,7 +32,7 @@ public class SranFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+    public Object call(RuntimeContext context, List<Object> arguments) {
         int min = toInt(arguments.get(0));
         int max = toInt(arguments.get(1));
         

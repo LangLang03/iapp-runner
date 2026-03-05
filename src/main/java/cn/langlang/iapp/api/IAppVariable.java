@@ -21,12 +21,12 @@ public class IAppVariable {
         
         public static VariableScope fromKeyword(String keyword) {
             if (keyword == null) return LOCAL;
-            switch (keyword) {
-                case "s": return LOCAL;
-                case "ss": return INTERFACE;
-                case "sss": return GLOBAL;
-                default: return LOCAL;
-            }
+            return switch (keyword) {
+                case "s" -> LOCAL;
+                case "ss" -> INTERFACE;
+                case "sss" -> GLOBAL;
+                default -> LOCAL;
+            };
         }
     }
     

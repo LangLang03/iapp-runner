@@ -231,10 +231,9 @@ public class Lexer implements ILexer {
         }
         
         if (!isAtEnd() && peek() == '.' && isDigit(peekNext())) {
-            value.append(advance());
-            while (!isAtEnd() && isDigit(peek())) {
+            do {
                 value.append(advance());
-            }
+            } while (!isAtEnd() && isDigit(peek()));
         }
         
         return new Token(TokenType.NUMBER, value.toString(), startLine, startColumn);

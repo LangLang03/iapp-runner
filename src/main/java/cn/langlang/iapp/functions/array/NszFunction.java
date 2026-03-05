@@ -24,7 +24,7 @@ public class NszFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+    public Object call(RuntimeContext context, List<Object> arguments) {
         int size = toInt(arguments.get(0));
         return new Object[size];
     }

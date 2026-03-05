@@ -5,7 +5,6 @@ import cn.langlang.iapp.runtime.FunctionException;
 import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SsszFunction extends AbstractFunction {
@@ -25,13 +24,12 @@ public class SsszFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+    public Object call(RuntimeContext context, List<Object> arguments) {
         Object array = arguments.get(0);
         int index = toInt(arguments.get(1));
         Object value = arguments.get(2);
         
-        if (array instanceof Object[]) {
-            Object[] arr = (Object[]) array;
+        if (array instanceof Object[] arr) {
             if (index >= 0 && index < arr.length) {
                 arr[index] = value;
             }

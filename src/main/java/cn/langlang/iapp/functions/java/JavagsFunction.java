@@ -6,7 +6,6 @@ import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.List;
 
 public class JavagsFunction extends AbstractFunction {

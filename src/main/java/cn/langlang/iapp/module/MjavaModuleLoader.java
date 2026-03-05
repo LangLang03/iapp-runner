@@ -5,8 +5,6 @@ import bsh.Interpreter;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class MjavaModuleLoader {
     private final Map<String, String> loadedModules;
@@ -65,10 +63,8 @@ public class MjavaModuleLoader {
     }
     
     private String wrapModuleCode(String moduleName, String content) {
-        StringBuilder wrapped = new StringBuilder();
-        wrapped.append("// Module: ").append(moduleName).append("\n");
-        wrapped.append(content);
-        return wrapped.toString();
+        return "// Module: " + moduleName + "\n" +
+                content;
     }
     
     public Object executeMethod(String moduleName, String methodName, Object[] args, Interpreter interpreter) throws Exception {

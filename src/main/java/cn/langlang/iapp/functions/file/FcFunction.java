@@ -8,6 +8,7 @@ import cn.langlang.iapp.runtime.RuntimeContext;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 public class FcFunction extends AbstractFunction {
@@ -27,7 +28,7 @@ public class FcFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+    public Object call(RuntimeContext context, List<Object> arguments) {
         String sourcePath = arguments.get(0) != null ? arguments.get(0).toString() : "";
         String destPath = arguments.get(1) != null ? arguments.get(1).toString() : "";
         sourcePath = context.resolvePath(sourcePath);
@@ -65,6 +66,9 @@ public class FcFunction extends AbstractFunction {
                 fos.write(buffer, 0, bytesRead);
             }
             return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
         }
     }
     

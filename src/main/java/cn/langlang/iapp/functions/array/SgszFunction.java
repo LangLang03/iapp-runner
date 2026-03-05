@@ -24,17 +24,15 @@ public class SgszFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+    public Object call(RuntimeContext context, List<Object> arguments) {
         Object array = arguments.get(0);
         int index = toInt(arguments.get(1));
         
-        if (array instanceof Object[]) {
-            Object[] arr = (Object[]) array;
+        if (array instanceof Object[] arr) {
             if (index >= 0 && index < arr.length) {
                 return arr[index];
             }
-        } else if (array instanceof List) {
-            List<?> list = (List<?>) array;
+        } else if (array instanceof List<?> list) {
             if (index >= 0 && index < list.size()) {
                 return list.get(index);
             }

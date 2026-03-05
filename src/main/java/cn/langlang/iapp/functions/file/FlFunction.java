@@ -26,7 +26,7 @@ public class FlFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+    public Object call(RuntimeContext context, List<Object> arguments) {
         String path = arguments.get(0) != null ? arguments.get(0).toString() : "";
         path = context.resolvePath(path);
         

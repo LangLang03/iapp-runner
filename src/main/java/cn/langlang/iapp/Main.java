@@ -1,8 +1,6 @@
 package cn.langlang.iapp;
 
-import cn.langlang.iapp.api.IAppFunction;
 import cn.langlang.iapp.api.IAppScript;
-import cn.langlang.iapp.api.IAppVariable;
 import cn.langlang.iapp.repl.REPL;
 
 import java.io.File;

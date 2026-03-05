@@ -24,7 +24,7 @@ public class SlofFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+    public Object call(RuntimeContext context, List<Object> arguments) {
         String source = arguments.get(0) != null ? arguments.get(0).toString() : "";
         String target = arguments.get(1) != null ? arguments.get(1).toString() : "";
         int fromIndex = source.length() - 1;

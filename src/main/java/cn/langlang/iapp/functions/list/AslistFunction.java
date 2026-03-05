@@ -26,7 +26,7 @@ public class AslistFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+    public Object call(RuntimeContext context, List<Object> arguments) {
         Object array = arguments.get(0);
         if (array instanceof Object[]) {
             return new ArrayList<>(Arrays.asList((Object[]) array));

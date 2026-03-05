@@ -10,7 +10,6 @@ import cn.langlang.iapp.lexer.Token;
 import cn.langlang.iapp.lexer.TokenType;
 import cn.langlang.iapp.parser.Parser;
 import cn.langlang.iapp.parser.ParserException;
-import cn.langlang.iapp.runtime.FunctionRegistry;
 import cn.langlang.iapp.runtime.IFunction;
 import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
@@ -20,7 +19,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,14 +27,11 @@ public class IAppScript {
     
     private final RuntimeContext context;
     private final Interpreter interpreter;
-    private final Lexer lexer;
-    private Program loadedProgram;
     private String loadedSource;
     
     private IAppScript(RuntimeContext context) {
         this.context = context != null ? context : new RuntimeContext();
-        this.interpreter = new Interpreter(this.context);
-        this.lexer = new Lexer("");
+        this.interpreter = new Interpreter();
     }
     
     public static IAppScript create() {
@@ -52,7 +47,6 @@ public class IAppScript {
             throw new IAppScriptException("源码不能为空");
         }
         this.loadedSource = source;
-        this.loadedProgram = null;
         return this;
     }
     
@@ -71,8 +65,7 @@ public class IAppScript {
         }
         
         this.loadedSource = content;
-        this.loadedProgram = null;
-        
+
         if (context.getCurrentDirectory() == null || context.getCurrentDirectory().isEmpty()) {
             context.setCurrentDirectory(file.getParent());
         }
@@ -174,7 +167,7 @@ public class IAppScript {
             throw new IAppScriptException("函数不能为空");
         }
         
-        IFunction wrappedFunction = new IAppFunctionAdapter(function, context);
+        IFunction wrappedFunction = new IAppFunctionAdapter(function);
         context.getFunctionRegistry().registerFunction(wrappedFunction);
         return this;
     }
@@ -215,18 +208,12 @@ public class IAppScript {
             throw new IAppScriptException("变量名不能为空");
         }
         
-        TokenType tokenScope;
-        switch (scope) {
-            case INTERFACE:
-                tokenScope = TokenType.KEYWORD_SS;
-                break;
-            case GLOBAL:
-                tokenScope = TokenType.KEYWORD_SSS;
-                break;
-            default:
-                tokenScope = TokenType.KEYWORD_S;
-        }
-        
+        TokenType tokenScope = switch (scope) {
+            case INTERFACE -> TokenType.KEYWORD_SS;
+            case GLOBAL -> TokenType.KEYWORD_SSS;
+            default -> TokenType.KEYWORD_S;
+        };
+
         context.setVariable(name, value, tokenScope);
         return this;
     }
@@ -248,11 +235,8 @@ public class IAppScript {
     }
     
     public Set<String> getVariableNames() {
-        Set<String> names = new HashSet<>();
-        
-        for (String name : context.getVariableManager().getLocalVariables().keySet()) {
-            names.add(name);
-        }
+
+        Set<String> names = new HashSet<>(context.getVariableManager().getLocalVariables().keySet());
         
         for (String name : context.getVariableManager().getInterfaceVariables().keySet()) {
             names.add("ss." + name);
@@ -315,7 +299,6 @@ public class IAppScript {
     public IAppScript reset() {
         context.resetEndCodeRequest();
         context.getVariableManager().clearLocalVariables();
-        loadedProgram = null;
         loadedSource = null;
         return this;
     }
@@ -342,55 +325,48 @@ public class IAppScript {
         }
         return IAppVariable.VariableScope.LOCAL;
     }
-    
-    private static class IAppFunctionAdapter implements IFunction {
-        private final IAppFunction function;
-        private final RuntimeContext context;
-        
-        IAppFunctionAdapter(IAppFunction function, RuntimeContext context) {
-            this.function = function;
-            this.context = context;
-        }
-        
+
+    private record IAppFunctionAdapter(IAppFunction function) implements IFunction {
+
         @Override
         public String getName() {
-            return function.getName();
-        }
-        
+                return function.getName();
+            }
+
         @Override
         public int getMinParameters() {
-            return function.getMinParameters();
-        }
-        
+                return function.getMinParameters();
+            }
+
         @Override
         public int getMaxParameters() {
-            return function.getMaxParameters();
-        }
-        
+                return function.getMaxParameters();
+            }
+
         @Override
         public Object call(RuntimeContext context, List<Object> arguments) {
             Object[] args = arguments != null ? arguments.toArray() : new Object[0];
             return function.call(args);
         }
-        
+
         @Override
         public boolean isSupported() {
-            return function.isSupported();
-        }
-        
+                return function.isSupported();
+            }
+
         @Override
         public String getUnsupportedReason() {
-            return function.getUnsupportedReason();
-        }
-        
+                return function.getUnsupportedReason();
+            }
+
         @Override
         public List<ParamType> getParamTypes() {
-            return function.getParamTypes();
-        }
-        
+                return function.getParamTypes();
+            }
+
         @Override
         public List<List<ParamType>> getParamTypeLists() {
-            return function.getParamTypeLists();
-        }
+                return function.getParamTypeLists();
+            }
     }
 }

@@ -24,10 +24,9 @@ public class DslistFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+    public Object call(RuntimeContext context, List<Object> arguments) {
         Object list = arguments.get(0);
-        if (list instanceof List) {
-            List<?> lst = (List<?>) list;
+        if (list instanceof List<?> lst) {
             if (arguments.size() > 1) {
                 int index = toInt(arguments.get(1));
                 if (index >= 0 && index < lst.size()) {

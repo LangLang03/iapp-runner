@@ -24,26 +24,20 @@ public class FdirFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+    public Object call(RuntimeContext context, List<Object> arguments) {
         if (arguments.isEmpty()) {
             return context.getCurrentDirectory();
         }
         
         String type = toString(arguments.get(0));
-        switch (type.toLowerCase()) {
-            case "app":
-                return context.getCurrentDirectory();
-            case "data":
-                return context.getCurrentDirectory() + "/data";
-            case "cache":
-                return context.getCurrentDirectory() + "/cache";
-            case "files":
-                return context.getCurrentDirectory() + "/files";
-            case "external":
-                return System.getProperty("user.dir");
-            default:
-                return context.resolvePath(type);
-        }
+        return switch (type.toLowerCase()) {
+            case "app" -> context.getCurrentDirectory();
+            case "data" -> context.getCurrentDirectory() + "/data";
+            case "cache" -> context.getCurrentDirectory() + "/cache";
+            case "files" -> context.getCurrentDirectory() + "/files";
+            case "external" -> System.getProperty("user.dir");
+            default -> context.resolvePath(type);
+        };
     }
     
     private String toString(Object value) {

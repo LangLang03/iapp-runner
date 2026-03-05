@@ -1,10 +1,7 @@
 package cn.langlang.iapp.interpreter;
 
 import cn.langlang.iapp.ast.*;
-import cn.langlang.iapp.ast.Expression;
-import cn.langlang.iapp.ast.Statement;
 import cn.langlang.iapp.lexer.TokenType;
-import cn.langlang.iapp.runtime.FunctionRegistry;
 import cn.langlang.iapp.runtime.IFunction;
 import cn.langlang.iapp.runtime.RuntimeContext;
 import org.slf4j.Logger;
@@ -15,12 +12,7 @@ import java.util.List;
 
 public class Interpreter implements IInterpreter {
     private static final Logger logger = LoggerFactory.getLogger(Interpreter.class);
-    private final RuntimeContext context;
-    
-    public Interpreter(RuntimeContext context) {
-        this.context = context;
-    }
-    
+
     @Override
     public Object execute(Program program, RuntimeContext context) throws InterpreterException {
         Object result = null;
@@ -266,8 +258,7 @@ public class Interpreter implements IInterpreter {
 
                     if (stmt.hasOutputVariables()) {
                         List<String> outputVars = stmt.getOutputVariables();
-                        for (int i = 0; i < outputVars.size(); i++) {
-                            String varName = outputVars.get(i);
+                        for (String varName : outputVars) {
                             context.setVariable(varName, result, stmt.getResultScope());
                         }
                     }
@@ -465,13 +456,11 @@ public class Interpreter implements IInterpreter {
     }
     
     private boolean isTruthy(Object value) {
-        return switch (value) {
-            case null -> false;
-            case Boolean b -> b;
-            case Number number -> number.doubleValue() != 0;
-            case String s -> !s.isEmpty();
-            default -> true;
-        };
+        if (value == null) return false;
+        if (value instanceof Boolean) return (Boolean) value;
+        if (value instanceof Number) return ((Number) value).doubleValue() != 0;
+        if (value instanceof String) return !((String) value).isEmpty();
+        return true;
     }
     
     private boolean isEqual(Object a, Object b) {

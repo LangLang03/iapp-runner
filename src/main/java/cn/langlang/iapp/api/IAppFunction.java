@@ -3,12 +3,10 @@ package cn.langlang.iapp.api;
 import cn.langlang.iapp.ast.FunctionDefinitionStatement;
 import cn.langlang.iapp.interpreter.Interpreter;
 import cn.langlang.iapp.interpreter.InterpreterException;
-import cn.langlang.iapp.runtime.FunctionException;
 import cn.langlang.iapp.runtime.IFunction;
 import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -111,8 +109,6 @@ public class IAppFunction {
             throw new IAppScriptException("函数 '" + name + "' 没有实现");
         } catch (IAppScriptException e) {
             throw e;
-        } catch (FunctionException e) {
-            throw new IAppScriptException("函数 '" + name + "' 执行错误: " + e.getMessage(), e);
         } catch (Exception e) {
             throw new IAppScriptException("函数 '" + name + "' 执行错误: " + e.getMessage(), e);
         }
@@ -130,7 +126,7 @@ public class IAppFunction {
                 context.setVariable(paramName, argValue, cn.langlang.iapp.lexer.TokenType.KEYWORD_S);
             }
             
-            Interpreter interpreter = new Interpreter(context);
+            Interpreter interpreter = new Interpreter();
             Object result = null;
             
             for (cn.langlang.iapp.ast.Statement stmt : userFunctionDef.getBody()) {

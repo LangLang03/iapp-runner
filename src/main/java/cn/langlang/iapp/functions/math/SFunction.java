@@ -5,7 +5,6 @@ import cn.langlang.iapp.runtime.FunctionException;
 import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class SFunction extends AbstractFunction {

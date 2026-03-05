@@ -7,7 +7,6 @@ import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class JavaxFunction extends AbstractFunction {

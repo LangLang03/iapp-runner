@@ -24,7 +24,7 @@ public class SsFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+    public Object call(RuntimeContext context, List<Object> arguments) {
         Object value = arguments.get(0);
         return value != null ? value.toString() : "";
     }
