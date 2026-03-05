@@ -4,7 +4,7 @@
 
 ![Java](https://img.shields.io/badge/Java-25+-orange?style=for-the-badge&logo=openjdk)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-blue?style=for-the-badge)
-![License](https://img.shields.io/badge/License-Apache%202.0-green?style=for-the-badge)
+![License](https://img.shields.io/badge/License-GPL%203.0-blue?style=for-the-badge)
 
 **基于裕语言 V3 语法的 跨平台解释器**
 
@@ -319,7 +319,7 @@ src/main/java/cn/langlang/iapp/
 
 ## 开源协议
 
-本项目基于 [Apache 2.0](LICENSE) 协议开源。
+本项目基于 [GPL 3.0](LICENSE) 协议开源。
 
 ---
 
@@ -342,4 +342,4 @@ Some Android-specific functions are not supported. See [del.txt](del.txt) for de
 
 ### License
 
-Apache 2.0
+GPL 3.0
