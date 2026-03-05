@@ -20,7 +20,7 @@ public class GslistFunction extends AbstractFunction {
     
     @Override
     public int getMaxParameters() {
-        return 2;
+        return 3;
     }
     
     @Override
@@ -50,6 +50,6 @@ public class GslistFunction extends AbstractFunction {
     
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.OBJECT, ParamType.INT);
+        return types(ParamType.OBJECT, ParamType.INT, ParamType.OUTPUT);
     }
 }

@@ -20,18 +20,22 @@ public class SiofFunction extends AbstractFunction {
     
     @Override
     public int getMaxParameters() {
-        return 3;
+        return 4;
     }
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
         String source = arguments.get(0) != null ? arguments.get(0).toString() : "";
         String target = arguments.get(1) != null ? arguments.get(1).toString() : "";
-        return (long) source.indexOf(target);
+        int fromIndex = 0;
+        if (arguments.size() > 2 && arguments.get(2) instanceof Number) {
+            fromIndex = ((Number) arguments.get(2)).intValue();
+        }
+        return (long) source.indexOf(target, fromIndex);
     }
     
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.STRING, ParamType.STRING, ParamType.OUTPUT);
+        return types(ParamType.STRING, ParamType.STRING, ParamType.INT, ParamType.OUTPUT);
     }
 }

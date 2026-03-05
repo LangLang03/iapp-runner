@@ -3,6 +3,7 @@ package cn.langlang.iapp.runtime;
 import cn.langlang.iapp.lexer.TokenType;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
@@ -79,6 +80,26 @@ public class VariableManager {
     public void popScope() {
         if (scopeStack.size() > 1) {
             scopeStack.pop();
+        }
+    }
+    
+    public void popScopeAndPromoteVariables() {
+        if (scopeStack.size() > 1) {
+            scopeStack.pop();
+        }
+    }
+    
+    public void promoteVariableToParent(String name, Object value) {
+        if (scopeStack.size() > 1) {
+            scopeStack.get(scopeStack.size() - 2).put(name, value);
+        }
+    }
+    
+    public void setVariableInParentScope(String name, Object value) {
+        if (scopeStack.size() > 1) {
+            scopeStack.get(scopeStack.size() - 2).put(name, value);
+        } else {
+            scopeStack.peek().put(name, value);
         }
     }
     

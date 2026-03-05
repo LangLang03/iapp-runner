@@ -41,6 +41,5 @@ bin/
 
 ### Mac OS ###
 .DS_Store
-test_scripts/
 .trae/
 iapp.txt

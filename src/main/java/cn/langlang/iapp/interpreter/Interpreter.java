@@ -254,7 +254,7 @@ public class Interpreter implements IInterpreter {
                     
                     if (context.hasUserFunction(functionName)) {
                         FunctionDefinitionStatement funcDef = context.getUserFunction(functionName);
-                        result = executeUserFunction(funcDef, args, context);
+                        result = executeUserFunction(funcDef, args, context, stmt.getOutputVariables());
                     } else {
                         IFunction function = context.getFunctionRegistry().getFunction(functionName);
                         if (function != null) {
@@ -477,6 +477,31 @@ public class Interpreter implements IInterpreter {
     private boolean isEqual(Object a, Object b) {
         if (a == null && b == null) return true;
         if (a == null || b == null) return false;
+        
+        if (a instanceof Number && b instanceof Number) {
+            return Double.compare(((Number) a).doubleValue(), ((Number) b).doubleValue()) == 0;
+        }
+        
+        if (a instanceof Number && b instanceof String) {
+            try {
+                double aVal = ((Number) a).doubleValue();
+                double bVal = Double.parseDouble((String) b);
+                return Double.compare(aVal, bVal) == 0;
+            } catch (NumberFormatException e) {
+                return a.toString().equals(b);
+            }
+        }
+        
+        if (a instanceof String && b instanceof Number) {
+            try {
+                double aVal = Double.parseDouble((String) a);
+                double bVal = ((Number) b).doubleValue();
+                return Double.compare(aVal, bVal) == 0;
+            } catch (NumberFormatException e) {
+                return a.equals(b.toString());
+            }
+        }
+        
         return a.equals(b);
     }
     
@@ -561,7 +586,7 @@ public class Interpreter implements IInterpreter {
         return -n.doubleValue();
     }
     
-    private Object executeUserFunction(FunctionDefinitionStatement funcDef, List<Object> args, RuntimeContext context) throws InterpreterException {
+    private Object executeUserFunction(FunctionDefinitionStatement funcDef, List<Object> args, RuntimeContext context, List<String> outputVariables) throws InterpreterException {
         context.getVariableManager().pushScope();
         
         try {
@@ -572,10 +597,14 @@ public class Interpreter implements IInterpreter {
                 context.setVariable(paramName, argValue, TokenType.KEYWORD_S);
             }
             
-            Object result = null;
             for (Statement stmt : funcDef.getBody()) {
                 if (context.isEndCodeRequested()) break;
-                result = executeStatement(stmt, context);
+                executeStatement(stmt, context);
+            }
+            
+            Object result = null;
+            if (outputVariables != null && !outputVariables.isEmpty()) {
+                result = context.getVariable(outputVariables.get(0));
             }
             
             return result;

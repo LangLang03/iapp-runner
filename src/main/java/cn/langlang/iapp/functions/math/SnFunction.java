@@ -27,12 +27,12 @@ public class SnFunction extends AbstractFunction {
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
         Object value = arguments.get(0);
         if (value instanceof Number) {
-            return -((Number) value).doubleValue();
+            return ((Number) value).doubleValue();
         }
         try {
-            return -Double.parseDouble(String.valueOf(value));
+            return Double.parseDouble(String.valueOf(value));
         } catch (NumberFormatException e) {
-            return 0;
+            return 0.0;
         }
     }
     

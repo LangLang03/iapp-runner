@@ -22,16 +22,16 @@ public class AslistFunction extends AbstractFunction {
     
     @Override
     public int getMaxParameters() {
-        return 1;
+        return 2;
     }
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
         Object array = arguments.get(0);
         if (array instanceof Object[]) {
-            return Arrays.asList((Object[]) array);
+            return new ArrayList<>(Arrays.asList((Object[]) array));
         } else if (array instanceof List) {
-            return array;
+            return new ArrayList<>((List<?>) array);
         }
         List<Object> result = new ArrayList<>();
         result.add(array);
@@ -40,6 +40,6 @@ public class AslistFunction extends AbstractFunction {
     
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.ARRAY);
+        return types(ParamType.ARRAY, ParamType.OUTPUT);
     }
 }

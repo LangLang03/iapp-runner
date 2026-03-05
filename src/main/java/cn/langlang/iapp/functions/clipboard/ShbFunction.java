@@ -7,7 +7,7 @@ import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.DataFlavor;
 import java.util.List;
 
 public class ShbFunction extends AbstractFunction {
@@ -18,7 +18,7 @@ public class ShbFunction extends AbstractFunction {
     
     @Override
     public int getMinParameters() {
-        return 1;
+        return 0;
     }
     
     @Override
@@ -28,20 +28,17 @@ public class ShbFunction extends AbstractFunction {
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
-        String text = arguments.get(0) != null ? arguments.get(0).toString() : "";
-        
         try {
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-            StringSelection selection = new StringSelection(text);
-            clipboard.setContents(selection, null);
-            return true;
+            Object data = clipboard.getData(DataFlavor.stringFlavor);
+            return data != null ? data.toString() : "";
         } catch (Exception e) {
-            throw new FunctionException("设置剪贴板失败: " + e.getMessage(), e);
+            return "";
         }
     }
     
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.STRING);
+        return types(ParamType.OUTPUT);
     }
 }

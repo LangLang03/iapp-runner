@@ -20,20 +20,39 @@ public class DslistFunction extends AbstractFunction {
     
     @Override
     public int getMaxParameters() {
-        return 1;
+        return 2;
     }
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
         Object list = arguments.get(0);
         if (list instanceof List) {
-            ((List<?>) list).clear();
+            List<?> lst = (List<?>) list;
+            if (arguments.size() > 1) {
+                int index = toInt(arguments.get(1));
+                if (index >= 0 && index < lst.size()) {
+                    lst.remove(index);
+                }
+            } else {
+                lst.clear();
+            }
         }
         return null;
     }
     
+    private int toInt(Object value) {
+        if (value instanceof Number) {
+            return ((Number) value).intValue();
+        }
+        try {
+            return Integer.parseInt(String.valueOf(value));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+    
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.OBJECT);
+        return types(ParamType.OBJECT, ParamType.INT);
     }
 }

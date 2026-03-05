@@ -28,11 +28,22 @@ public class SFunction extends AbstractFunction {
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
         Object arg = arguments.get(0);
         
+        if (arg instanceof Boolean) {
+            return arg;
+        }
+        
         if (arg instanceof Number) {
             return ((Number) arg).longValue();
         }
         
         String expression = toString(arg);
+        
+        if (expression.equals("true")) {
+            return true;
+        }
+        if (expression.equals("false")) {
+            return false;
+        }
         
         try {
             return Long.parseLong(expression);

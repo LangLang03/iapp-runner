@@ -22,7 +22,7 @@ public class FiFunction extends AbstractFunction {
     
     @Override
     public int getMaxParameters() {
-        return 1;
+        return 2;
     }
     
     @Override
@@ -40,6 +40,6 @@ public class FiFunction extends AbstractFunction {
     
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.STRING);
+        return types(ParamType.STRING, ParamType.OUTPUT);
     }
 }

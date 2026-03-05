@@ -39,26 +39,25 @@ public class TimeFunction extends AbstractFunction {
             switch (type) {
                 case 0:
                     sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                    break;
+                    return sdf.format(new Date());
                 case 1:
                     sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-                    break;
+                    return sdf.format(new Date());
                 case 2:
                     sdf = new SimpleDateFormat("yyyy-MM-dd");
-                    break;
+                    return sdf.format(new Date());
                 case 3:
                     sdf = new SimpleDateFormat("HH:mm:ss");
-                    break;
+                    return sdf.format(new Date());
                 case 4:
-                    sdf = new SimpleDateFormat("yyyyMMddHHmmss");
-                    break;
+                    return System.currentTimeMillis();
                 case 5:
                     sdf = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");
-                    break;
+                    return sdf.format(new Date());
                 default:
                     sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    return sdf.format(new Date());
             }
-            return sdf.format(new Date());
         }
         
         String format = firstArg != null ? firstArg.toString() : "yyyy-MM-dd HH:mm:ss";
