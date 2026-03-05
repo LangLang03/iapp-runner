@@ -254,6 +254,14 @@ public class IAppScript {
             names.add(name);
         }
         
+        for (String name : context.getVariableManager().getInterfaceVariables().keySet()) {
+            names.add("ss." + name);
+        }
+        
+        for (String name : context.getVariableManager().getGlobalVariables().keySet()) {
+            names.add("sss." + name);
+        }
+        
         return names;
     }
     

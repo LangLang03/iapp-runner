@@ -364,17 +364,17 @@ public class Interpreter implements IInterpreter {
                             return left + String.valueOf(right);
                         }
                         if (left instanceof Number && right instanceof Number) {
-                            return ((Number) left).doubleValue() + ((Number) right).doubleValue();
+                            return addNumbers((Number) left, (Number) right);
                         }
                         return left + String.valueOf(right);
                     case MINUS:
-                        return ((Number) left).doubleValue() - ((Number) right).doubleValue();
+                        return subtractNumbers((Number) left, (Number) right);
                     case STAR:
-                        return ((Number) left).doubleValue() * ((Number) right).doubleValue();
+                        return multiplyNumbers((Number) left, (Number) right);
                     case SLASH:
-                        return ((Number) left).doubleValue() / ((Number) right).doubleValue();
+                        return divideNumbers((Number) left, (Number) right);
                     case PERCENT:
-                        return ((Number) left).doubleValue() % ((Number) right).doubleValue();
+                        return moduloNumbers((Number) left, (Number) right);
                     case EQ:
                         return isEqual(left, right);
                     case NE:
@@ -408,7 +408,7 @@ public class Interpreter implements IInterpreter {
 
                 return switch (expr.getOperator()) {
                     case NOT -> !isTruthy(operand);
-                    case MINUS -> -((Number) operand).doubleValue();
+                    case MINUS -> negateNumber((Number) operand);
                     default -> operand;
                 };
             }
@@ -502,6 +502,63 @@ public class Interpreter implements IInterpreter {
             return ((Number) value).intValue();
         }
         return Integer.parseInt(String.valueOf(value));
+    }
+    
+    private boolean isInteger(Number n) {
+        if (n instanceof Integer || n instanceof Long) {
+            return true;
+        }
+        if (n instanceof Double || n instanceof Float) {
+            double d = n.doubleValue();
+            return d == Math.floor(d) && !Double.isInfinite(d);
+        }
+        return false;
+    }
+    
+    private Number addNumbers(Number a, Number b) {
+        if (isInteger(a) && isInteger(b)) {
+            return a.longValue() + b.longValue();
+        }
+        return a.doubleValue() + b.doubleValue();
+    }
+    
+    private Number subtractNumbers(Number a, Number b) {
+        if (isInteger(a) && isInteger(b)) {
+            return a.longValue() - b.longValue();
+        }
+        return a.doubleValue() - b.doubleValue();
+    }
+    
+    private Number multiplyNumbers(Number a, Number b) {
+        if (isInteger(a) && isInteger(b)) {
+            return a.longValue() * b.longValue();
+        }
+        return a.doubleValue() * b.doubleValue();
+    }
+    
+    private Number divideNumbers(Number a, Number b) {
+        if (isInteger(a) && isInteger(b)) {
+            long la = a.longValue();
+            long lb = b.longValue();
+            if (lb != 0 && la % lb == 0) {
+                return la / lb;
+            }
+        }
+        return a.doubleValue() / b.doubleValue();
+    }
+    
+    private Number moduloNumbers(Number a, Number b) {
+        if (isInteger(a) && isInteger(b)) {
+            return a.longValue() % b.longValue();
+        }
+        return a.doubleValue() % b.doubleValue();
+    }
+    
+    private Number negateNumber(Number n) {
+        if (isInteger(n)) {
+            return -n.longValue();
+        }
+        return -n.doubleValue();
     }
     
     private Object executeUserFunction(FunctionDefinitionStatement funcDef, List<Object> args, RuntimeContext context) throws InterpreterException {

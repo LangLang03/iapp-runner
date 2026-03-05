@@ -3,6 +3,7 @@ package cn.langlang.iapp;
 import cn.langlang.iapp.api.IAppFunction;
 import cn.langlang.iapp.api.IAppScript;
 import cn.langlang.iapp.api.IAppVariable;
+import cn.langlang.iapp.repl.REPL;
 
 import java.io.File;
 import java.io.PrintStream;
@@ -18,7 +19,7 @@ public class Main {
         }
         
         if (args.length == 0) {
-            printUsage();
+            startREPL();
             return;
         }
         
@@ -46,9 +47,17 @@ public class Main {
         }
     }
     
+    private static void startREPL() {
+        REPL repl = new REPL();
+        repl.start();
+    }
+    
     private static void printUsage() {
         System.out.println("iAppV3 跨平台解释器");
-        System.out.println("用法: java -jar iapp.jar <脚本文件>");
+        System.out.println();
+        System.out.println("用法:");
+        System.out.println("  java -jar iapp.jar              启动 REPL 交互模式");
+        System.out.println("  java -jar iapp.jar <脚本文件>   执行脚本文件");
         System.out.println();
         System.out.println("API 使用示例:");
         System.out.println();
