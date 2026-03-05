@@ -6,8 +6,6 @@ import cn.langlang.iapp.lexer.TokenType;
 import cn.langlang.iapp.runtime.FunctionRegistry;
 import cn.langlang.iapp.runtime.IFunction;
 import cn.langlang.iapp.runtime.ParamType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -15,7 +13,6 @@ import java.util.List;
 import java.util.Set;
 
 public class Parser implements IParser {
-    private static final Logger logger = LoggerFactory.getLogger(Parser.class);
     private static final int MAX_ITERATIONS = 100000;
     private int iterationCount = 0;
     
@@ -52,13 +49,11 @@ public class Parser implements IParser {
     }
     
     public Program parse() throws ParserException {
-        logger.debug("开始语法分析, tokens数量: {}", tokens.size());
         Program program = new Program();
         
         while (!isAtEnd()) {
             iterationCount++;
             if (iterationCount > MAX_ITERATIONS) {
-                logger.error("检测到可能的死循环! 当前位置: {}, 当前token: {}", current, peek().getValue());
                 throw new ParserException("解析器检测到可能的死循环", peek().getLine(), peek().getColumn());
             }
             
@@ -66,17 +61,14 @@ public class Parser implements IParser {
             Statement statement = parseStatement();
             if (statement != null) {
                 program.addStatement(statement);
-                logger.trace("解析语句: {} at line {}", statement.getClass().getSimpleName(), statement.getLine());
             }
             
             if (current == startPos && !isAtEnd()) {
                 Token token = peek();
-                logger.error("解析器位置未前进! 位置: {}, Token: {} '{}'", current, token.getType(), token.getValue());
                 throw new ParserException("解析器卡在 token: " + token.getValue(), token.getLine(), token.getColumn());
             }
         }
         
-        logger.debug("语法分析完成, 共解析 {} 条语句", program.getStatements().size());
         return program;
     }
     
@@ -151,7 +143,6 @@ public class Parser implements IParser {
                 if (isOutputParam && check(TokenType.IDENTIFIER)) {
                     Token varToken = advance();
                     outputVariables.add(varToken.getValue());
-                    logger.debug("函数 {} 的输出变量: {}", functionName, varToken.getValue());
                 } else {
                     arguments.add(parseExpression());
                 }
@@ -490,12 +481,10 @@ public class Parser implements IParser {
     private List<Statement> parseFunctionBody() throws ParserException {
         List<Statement> statements = new ArrayList<>();
         int blockIterations = 0;
-        logger.trace("开始解析函数体, 当前位置: {}", current);
         
         while (!isAtEnd()) {
             blockIterations++;
             if (blockIterations > MAX_ITERATIONS) {
-                logger.error("parseFunctionBody 检测到可能的死循环! 位置: {}, Token: {}", current, peek().getValue());
                 throw new ParserException("parseFunctionBody 检测到可能的死循环", peek().getLine(), peek().getColumn());
             }
             
@@ -522,12 +511,10 @@ public class Parser implements IParser {
                 if (token.getType() == TokenType.KEYWORD_END) {
                     continue;
                 }
-                logger.error("parseFunctionBody 位置未前进! 位置: {}, Token: {} '{}'", current, token.getType(), token.getValue());
                 throw new ParserException("解析器在函数体中卡在 token: " + token.getValue(), token.getLine(), token.getColumn());
             }
         }
         
-        logger.trace("函数体解析完成, 语句数: {}", statements.size());
         return statements;
     }
     
@@ -553,12 +540,10 @@ public class Parser implements IParser {
     private List<Statement> parseBlock() throws ParserException {
         List<Statement> statements = new ArrayList<>();
         int blockIterations = 0;
-        logger.trace("开始解析块, 当前位置: {}", current);
         
         while (!check(TokenType.RBRACE) && !isAtEnd()) {
             blockIterations++;
             if (blockIterations > MAX_ITERATIONS) {
-                logger.error("parseBlock 检测到可能的死循环! 位置: {}, Token: {}", current, peek().getValue());
                 throw new ParserException("parseBlock 检测到可能的死循环", peek().getLine(), peek().getColumn());
             }
             
@@ -574,12 +559,10 @@ public class Parser implements IParser {
             
             if (current == startPos && !isAtEnd()) {
                 Token token = peek();
-                logger.error("parseBlock 位置未前进! 位置: {}, Token: {} '{}'", current, token.getType(), token.getValue());
                 throw new ParserException("解析器在块中卡在 token: " + token.getValue(), token.getLine(), token.getColumn());
             }
         }
         
-        logger.trace("块解析完成, 语句数: {}, 当前位置: {}", statements.size(), current);
         consume(TokenType.RBRACE, "Expected '}' after block");
         return statements;
     }
@@ -654,7 +637,6 @@ public class Parser implements IParser {
                 if (isOutputParam && check(TokenType.IDENTIFIER)) {
                     Token varToken = advance();
                     outputVariables.add(varToken.getValue());
-                    logger.debug("函数 {} 的输出变量: {}", functionName, varToken.getValue());
                 } else {
                     arguments.add(parseExpression());
                 }
@@ -967,7 +949,6 @@ public class Parser implements IParser {
                 if (isOutputParam && check(TokenType.IDENTIFIER)) {
                     Token varToken = advance();
                     outputVariables.add(varToken.getValue());
-                    logger.trace("数学函数 {} 的输出变量: {}", scopeToken.getValue() + operatorToken.getValue(), varToken.getValue());
                 } else {
                     arguments.add(parseExpression());
                 }

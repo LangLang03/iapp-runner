@@ -1,12 +1,8 @@
 package cn.langlang.iapp.lexer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.*;
 
 public class Lexer implements ILexer {
-    private static final Logger logger = LoggerFactory.getLogger(Lexer.class);
     private final String source;
     private int position;
     private int line;
@@ -49,7 +45,6 @@ public class Lexer implements ILexer {
     
     public List<Token> tokenizeInternal() throws LexerException {
         List<Token> tokens = new ArrayList<>();
-        logger.debug("开始词法分析, 源码长度: {}", length);
         
         while (!isAtEnd()) {
             skipWhitespace();
@@ -58,12 +53,10 @@ public class Lexer implements ILexer {
             Token token = scanToken();
             if (token != null) {
                 tokens.add(token);
-                logger.trace("Token: {} '{}' at line:{}", token.getType(), token.getValue(), token.getLine());
             }
         }
         
         tokens.add(new Token(TokenType.EOF, "", line, column));
-        logger.debug("词法分析完成, 共生成 {} 个tokens", tokens.size());
         return tokens;
     }
     

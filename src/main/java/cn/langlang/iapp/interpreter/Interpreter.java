@@ -4,14 +4,11 @@ import cn.langlang.iapp.ast.*;
 import cn.langlang.iapp.lexer.TokenType;
 import cn.langlang.iapp.runtime.IFunction;
 import cn.langlang.iapp.runtime.RuntimeContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Interpreter implements IInterpreter {
-    private static final Logger logger = LoggerFactory.getLogger(Interpreter.class);
 
     @Override
     public Object execute(Program program, RuntimeContext context) throws InterpreterException {
@@ -288,7 +285,6 @@ public class Interpreter implements IInterpreter {
             public Object visitFunctionDefinition(FunctionDefinitionStatement stmt) {
                 String fullName = stmt.getFullName();
                 context.registerUserFunction(fullName, stmt);
-                logger.debug("注册用户函数: {}", fullName);
                 return null;
             }
 
