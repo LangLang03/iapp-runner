@@ -26,7 +26,7 @@ public class CallFunction extends AbstractFunction {
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
         if (arguments.size() < 2) {
-            throw new FunctionException("call function requires at least 2 arguments");
+            throw new FunctionException("call 函数至少需要 2 个参数");
         }
         
         String language = arguments.get(0) != null ? arguments.get(0).toString() : "";
@@ -52,7 +52,7 @@ public class CallFunction extends AbstractFunction {
         try {
             return context.executeMjavaMethod(moduleName, methodName, args);
         } catch (Exception e) {
-            throw new FunctionException("Failed to call " + language + "." + fullMethodName + ": " + e.getMessage(), e);
+            throw new FunctionException("调用 " + language + "." + fullMethodName + " 失败: " + e.getMessage(), e);
         }
     }
     

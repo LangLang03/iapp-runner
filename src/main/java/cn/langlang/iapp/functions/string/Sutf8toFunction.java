@@ -39,7 +39,7 @@ public class Sutf8toFunction extends AbstractFunction {
         try {
             return URLDecoder.decode(str, charsetName);
         } catch (Exception e) {
-            throw new FunctionException("URL decoding failed: " + e.getMessage(), e);
+            throw new FunctionException("URL 解码失败: " + e.getMessage(), e);
         }
     }
     

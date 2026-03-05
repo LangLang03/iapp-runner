@@ -39,7 +39,7 @@ public class FoFunction extends AbstractFunction {
             Files.move(srcFile.toPath(), destFile.toPath());
             return true;
         } catch (Exception e) {
-            throw new FunctionException("Failed to move file: " + source + " -> " + dest, e);
+            throw new FunctionException("移动文件失败: " + source + " -> " + dest, e);
         }
     }
     

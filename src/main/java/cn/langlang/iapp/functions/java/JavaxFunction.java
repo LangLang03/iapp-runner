@@ -43,16 +43,16 @@ public class JavaxFunction extends AbstractFunction {
                 clazz = Class.forName((String) classObj);
                 targetInstance = instanceObj;
             } catch (ClassNotFoundException e) {
-                throw new FunctionException("Class not found: " + classObj, e);
+                throw new FunctionException("类未找到: " + classObj, e);
             }
         } else if (classObj == null) {
             if (instanceObj == null) {
-                throw new FunctionException("Both instance and class parameters cannot be null");
+                throw new FunctionException("实例和类参数不能同时为空");
             }
             clazz = instanceObj.getClass();
             targetInstance = instanceObj;
         } else {
-            throw new FunctionException("Invalid class parameter");
+            throw new FunctionException("无效的类参数");
         }
         
         List<Class<?>> paramTypes = new ArrayList<>();
@@ -74,7 +74,7 @@ public class JavaxFunction extends AbstractFunction {
             method.setAccessible(true);
             return method.invoke(targetInstance, paramValues.toArray());
         } catch (Exception e) {
-            throw new FunctionException("Javax function call failed: " + methodName, e);
+            throw new FunctionException("javax 函数调用失败: " + methodName, e);
         }
     }
     
@@ -98,7 +98,7 @@ public class JavaxFunction extends AbstractFunction {
                 try {
                     return Class.forName(typeName);
                 } catch (ClassNotFoundException e) {
-                    throw new FunctionException("Unknown type: " + typeName);
+                    throw new FunctionException("未知类型: " + typeName);
                 }
         }
     }

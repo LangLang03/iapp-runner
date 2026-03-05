@@ -274,7 +274,7 @@ public class Interpreter implements IInterpreter {
 
                     return result;
                 } catch (Exception e) {
-                    throw new InterpreterException("Function call error: " + e.getMessage());
+                    throw new InterpreterException("函数调用错误: " + e.getMessage());
                 }
             }
 
@@ -430,7 +430,7 @@ public class Interpreter implements IInterpreter {
                         return context.executeMjavaMethod("", functionName, args.toArray());
                     }
                 } catch (Exception e) {
-                    throw new InterpreterException("Function call error: " + e.getMessage());
+                    throw new InterpreterException("函数调用错误: " + e.getMessage());
                 }
             }
 

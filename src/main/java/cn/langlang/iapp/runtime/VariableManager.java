@@ -93,4 +93,16 @@ public class VariableManager {
     public void clearGlobalVariables() {
         globalVariables.clear();
     }
+    
+    public Map<String, Object> getLocalVariables() {
+        return scopeStack.peek();
+    }
+    
+    public Map<String, Object> getInterfaceVariables() {
+        return interfaceVariables;
+    }
+    
+    public Map<String, Object> getGlobalVariables() {
+        return globalVariables;
+    }
 }

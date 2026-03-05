@@ -235,6 +235,10 @@ public class RuntimeContext {
         return userFunctions.containsKey(name);
     }
     
+    public Map<String, FunctionDefinitionStatement> getUserFunctions() {
+        return userFunctions;
+    }
+    
     public static class BreakContext {
         private final String type;
         private boolean shouldBreak;

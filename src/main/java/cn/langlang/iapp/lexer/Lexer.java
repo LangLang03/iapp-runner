@@ -193,7 +193,7 @@ public class Lexer implements ILexer {
             char c = advance();
             if (c == '\\') {
                 if (isAtEnd()) {
-                    throw new LexerException("Unterminated string", startLine, startColumn);
+                    throw new LexerException("字符串未闭合", startLine, startColumn);
                 }
                 char escaped = advance();
                 switch (escaped) {
@@ -215,7 +215,7 @@ public class Lexer implements ILexer {
         }
         
         if (isAtEnd()) {
-            throw new LexerException("Unterminated string", startLine, startColumn);
+            throw new LexerException("字符串未闭合", startLine, startColumn);
         }
         
         advance();

@@ -36,10 +36,10 @@ public class JavanewFunction extends AbstractFunction {
             try {
                 clazz = Class.forName((String) classObj);
             } catch (ClassNotFoundException e) {
-                throw new FunctionException("Class not found: " + classObj, e);
+                throw new FunctionException("类未找到: " + classObj, e);
             }
         } else {
-            throw new FunctionException("Invalid class parameter");
+            throw new FunctionException("无效的类参数");
         }
         
         List<Class<?>> paramTypes = new ArrayList<>();
@@ -61,7 +61,7 @@ public class JavanewFunction extends AbstractFunction {
             constructor.setAccessible(true);
             return constructor.newInstance(paramValues.toArray());
         } catch (Exception e) {
-            throw new FunctionException("Failed to create instance of: " + clazz.getName(), e);
+            throw new FunctionException("创建实例失败: " + clazz.getName(), e);
         }
     }
     
@@ -85,7 +85,7 @@ public class JavanewFunction extends AbstractFunction {
                 try {
                     return Class.forName(typeName);
                 } catch (ClassNotFoundException e) {
-                    throw new FunctionException("Unknown type: " + typeName);
+                    throw new FunctionException("未知类型: " + typeName);
                 }
         }
     }

@@ -36,7 +36,7 @@ public class FrFunction extends AbstractFunction {
             }
             return new String(java.nio.file.Files.readAllBytes(file.toPath()));
         } catch (Exception e) {
-            throw new FunctionException("Failed to read file: " + path, e);
+            throw new FunctionException("读取文件失败: " + path, e);
         }
     }
     

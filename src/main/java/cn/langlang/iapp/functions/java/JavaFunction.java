@@ -53,7 +53,7 @@ public class JavaFunction extends AbstractFunction {
                 return context.executeMjavaMethod("", methodName, args);
             }
         } catch (Exception e) {
-            throw new FunctionException("Java call failed: " + methodPath, e);
+            throw new FunctionException("Java 调用失败: " + methodPath, e);
         }
     }
     
