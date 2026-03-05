@@ -10,9 +10,9 @@ s test_total = 0
 s test_pass = 0
 s test_fail = 0
 
-fn test_report(name, result)
+fn test_report(name, passed)
     s(test_total + 1, test_total)
-    f(result == true)
+    f(passed == true)
     {
         s(test_pass + 1, test_pass)
         syso("[PASS] " + name)
@@ -650,12 +650,12 @@ syso("")
 
 // 定义测试函数
 fn add_func(a, b)
-    ss(a + b, result)
+    sss result = a + b
     syso("add_func result: " + result)
 end fn
 
 fn multiply_func(a, b)
-    ss(a * b, result)
+    sss result = a * b
 end fn
 
 fn no_param_func()
@@ -663,8 +663,8 @@ fn no_param_func()
 end fn
 
 fn nested_func(a)
-    s(a + 10, b)
-    multiply_func(b, 2)
+    sss nested_b = a + 10
+    multiply_func(nested_b, 2)
 end fn
 
 // 测试41：有参函数调用
@@ -695,6 +695,7 @@ else
 
 // 测试44：函数嵌套调用
 nested_func(5)
+syso("nested_func result: " + result)
 f(result == 30)
 {
     test_report("函数嵌套调用", true)

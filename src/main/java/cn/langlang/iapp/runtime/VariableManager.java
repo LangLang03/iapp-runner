@@ -38,7 +38,10 @@ public class VariableManager {
             if (interfaceVariables.containsKey(name)) {
                 return interfaceVariables.get(name);
             }
-            return globalVariables.get(name);
+            if (globalVariables.containsKey(name)) {
+                return globalVariables.get(name);
+            }
+            return null;
         }
     }
     
