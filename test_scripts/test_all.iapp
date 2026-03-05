@@ -25,7 +25,7 @@ fn test_report(name, passed)
 end fn
 
 syso("============================================")
-syso("  iApp Runner 全面测试脚本")
+syso("  iApp Runner 兼容性测试脚本")
 syso("============================================")
 syso("")
 
