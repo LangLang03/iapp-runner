@@ -59,7 +59,7 @@ public class Parser implements IParser {
             iterationCount++;
             if (iterationCount > MAX_ITERATIONS) {
                 logger.error("检测到可能的死循环! 当前位置: {}, 当前token: {}", current, peek().getValue());
-                throw new ParserException("Possible infinite loop detected in parser", peek().getLine(), peek().getColumn());
+                throw new ParserException("解析器检测到可能的死循环", peek().getLine(), peek().getColumn());
             }
             
             int startPos = current;
@@ -72,7 +72,7 @@ public class Parser implements IParser {
             if (current == startPos && !isAtEnd()) {
                 Token token = peek();
                 logger.error("解析器位置未前进! 位置: {}, Token: {} '{}'", current, token.getType(), token.getValue());
-                throw new ParserException("Parser stuck at token: " + token.getValue(), token.getLine(), token.getColumn());
+                throw new ParserException("解析器卡在 token: " + token.getValue(), token.getLine(), token.getColumn());
             }
         }
         
@@ -123,7 +123,7 @@ public class Parser implements IParser {
             case IDENTIFIER:
                 return parseIdentifierStatement();
             default:
-                throw new ParserException("Unexpected token: " + token.getValue(), token.getLine(), token.getColumn());
+                throw new ParserException("意外的 token: " + token.getValue(), token.getLine(), token.getColumn());
         }
     }
 
@@ -201,7 +201,7 @@ public class Parser implements IParser {
         TokenType scope = scopeToken.getType();
         
         if (!check(TokenType.IDENTIFIER)) {
-            throw new ParserException("Expected variable name", scopeToken.getLine(), scopeToken.getColumn());
+            throw new ParserException("需要变量名", scopeToken.getLine(), scopeToken.getColumn());
         }
         
         Token nameToken = advance();
@@ -306,11 +306,11 @@ public class Parser implements IParser {
             }
         } else {
             if (isCStyle) {
-                throw new ParserException("C-style for loop requires condition and update", forToken.getLine(), forToken.getColumn());
+                throw new ParserException("C风格 for 循环需要条件和更新语句", forToken.getLine(), forToken.getColumn());
             }
             Token varToken = previous();
             if (varToken.getType() != TokenType.IDENTIFIER) {
-                throw new ParserException("Expected variable name in for-each", varToken.getLine(), varToken.getColumn());
+                throw new ParserException("for-each 循环需要变量名", varToken.getLine(), varToken.getColumn());
             }
             consume(TokenType.RPAREN, "Expected ')' after for-each");
             skipNewlines();
@@ -389,10 +389,10 @@ public class Parser implements IParser {
                 return new AssignmentStatement(identifier.getLine(), identifier.getValue(), value, TokenType.KEYWORD_S);
             }
             
-            throw new ParserException("Expected update expression in for loop", identifier.getLine(), identifier.getColumn());
+            throw new ParserException("for 循环需要更新表达式", identifier.getLine(), identifier.getColumn());
         }
         
-        throw new ParserException("Expected identifier in for update", identifier.getLine(), identifier.getColumn());
+        throw new ParserException("for 更新语句需要标识符", identifier.getLine(), identifier.getColumn());
     }
     
     private Statement parseBreakStatement() throws ParserException {
@@ -441,7 +441,7 @@ public class Parser implements IParser {
             if (arg instanceof VariableExpression) {
                 parameters.add(((VariableExpression) arg).getName());
             } else {
-                throw new ParserException("Function definition parameters must be identifiers", fnToken.getLine(), fnToken.getColumn());
+                throw new ParserException("函数定义参数必须是标识符", fnToken.getLine(), fnToken.getColumn());
             }
         }
         
@@ -476,7 +476,7 @@ public class Parser implements IParser {
         }
         
         if (!hasEndFn) {
-            throw new ParserException("Function definition must end with 'end fn'", fnToken.getLine(), fnToken.getColumn());
+            throw new ParserException("函数定义必须以 'end fn' 结束", fnToken.getLine(), fnToken.getColumn());
         }
         
         current = savedPos;
@@ -496,7 +496,7 @@ public class Parser implements IParser {
             blockIterations++;
             if (blockIterations > MAX_ITERATIONS) {
                 logger.error("parseFunctionBody 检测到可能的死循环! 位置: {}, Token: {}", current, peek().getValue());
-                throw new ParserException("Possible infinite loop in parseFunctionBody", peek().getLine(), peek().getColumn());
+                throw new ParserException("parseFunctionBody 检测到可能的死循环", peek().getLine(), peek().getColumn());
             }
             
             skipNewlines();
@@ -505,7 +505,7 @@ public class Parser implements IParser {
                 advance();
                 if (!check(TokenType.KEYWORD_FN)) {
                     Token token = peek();
-                    throw new ParserException("Expected 'fn' after 'end'", token.getLine(), token.getColumn());
+                    throw new ParserException("'end' 后需要 'fn'", token.getLine(), token.getColumn());
                 }
                 advance();
                 break;
@@ -523,7 +523,7 @@ public class Parser implements IParser {
                     continue;
                 }
                 logger.error("parseFunctionBody 位置未前进! 位置: {}, Token: {} '{}'", current, token.getType(), token.getValue());
-                throw new ParserException("Parser stuck in function body at token: " + token.getValue(), token.getLine(), token.getColumn());
+                throw new ParserException("解析器在函数体中卡在 token: " + token.getValue(), token.getLine(), token.getColumn());
             }
         }
         
@@ -559,7 +559,7 @@ public class Parser implements IParser {
             blockIterations++;
             if (blockIterations > MAX_ITERATIONS) {
                 logger.error("parseBlock 检测到可能的死循环! 位置: {}, Token: {}", current, peek().getValue());
-                throw new ParserException("Possible infinite loop in parseBlock", peek().getLine(), peek().getColumn());
+                throw new ParserException("parseBlock 检测到可能的死循环", peek().getLine(), peek().getColumn());
             }
             
             skipNewlines();
@@ -575,7 +575,7 @@ public class Parser implements IParser {
             if (current == startPos && !isAtEnd()) {
                 Token token = peek();
                 logger.error("parseBlock 位置未前进! 位置: {}, Token: {} '{}'", current, token.getType(), token.getValue());
-                throw new ParserException("Parser stuck in block at token: " + token.getValue(), token.getLine(), token.getColumn());
+                throw new ParserException("解析器在块中卡在 token: " + token.getValue(), token.getLine(), token.getColumn());
             }
         }
         
@@ -608,7 +608,7 @@ public class Parser implements IParser {
             return new AssignmentStatement(identifier.getLine(), identifier.getValue(), index, value, TokenType.KEYWORD_S);
         }
         
-        throw new ParserException("Unexpected token after identifier: " + identifier.getValue(), identifier.getLine(), identifier.getColumn());
+        throw new ParserException("标识符后有意外的 token: " + identifier.getValue(), identifier.getLine(), identifier.getColumn());
     }
     
     private Statement parseMemberAccessOrCall(Token objectToken) throws ParserException {
@@ -623,7 +623,7 @@ public class Parser implements IParser {
             return new AssignmentStatement(objectToken.getLine(), objectToken.getValue() + "." + memberToken.getValue(), value, TokenType.KEYWORD_S);
         }
         
-        throw new ParserException("Expected '(' or '=' after member access", memberToken.getLine(), memberToken.getColumn());
+        throw new ParserException("成员访问后需要 '(' 或 '='", memberToken.getLine(), memberToken.getColumn());
     }
     
     private Statement parseMethodCall(String objectName, String methodName, int line) throws ParserException {
@@ -829,7 +829,7 @@ public class Parser implements IParser {
             return new VariableExpression(token.getLine(), token.getValue(), scope);
         }
         
-        throw new ParserException("Expected expression", peek().getLine(), peek().getColumn());
+        throw new ParserException("需要表达式", peek().getLine(), peek().getColumn());
     }
     
     private Expression parseFunctionCallExpression(String functionName, int line) throws ParserException {

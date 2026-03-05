@@ -26,7 +26,7 @@ public class SjFunction extends AbstractFunction {
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
         if (arguments.size() < 3) {
-            throw new FunctionException("sj function requires at least 3 arguments");
+            throw new FunctionException("sj 函数至少需要 3 个参数");
         }
         
         String source = arguments.get(0) != null ? arguments.get(0).toString() : "";

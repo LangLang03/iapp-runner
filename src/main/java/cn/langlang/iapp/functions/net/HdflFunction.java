@@ -58,7 +58,7 @@ public class HdflFunction extends AbstractFunction {
             }
             return false;
         } catch (Exception e) {
-            throw new FunctionException("Download failed: " + e.getMessage(), e);
+            throw new FunctionException("下载失败: " + e.getMessage(), e);
         }
     }
     

@@ -35,7 +35,7 @@ public class JavagsFunction extends AbstractFunction {
         Object targetInstance;
         
         if (classObj == null) {
-            throw new FunctionException("Class parameter cannot be null");
+            throw new FunctionException("类参数不能为空");
         } else if (classObj instanceof Class) {
             clazz = (Class<?>) classObj;
             targetInstance = instanceObj;
@@ -44,10 +44,10 @@ public class JavagsFunction extends AbstractFunction {
                 clazz = Class.forName((String) classObj);
                 targetInstance = instanceObj;
             } catch (ClassNotFoundException e) {
-                throw new FunctionException("Class not found: " + classObj, e);
+                throw new FunctionException("类未找到: " + classObj, e);
             }
         } else {
-            throw new FunctionException("Invalid class parameter: " + classObj.getClass().getName());
+            throw new FunctionException("无效的类参数: " + classObj.getClass().getName());
         }
         
         try {
@@ -59,10 +59,10 @@ public class JavagsFunction extends AbstractFunction {
                 field.setAccessible(true);
                 return field.get(targetInstance);
             } catch (Exception ex) {
-                throw new FunctionException("Failed to get field: " + fieldName, ex);
+                throw new FunctionException("获取字段失败: " + fieldName, ex);
             }
         } catch (Exception e) {
-            throw new FunctionException("Failed to get field: " + fieldName, e);
+            throw new FunctionException("获取字段失败: " + fieldName, e);
         }
     }
     

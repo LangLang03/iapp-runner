@@ -51,7 +51,7 @@ public class FwFunction extends AbstractFunction {
             }
             return true;
         } catch (Exception e) {
-            throw new FunctionException("Failed to write file: " + path + " - " + e.getMessage(), e);
+            throw new FunctionException("写入文件失败: " + path + " - " + e.getMessage(), e);
         }
     }
     

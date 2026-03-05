@@ -43,3 +43,4 @@ bin/
 .DS_Store
 test_scripts/
 .trae/
+iapp.txt

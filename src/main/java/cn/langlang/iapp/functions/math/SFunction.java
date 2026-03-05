@@ -40,7 +40,7 @@ public class SFunction extends AbstractFunction {
             try {
                 return (long) Double.parseDouble(expression);
             } catch (NumberFormatException ex2) {
-                throw new FunctionException("Failed to evaluate expression: " + expression);
+                throw new FunctionException("无法解析表达式: " + expression);
             }
         }
     }

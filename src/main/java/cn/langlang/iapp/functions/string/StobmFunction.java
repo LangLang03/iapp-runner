@@ -51,7 +51,7 @@ public class StobmFunction extends AbstractFunction {
             }
             return encoded;
         } catch (Exception e) {
-            throw new FunctionException("URL encoding failed: " + e.getMessage(), e);
+            throw new FunctionException("URL 编码失败: " + e.getMessage(), e);
         }
     }
     

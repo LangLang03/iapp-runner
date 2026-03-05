@@ -42,10 +42,10 @@ public class JavassFunction extends AbstractFunction {
                 clazz = Class.forName((String) classObj);
                 targetInstance = instanceObj;
             } catch (ClassNotFoundException e) {
-                throw new FunctionException("Class not found: " + classObj, e);
+                throw new FunctionException("类未找到: " + classObj, e);
             }
         } else {
-            throw new FunctionException("Invalid class parameter");
+            throw new FunctionException("无效的类参数");
         }
         
         try {
@@ -59,10 +59,10 @@ public class JavassFunction extends AbstractFunction {
                 field.set(targetInstance, value);
                 return value;
             } catch (Exception ex) {
-                throw new FunctionException("Failed to set field: " + fieldName, ex);
+                throw new FunctionException("设置字段失败: " + fieldName, ex);
             }
         } catch (Exception e) {
-            throw new FunctionException("Failed to set field: " + fieldName, e);
+            throw new FunctionException("设置字段失败: " + fieldName, e);
         }
     }
     

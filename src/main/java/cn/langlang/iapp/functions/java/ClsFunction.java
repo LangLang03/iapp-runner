@@ -31,7 +31,7 @@ public class ClsFunction extends AbstractFunction {
         try {
             return Class.forName(className);
         } catch (ClassNotFoundException e) {
-            throw new FunctionException("Class not found: " + className, e);
+            throw new FunctionException("类未找到: " + className, e);
         }
     }
     

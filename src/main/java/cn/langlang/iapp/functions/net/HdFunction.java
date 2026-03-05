@@ -60,7 +60,7 @@ public class HdFunction extends AbstractFunction {
             }
             return "";
         } catch (Exception e) {
-            throw new FunctionException("HTTP request failed: " + e.getMessage(), e);
+            throw new FunctionException("HTTP 请求失败: " + e.getMessage(), e);
         }
     }
     

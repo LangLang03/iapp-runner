@@ -36,7 +36,7 @@ public class ShbFunction extends AbstractFunction {
             clipboard.setContents(selection, null);
             return true;
         } catch (Exception e) {
-            throw new FunctionException("Failed to set clipboard: " + e.getMessage(), e);
+            throw new FunctionException("设置剪贴板失败: " + e.getMessage(), e);
         }
     }
     
