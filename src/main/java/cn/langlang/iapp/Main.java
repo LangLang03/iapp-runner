@@ -83,17 +83,6 @@ public class Main {
         System.out.println("  // 加载 mjava 模块");
         System.out.println("  script.loadMjava(\"mjava\");");
         System.out.println();
-        System.out.println("支持的功能:");
-        System.out.println("  - 变量声明 (s, ss, sss)");
-        System.out.println("  - 控制流 (f/else, w, for, break, endcode)");
-        System.out.println("  - 字符串函数 (ss, sr, sj, sl, ssg, slg 等)");
-        System.out.println("  - 数学函数 (s+, s-, s*, s/, s%, s, s2, sn, sran)");
-        System.out.println("  - 数组函数 (nsz, sgsz, sssz, sgszl)");
-        System.out.println("  - 文件函数 (fd, fe, fs, fr, fw, fc, fl, ft, fdir)");
-        System.out.println("  - 时间函数 (time)");
-        System.out.println("  - Java 交互 (java, javax, javanew, javags, javass, cls)");
-        System.out.println("  - 输出函数 (syso, tw)");
-        System.out.println("  - mjava 模块加载");
         System.out.println();
         System.out.println("注意: 不支持 Android 专用函数。");
     }
