@@ -51,10 +51,9 @@ public class RouteHandler {
         long startTime = System.currentTimeMillis();
         perfMonitor.incrementCounter(METRIC_REQUEST_COUNT);
         
-        String fullPath = server.getProjectPath() + "/webroot" + scriptPath;
-        String source = readFile(fullPath);
+        String source = readFile(scriptPath);
         if (source == null) {
-            ctx.status(404).result("Script not found");
+            ctx.status(404).result("Script not found: " + scriptPath);
             return;
         }
         
@@ -65,7 +64,7 @@ public class RouteHandler {
             ScriptCache.CacheStats beforeStats = scriptCache.getStats();
             
             long compileStart = System.currentTimeMillis();
-            CachedScript cachedScript = scriptCache.getOrCompile(fullPath, source);
+            CachedScript cachedScript = scriptCache.getOrCompile(scriptPath, source);
             long compileTime = System.currentTimeMillis() - compileStart;
             perfMonitor.recordTime(METRIC_SCRIPT_COMPILE, compileTime);
             
