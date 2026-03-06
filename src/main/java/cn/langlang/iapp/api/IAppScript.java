@@ -28,10 +28,18 @@ public class IAppScript {
     private final RuntimeContext context;
     private final Interpreter interpreter;
     private String loadedSource;
+    private final boolean useContextRegistry;
     
     private IAppScript(RuntimeContext context) {
         this.context = context != null ? context : new RuntimeContext();
         this.interpreter = new Interpreter();
+        this.useContextRegistry = context != null;
+    }
+    
+    private IAppScript(RuntimeContext context, boolean useContextRegistry) {
+        this.context = context != null ? context : new RuntimeContext();
+        this.interpreter = new Interpreter();
+        this.useContextRegistry = useContextRegistry;
     }
     
     public static IAppScript create() {
@@ -40,6 +48,10 @@ public class IAppScript {
     
     public static IAppScript create(RuntimeContext context) {
         return new IAppScript(context);
+    }
+    
+    public static IAppScript createWithContext(RuntimeContext context) {
+        return new IAppScript(context, true);
     }
     
     public IAppScript loadString(String source) {

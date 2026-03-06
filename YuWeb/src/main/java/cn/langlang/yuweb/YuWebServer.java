@@ -2,16 +2,19 @@ package cn.langlang.yuweb;
 
 import io.javalin.Javalin;
 import io.javalin.http.Context;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class YuWebServer {
+    private static final Logger logger = LoggerFactory.getLogger(YuWebServer.class);
     private int port = 8080;
     private String projectPath;
     private Javalin app;
-    private RequestContext currentContext;
+    private static final ThreadLocal<RequestContext> currentContext = new ThreadLocal<>();
     
     public YuWebServer(String projectPath) {
         this.projectPath = projectPath != null ? projectPath : ".";
@@ -30,14 +33,23 @@ public class YuWebServer {
     }
     
     public void setCurrentContext(RequestContext context) {
-        this.currentContext = context;
+        currentContext.set(context);
     }
     
     public RequestContext getCurrentContext() {
-        return currentContext;
+        return currentContext.get();
+    }
+    
+    public void clearCurrentContext() {
+        currentContext.remove();
     }
     
     public void start() {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            logger.info("Shutting down YuWeb Server...");
+            stop();
+        }));
+        
         File staticDir = new File(projectPath + "/static");
         
         app = Javalin.create(config -> {
@@ -45,7 +57,11 @@ public class YuWebServer {
         });
         
         app.before(ctx -> {
-            currentContext = new RequestContext(ctx, this);
+            currentContext.set(new RequestContext(ctx, this));
+        });
+        
+        app.after(ctx -> {
+            currentContext.remove();
         });
         
         app.get("/*", this::handleRequest);
@@ -63,14 +79,15 @@ public class YuWebServer {
         }
         
         app.start(port);
-        System.out.println("YuWeb Server started on port " + port);
-        System.out.println("Project path: " + new File(projectPath).getAbsolutePath());
+        logger.info("YuWeb Server started on port {}", port);
+        logger.info("Project path: {}", new File(projectPath).getAbsolutePath());
     }
     
     public void stop() {
         if (app != null) {
             app.stop();
         }
+        RouteHandler.closeDatabase();
     }
     
     private void handleRequest(Context ctx) {
@@ -93,8 +110,8 @@ public class YuWebServer {
             RouteHandler handler = new RouteHandler(this);
             handler.handle(scriptFile.getAbsolutePath(), ctx);
         } catch (Exception e) {
-            ctx.status(500).result("Internal Server Error: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Error handling request: {}", e.getMessage(), e);
+            ctx.status(500).result("Internal Server Error");
         }
     }
     
@@ -127,8 +144,7 @@ public class YuWebServer {
             RouteHandler handler = new RouteHandler(this);
             handler.executeAppConfig(appFile);
         } catch (Exception e) {
-            System.err.println("Error executing app.iapp: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Error executing app.iapp: {}", e.getMessage(), e);
         }
     }
     

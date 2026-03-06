@@ -3,15 +3,17 @@ package cn.langlang.iapp.lexer;
 import java.util.*;
 
 public class Lexer implements ILexer {
-    private final String source;
+    private String source;
+    private char[] chars;
     private int position;
     private int line;
     private int column;
-    private final int length;
+    private int length;
     
-    private static final Map<String, TokenType> KEYWORDS = new HashMap<>();
+    private static final Map<String, TokenType> KEYWORDS;
     
     static {
+        KEYWORDS = new HashMap<>(16);
         KEYWORDS.put("s", TokenType.KEYWORD_S);
         KEYWORDS.put("ss", TokenType.KEYWORD_SS);
         KEYWORDS.put("sss", TokenType.KEYWORD_SSS);
@@ -30,21 +32,26 @@ public class Lexer implements ILexer {
     }
     
     public Lexer(String source) {
+        reset(source);
+    }
+    
+    public void reset(String source) {
         this.source = source;
+        this.chars = source != null ? source.toCharArray() : new char[0];
         this.position = 0;
         this.line = 1;
         this.column = 1;
-        this.length = source.length();
+        this.length = chars.length;
     }
     
     @Override
     public List<Token> tokenize(String source) throws LexerException {
-        Lexer lexer = new Lexer(source);
-        return lexer.tokenizeInternal();
+        reset(source);
+        return tokenizeInternal();
     }
     
     public List<Token> tokenizeInternal() throws LexerException {
-        List<Token> tokens = new ArrayList<>();
+        List<Token> tokens = new ArrayList<>(64);
         
         while (!isAtEnd()) {
             skipWhitespace();
@@ -180,7 +187,10 @@ public class Lexer implements ILexer {
     }
     
     private Token scanString(int startLine, int startColumn) throws LexerException {
-        StringBuilder value = new StringBuilder();
+        int startPos = position;
+        int capacity = 32;
+        char[] buffer = new char[capacity];
+        int bufferPos = 0;
         
         while (!isAtEnd() && peek() != '"') {
             char c = advance();
@@ -189,21 +199,50 @@ public class Lexer implements ILexer {
                     throw new LexerException("字符串未闭合", startLine, startColumn);
                 }
                 char escaped = advance();
+                char result;
                 switch (escaped) {
-                    case 'n': value.append('\n'); break;
-                    case 't': value.append('\t'); break;
-                    case 'r': value.append('\r'); break;
-                    case '\\': value.append('\\'); break;
-                    case '"': value.append('"'); break;
-                    case '\'': value.append('\''); break;
-                    default: value.append('\\').append(escaped);
+                    case 'n': result = '\n'; break;
+                    case 't': result = '\t'; break;
+                    case 'r': result = '\r'; break;
+                    case '\\': result = '\\'; break;
+                    case '"': result = '"'; break;
+                    case '\'': result = '\''; break;
+                    default:
+                        if (bufferPos + 2 >= capacity) {
+                            capacity = capacity * 2;
+                            char[] newBuffer = new char[capacity];
+                            System.arraycopy(buffer, 0, newBuffer, 0, bufferPos);
+                            buffer = newBuffer;
+                        }
+                        buffer[bufferPos++] = '\\';
+                        buffer[bufferPos++] = escaped;
+                        continue;
                 }
+                if (bufferPos >= capacity) {
+                    capacity = capacity * 2;
+                    char[] newBuffer = new char[capacity];
+                    System.arraycopy(buffer, 0, newBuffer, 0, bufferPos);
+                    buffer = newBuffer;
+                }
+                buffer[bufferPos++] = result;
             } else if (c == '\n') {
                 line++;
                 column = 1;
-                value.append(c);
+                if (bufferPos >= capacity) {
+                    capacity = capacity * 2;
+                    char[] newBuffer = new char[capacity];
+                    System.arraycopy(buffer, 0, newBuffer, 0, bufferPos);
+                    buffer = newBuffer;
+                }
+                buffer[bufferPos++] = c;
             } else {
-                value.append(c);
+                if (bufferPos >= capacity) {
+                    capacity = capacity * 2;
+                    char[] newBuffer = new char[capacity];
+                    System.arraycopy(buffer, 0, newBuffer, 0, bufferPos);
+                    buffer = newBuffer;
+                }
+                buffer[bufferPos++] = c;
             }
         }
         
@@ -212,35 +251,34 @@ public class Lexer implements ILexer {
         }
         
         advance();
-        return new Token(TokenType.STRING, value.toString(), startLine, startColumn);
+        return new Token(TokenType.STRING, new String(buffer, 0, bufferPos), startLine, startColumn);
     }
     
     private Token scanNumber(int startLine, int startColumn) {
-        StringBuilder value = new StringBuilder();
-        value.append(source.charAt(position - 1));
+        int startPos = position - 1;
         
         while (!isAtEnd() && isDigit(peek())) {
-            value.append(advance());
+            advance();
         }
         
         if (!isAtEnd() && peek() == '.' && isDigit(peekNext())) {
-            do {
-                value.append(advance());
-            } while (!isAtEnd() && isDigit(peek()));
+            advance();
+            while (!isAtEnd() && isDigit(peek())) {
+                advance();
+            }
         }
         
-        return new Token(TokenType.NUMBER, value.toString(), startLine, startColumn);
+        return new Token(TokenType.NUMBER, new String(chars, startPos, position - startPos), startLine, startColumn);
     }
     
     private Token scanIdentifier(int startLine, int startColumn) {
-        StringBuilder value = new StringBuilder();
-        value.append(source.charAt(position - 1));
+        int startPos = position - 1;
         
         while (!isAtEnd() && isAlphaNumeric(peek())) {
-            value.append(advance());
+            advance();
         }
         
-        String identifier = value.toString();
+        String identifier = new String(chars, startPos, position - startPos);
         TokenType type = KEYWORDS.get(identifier);
         
         if (type == null) {
@@ -287,7 +325,7 @@ public class Lexer implements ILexer {
     }
     
     private char advance() {
-        char c = source.charAt(position++);
+        char c = chars[position++];
         column++;
         if (c == '\n') {
             line++;
@@ -298,17 +336,17 @@ public class Lexer implements ILexer {
     
     private char peek() {
         if (isAtEnd()) return '\0';
-        return source.charAt(position);
+        return chars[position];
     }
     
     private char peekNext() {
         if (position + 1 >= length) return '\0';
-        return source.charAt(position + 1);
+        return chars[position + 1];
     }
     
     private boolean match(char expected) {
         if (isAtEnd()) return false;
-        if (source.charAt(position) != expected) return false;
+        if (chars[position] != expected) return false;
         position++;
         column++;
         return true;

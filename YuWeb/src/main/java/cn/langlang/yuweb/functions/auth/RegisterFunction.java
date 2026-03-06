@@ -49,7 +49,9 @@ public class RegisterFunction extends AbstractFunction {
         Map<String, Object> result = new HashMap<>();
         
         try {
-            Map<String, Object> existUser = db.findOne(table, "username = '" + username + "'");
+            Map<String, Object> condition = new HashMap<>();
+            condition.put("username", username);
+            Map<String, Object> existUser = db.findOne(table, condition);
             if (existUser != null) {
                 result.put("success", false);
                 result.put("msg", "用户名已存在");

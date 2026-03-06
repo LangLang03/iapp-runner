@@ -4,11 +4,14 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import io.javalin.http.Context;
 import io.javalin.http.Cookie;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class RequestContext {
+    private static final Logger logger = LoggerFactory.getLogger(RequestContext.class);
     private Context ctx;
     private YuWebServer server;
     private Map<String, Object> jsonData;
@@ -91,13 +94,13 @@ public class RequestContext {
             jsonParsed = true;
             try {
                 String body = ctx.body();
-                System.out.println("Request body: " + body);
+                logger.debug("Request body: {}", body);
                 if (body != null && !body.isEmpty()) {
                     jsonData = gson.fromJson(body, new TypeToken<Map<String, Object>>(){}.getType());
-                    System.out.println("Parsed JSON: " + jsonData);
+                    logger.debug("Parsed JSON: {}", jsonData);
                 }
             } catch (Exception e) {
-                System.out.println("JSON parse error: " + e.getMessage());
+                logger.debug("JSON parse error: {}", e.getMessage());
                 jsonData = null;
             }
         }

@@ -21,6 +21,7 @@ public class RuntimeContext {
     private String currentDirectory;
     private boolean endCodeRequested;
     private Thread currentThread;
+    private final boolean useSharedRegistry;
     
     public RuntimeContext() {
         this.variableManager = new VariableManager();
@@ -32,7 +33,22 @@ public class RuntimeContext {
         this.userFunctions = new HashMap<>();
         this.currentDirectory = System.getProperty("user.dir");
         this.endCodeRequested = false;
+        this.useSharedRegistry = false;
         registerBuiltinFunctions();
+        initializeBeanShell();
+    }
+    
+    public RuntimeContext(FunctionRegistry sharedRegistry) {
+        this.variableManager = new VariableManager();
+        this.functionRegistry = sharedRegistry;
+        this.beanShellInterpreter = new Interpreter();
+        this.mjavaModuleLoader = new MjavaModuleLoader();
+        this.breakContextStack = new Stack<>();
+        this.javaObjects = new HashMap<>();
+        this.userFunctions = new HashMap<>();
+        this.currentDirectory = System.getProperty("user.dir");
+        this.endCodeRequested = false;
+        this.useSharedRegistry = true;
         initializeBeanShell();
     }
     

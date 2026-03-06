@@ -3,29 +3,100 @@ package cn.langlang.yuweb.database.impl;
 import cn.langlang.yuweb.database.Database;
 import cn.langlang.yuweb.database.DatabaseException;
 import cn.langlang.yuweb.database.QueryCondition;
-import com.google.gson.Gson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class SQLiteDatabase implements Database {
-    private String path;
-    private Connection connection;
-    private static final Gson gson = new Gson();
+public class MySQLDatabase implements Database {
+    private static final Logger logger = LoggerFactory.getLogger(MySQLDatabase.class);
     
-    public SQLiteDatabase(String path) {
-        this.path = path;
+    private String host;
+    private int port;
+    private String database;
+    private String username;
+    private String password;
+    private String charset;
+    private Connection connection;
+    
+    public MySQLDatabase(String host, int port, String database, String username, String password) {
+        this.host = host;
+        this.port = port;
+        this.database = database;
+        this.username = username;
+        this.password = password;
+        this.charset = "utf8mb4";
+    }
+    
+    public MySQLDatabase(String connectionString) {
+        parseConnectionString(connectionString);
+    }
+    
+    private void parseConnectionString(String connectionString) {
+        this.host = "localhost";
+        this.port = 3306;
+        this.charset = "utf8mb4";
+        
+        String[] parts = connectionString.split("/");
+        if (parts.length >= 4) {
+            String hostPort = parts[2];
+            this.database = parts[3].split("[?]")[0];
+            
+            if (hostPort.contains(":")) {
+                String[] hp = hostPort.split(":");
+                this.host = hp[0];
+                this.port = Integer.parseInt(hp[1]);
+            } else {
+                this.host = hostPort;
+            }
+            
+            if (parts.length > 3 && parts[3].contains("?")) {
+                String queryString = parts[3].split("[?]")[1];
+                for (String param : queryString.split("&")) {
+                    String[] kv = param.split("=");
+                    if (kv.length == 2) {
+                        if ("charset".equalsIgnoreCase(kv[0])) {
+                            this.charset = kv[1];
+                        }
+                    }
+                }
+            }
+        }
+        
+        int atIndex = connectionString.indexOf("@");
+        if (atIndex > 0) {
+            String userPass = connectionString.substring(0, atIndex);
+            if (userPass.startsWith("mysql://")) {
+                userPass = userPass.substring(8);
+            }
+            String[] up = userPass.split(":");
+            this.username = up[0];
+            this.password = up.length > 1 ? up[1] : "";
+        }
+    }
+    
+    public void setCharset(String charset) {
+        this.charset = charset;
     }
     
     @Override
     public void connect() throws DatabaseException {
         try {
-            Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:" + path);
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            
+            String url = String.format(
+                "jdbc:mysql://%s:%d/%s?useSSL=false&serverTimezone=UTC&characterEncoding=%s&allowPublicKeyRetrieval=true",
+                host, port, database, charset
+            );
+            
+            connection = DriverManager.getConnection(url, username, password);
             connection.setAutoCommit(true);
+            
+            logger.info("Connected to MySQL database: {}@{}:{}/{}", username, host, port, database);
         } catch (ClassNotFoundException | SQLException e) {
-            throw new DatabaseException("Failed to connect to database: " + e.getMessage(), e);
+            throw new DatabaseException("Failed to connect to MySQL: " + e.getMessage(), e);
         }
     }
     
@@ -34,8 +105,9 @@ public class SQLiteDatabase implements Database {
         if (connection != null) {
             try {
                 connection.close();
+                logger.info("Disconnected from MySQL database");
             } catch (SQLException e) {
-                e.printStackTrace();
+                logger.error("Error closing MySQL connection: {}", e.getMessage());
             }
             connection = null;
         }
@@ -213,7 +285,7 @@ public class SQLiteDatabase implements Database {
             dataSql.append(" WHERE ").append(whereClause);
         }
         
-        dataSql.append(" LIMIT ? OFFSET ?");
+        dataSql.append(" LIMIT ?, ?");
         
         Map<String, Object> result = new HashMap<>();
         
@@ -236,8 +308,8 @@ public class SQLiteDatabase implements Database {
                 for (Object value : values) {
                     dataStmt.setObject(paramIndex++, value);
                 }
-                dataStmt.setInt(paramIndex++, size);
-                dataStmt.setInt(paramIndex, offset);
+                dataStmt.setInt(paramIndex++, offset);
+                dataStmt.setInt(paramIndex, size);
                 
                 ResultSet rs = dataStmt.executeQuery();
                 while (rs.next()) {

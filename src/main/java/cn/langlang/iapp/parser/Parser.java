@@ -35,16 +35,20 @@ public class Parser implements IParser {
         this.functionRegistry = new FunctionRegistry();
     }
     
+    public void reset(List<Token> tokens) {
+        this.tokens = tokens;
+        this.current = 0;
+        this.iterationCount = 0;
+        this.definedFunctions.clear();
+    }
+    
     public void setFunctionRegistry(FunctionRegistry functionRegistry) {
         this.functionRegistry = functionRegistry;
     }
     
     @Override
     public Program parse(List<Token> tokens) throws ParserException {
-        this.tokens = tokens;
-        this.current = 0;
-        this.iterationCount = 0;
-        this.definedFunctions.clear();
+        reset(tokens);
         return parse();
     }
     

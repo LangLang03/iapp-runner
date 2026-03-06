@@ -12,10 +12,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class LoginFunction extends AbstractFunction {
     private DatabaseManager dbManager;
-    private static final Map<String, Map<String, Object>> tokenStore = new HashMap<>();
+    private static final Map<String, Map<String, Object>> tokenStore = new ConcurrentHashMap<>();
     
     public LoginFunction(DatabaseManager dbManager) {
         this.dbManager = dbManager;
@@ -50,7 +51,9 @@ public class LoginFunction extends AbstractFunction {
         Map<String, Object> result = new HashMap<>();
         
         try {
-            Map<String, Object> user = db.findOne(table, "username = '" + username + "'");
+            Map<String, Object> condition = new HashMap<>();
+            condition.put("username", username);
+            Map<String, Object> user = db.findOne(table, condition);
             
             if (user == null) {
                 result.put("success", false);
