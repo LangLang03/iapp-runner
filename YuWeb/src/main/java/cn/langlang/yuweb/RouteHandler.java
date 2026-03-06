@@ -21,6 +21,8 @@ public class RouteHandler {
     private static final Logger logger = LoggerFactory.getLogger(RouteHandler.class);
     
     private final YuWebServer server;
+    private final YuWebConfig config;
+    private final ErrorPageGenerator errorPageGenerator;
     private static final DatabaseManager dbManager = new DatabaseManager();
     private static final Map<String, Object> globalVariables = new ConcurrentHashMap<>();
     private static ScriptCache scriptCache;
@@ -36,6 +38,8 @@ public class RouteHandler {
     
     public RouteHandler(YuWebServer server) {
         this.server = server;
+        this.config = server.getConfig();
+        this.errorPageGenerator = new ErrorPageGenerator(config);
         ensureInitialized();
     }
     
@@ -53,7 +57,7 @@ public class RouteHandler {
         
         String source = readFile(scriptPath);
         if (source == null) {
-            ctx.status(404).result("Script not found: " + scriptPath);
+            errorPageGenerator.sendNotFound(ctx, scriptPath);
             return;
         }
         
@@ -92,7 +96,7 @@ public class RouteHandler {
             
         } catch (Exception e) {
             logger.error("Error executing script {}: {}", scriptPath, e.getMessage(), e);
-            throw e;
+            errorPageGenerator.sendServerError(ctx, "Script execution error: " + e.getMessage(), e);
         } finally {
             long elapsed = System.currentTimeMillis() - startTime;
             perfMonitor.recordTime(METRIC_REQUEST_TIME, elapsed);

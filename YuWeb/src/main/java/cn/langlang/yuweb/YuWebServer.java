@@ -11,13 +11,28 @@ import java.nio.file.Paths;
 
 public class YuWebServer {
     private static final Logger logger = LoggerFactory.getLogger(YuWebServer.class);
+    
+    public static final String VERSION = "1.0.0";
+    public static final String SERVER_NAME = "YuWeb";
+    
     private int port = 8080;
     private String projectPath;
     private Javalin app;
+    private final YuWebConfig config;
+    private final ErrorPageGenerator errorPageGenerator;
     private static final ThreadLocal<RequestContext> currentContext = new ThreadLocal<>();
     
     public YuWebServer(String projectPath) {
         this.projectPath = projectPath != null ? projectPath : ".";
+        this.config = new YuWebConfig();
+        this.config.setServerName(SERVER_NAME);
+        this.config.setServerVersion(VERSION);
+        this.errorPageGenerator = new ErrorPageGenerator(config);
+    }
+    
+    public YuWebServer(String projectPath, boolean debugMode) {
+        this(projectPath);
+        this.config.setDebugMode(debugMode);
     }
     
     public void setPort(int port) {
@@ -30,6 +45,18 @@ public class YuWebServer {
     
     public String getProjectPath() {
         return projectPath;
+    }
+    
+    public YuWebConfig getConfig() {
+        return config;
+    }
+    
+    public void setDebugMode(boolean debugMode) {
+        this.config.setDebugMode(debugMode);
+    }
+    
+    public boolean isDebugMode() {
+        return config.isDebugMode();
     }
     
     public void setCurrentContext(RequestContext context) {
@@ -52,8 +79,8 @@ public class YuWebServer {
         
         File staticDir = new File(projectPath + "/static");
         
-        app = Javalin.create(config -> {
-            config.http.maxRequestSize = 10_000_000L;
+        app = Javalin.create(javalinConfig -> {
+            javalinConfig.http.maxRequestSize = 10_000_000L;
         });
         
         app.before(ctx -> {
@@ -72,6 +99,11 @@ public class YuWebServer {
         app.options("/*", this::handleRequest);
         app.head("/*", this::handleRequest);
         
+        app.exception(Exception.class, (e, ctx) -> {
+            logger.error("Unhandled exception: {}", e.getMessage(), e);
+            errorPageGenerator.sendServerError(ctx, "Internal server error", e);
+        });
+        
         String appFile = projectPath + "/app.iapp";
         File appFileObj = new File(appFile);
         if (appFileObj.exists()) {
@@ -81,6 +113,9 @@ public class YuWebServer {
         app.start(port);
         logger.info("YuWeb Server started on port {}", port);
         logger.info("Project path: {}", new File(projectPath).getAbsolutePath());
+        if (config.isDebugMode()) {
+            logger.warn("Debug mode is ENABLED - Error details will be shown to clients");
+        }
     }
     
     public void stop() {
@@ -96,13 +131,13 @@ public class YuWebServer {
         String scriptPath = findScriptPath(path);
         
         if (scriptPath == null) {
-            ctx.status(404).result("Not Found: " + path);
+            errorPageGenerator.sendNotFound(ctx, path);
             return;
         }
         
         File scriptFile = new File(projectPath + "/webroot" + scriptPath);
         if (!scriptFile.exists()) {
-            ctx.status(404).result("Not Found: " + path);
+            errorPageGenerator.sendNotFound(ctx, path);
             return;
         }
         
@@ -111,7 +146,7 @@ public class YuWebServer {
             handler.handle(scriptFile.getAbsolutePath(), ctx);
         } catch (Exception e) {
             logger.error("Error handling request: {}", e.getMessage(), e);
-            ctx.status(500).result("Internal Server Error");
+            errorPageGenerator.sendServerError(ctx, "Request handling error", e);
         }
     }
     
@@ -150,7 +185,15 @@ public class YuWebServer {
     
     public static void main(String[] args) {
         String projectPath = args.length > 0 ? args[0] : ".";
-        YuWebServer server = new YuWebServer(projectPath);
+        boolean debugMode = false;
+        
+        for (int i = 1; i < args.length; i++) {
+            if ("--debug".equals(args[i]) || "-d".equals(args[i])) {
+                debugMode = true;
+            }
+        }
+        
+        YuWebServer server = new YuWebServer(projectPath, debugMode);
         server.start();
     }
 }
