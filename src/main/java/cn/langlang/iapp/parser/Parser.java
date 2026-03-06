@@ -784,6 +784,22 @@ public class Parser implements IParser {
             return expression;
         }
         
+        if (match(TokenType.KEYWORD_SS)) {
+            Token token = previous();
+            if (match(TokenType.LPAREN)) {
+                return parseFunctionCallExpression(token.getValue(), token.getLine());
+            }
+            return new VariableExpression(token.getLine(), token.getValue(), TokenType.KEYWORD_SS);
+        }
+        
+        if (match(TokenType.KEYWORD_SSS)) {
+            Token token = previous();
+            if (match(TokenType.LPAREN)) {
+                return parseFunctionCallExpression(token.getValue(), token.getLine());
+            }
+            return new VariableExpression(token.getLine(), token.getValue(), TokenType.KEYWORD_SSS);
+        }
+        
         if (match(TokenType.IDENTIFIER)) {
             Token token = previous();
             
@@ -818,8 +834,17 @@ public class Parser implements IParser {
         List<Expression> arguments = new ArrayList<>();
         
         if (!check(TokenType.RPAREN)) {
+            int paramIndex = 0;
             do {
-                arguments.add(parseExpression());
+                boolean isOutputParam = isOutputParameter(functionName, paramIndex);
+                
+                if (isOutputParam && check(TokenType.IDENTIFIER)) {
+                    Token varToken = advance();
+                    arguments.add(new VariableExpression(varToken.getLine(), varToken.getValue(), TokenType.KEYWORD_S));
+                } else {
+                    arguments.add(parseExpression());
+                }
+                paramIndex++;
             } while (match(TokenType.COMMA));
         }
         

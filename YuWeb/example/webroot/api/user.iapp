@@ -1,0 +1,79 @@
+s id = get("id")
+
+// GET - 查询
+f(method() == "GET")
+{
+    f(id == null)
+    {
+        s users = dball("users", null)
+        json(map("code", 0, "data", users))
+    }
+    else
+    {
+        s user = dbone("users", ss("id = " + id))
+        f(user == null)
+        {
+            json(map("code", 404, "msg", "用户不存在"))
+        }
+        else
+        {
+            json(map("code", 0, "data", user))
+        }
+    }
+    endcode
+}
+
+// POST - 创建
+f(method() == "POST")
+{
+    s data = json()
+    s username = mget(data, "username")
+    s password = mget(data, "password")
+    s email = mget(data, "email")
+    
+    f(username == null || password == null)
+    {
+        json(map("code", 400, "msg", "用户名和密码不能为空"))
+        endcode
+    }
+    
+    s extra = map("email", email)
+    s result = register("users", username, password, extra)
+    
+    json(map("code", 0, "msg", "创建成功", "id", mget(result, "userId")))
+    endcode
+}
+
+// PUT - 更新
+f(method() == "PUT")
+{
+    f(id == null)
+    {
+        json(map("code", 400, "msg", "缺少用户ID"))
+        endcode
+    }
+    
+    s data = json()
+    s email = mget(data, "email")
+    s status = mget(data, "status")
+    
+    dbupdate("users", map("email", email, "status", status), ss("id = " + id))
+    json(map("code", 0, "msg", "更新成功"))
+    endcode
+}
+
+// DELETE - 删除
+f(method() == "DELETE")
+{
+    f(id == null)
+    {
+        json(map("code", 400, "msg", "缺少用户ID"))
+        endcode
+    }
+    
+    dbdelete("users", ss("id = " + id))
+    json(map("code", 0, "msg", "删除成功"))
+    endcode
+}
+
+json(map("code", 405, "msg", "Method Not Allowed"))

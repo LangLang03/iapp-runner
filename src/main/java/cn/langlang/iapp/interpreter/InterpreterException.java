@@ -13,6 +13,16 @@ public class InterpreterException extends Exception {
         this.line = line;
     }
     
+    public InterpreterException(String message, Throwable cause) {
+        super(message, cause);
+        this.line = -1;
+    }
+    
+    public InterpreterException(String message, int line, Throwable cause) {
+        super(message + " at line " + line, cause);
+        this.line = line;
+    }
+    
     public int getLine() {
         return line;
     }

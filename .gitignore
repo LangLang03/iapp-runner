@@ -43,3 +43,5 @@ bin/
 .DS_Store
 .trae/
 iapp.txt
+.db
+.idea/

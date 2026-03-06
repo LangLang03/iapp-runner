@@ -402,10 +402,10 @@ public class Interpreter implements IInterpreter {
 
             @Override
             public Object visitFunctionCall(FunctionCallExpression expr) throws InterpreterException {
+                String functionName = expr.getFunctionName();
+                List<Object> args = new ArrayList<>();
+                
                 try {
-                    String functionName = expr.getFunctionName();
-                    List<Object> args = new ArrayList<>();
-
                     for (Expression arg : expr.getArguments()) {
                         args.add(evaluateExpression(arg, context));
                     }
@@ -417,7 +417,7 @@ public class Interpreter implements IInterpreter {
                         return context.executeMjavaMethod("", functionName, args.toArray());
                     }
                 } catch (Exception e) {
-                    throw new InterpreterException("函数调用错误: " + e.getMessage());
+                    throw new InterpreterException("函数 '" + functionName + "' 调用错误 (参数数量: " + args.size() + "): " + e.getMessage(), e);
                 }
             }
 

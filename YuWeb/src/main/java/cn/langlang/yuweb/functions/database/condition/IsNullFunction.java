@@ -1,16 +1,17 @@
-package cn.langlang.iapp.functions.string;
+package cn.langlang.yuweb.functions.database.condition;
 
 import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
 import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
+import cn.langlang.yuweb.database.QueryCondition;
 
 import java.util.List;
 
-public class SsFunction extends AbstractFunction {
+public class IsNullFunction extends AbstractFunction {
     @Override
     public String getName() {
-        return "ss";
+        return "isnull";
     }
     
     @Override
@@ -24,13 +25,13 @@ public class SsFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) {
-        Object value = arguments.get(0);
-        return value != null ? value.toString() : "";
+    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+        String field = arguments.get(0) != null ? arguments.get(0).toString() : "";
+        return QueryCondition.isNull(field);
     }
     
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.OBJECT);
+        return types(ParamType.STRING);
     }
 }

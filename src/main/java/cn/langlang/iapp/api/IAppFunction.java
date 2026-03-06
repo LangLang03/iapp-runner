@@ -62,7 +62,7 @@ public class IAppFunction {
     public String getParamTypeInfo() {
         StringBuilder sb = new StringBuilder();
         sb.append(name).append("(");
-        if (!paramTypes.isEmpty()) {
+        if (paramTypes != null && !paramTypes.isEmpty()) {
             for (int i = 0; i < paramTypes.size(); i++) {
                 if (i > 0) sb.append(", ");
                 sb.append(paramTypes.get(i).name());

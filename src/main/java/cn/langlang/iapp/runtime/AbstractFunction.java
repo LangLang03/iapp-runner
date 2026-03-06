@@ -24,8 +24,12 @@ public abstract class AbstractFunction implements IFunction {
     
     @Override
     public List<List<ParamType>> getParamTypeLists() {
+        List<ParamType> paramTypes = getParamTypes();
+        if (paramTypes == null) {
+            return null;
+        }
         List<List<ParamType>> lists = new ArrayList<>();
-        lists.add(getParamTypes());
+        lists.add(paramTypes);
         return lists;
     }
     

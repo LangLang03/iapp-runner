@@ -1,0 +1,38 @@
+f(method() != "POST")
+{
+    json(map("code", 405, "msg", "仅支持 POST 请求"))
+    endcode
+}
+
+s username = post("username")
+s password = post("password")
+s email = post("email")
+
+f(username == null || password == null)
+{
+    s data = json()
+    f(data != null)
+    {
+        username = mget(data, "username")
+        password = mget(data, "password")
+        email = mget(data, "email")
+    }
+}
+
+f(username == null || password == null)
+{
+    json(map("code", 400, "msg", "用户名和密码不能为空"))
+    endcode
+}
+
+s extra = map("email", email)
+s result = register("users", username, password, extra)
+
+f(mget(result, "success") == true)
+{
+    json(map("code", 0, "msg", "注册成功", "userId", mget(result, "userId")))
+}
+else
+{
+    json(map("code", 400, "msg", mget(result, "msg")))
+}

@@ -1,16 +1,17 @@
-package cn.langlang.iapp.functions.string;
+package cn.langlang.yuweb.functions.auth;
 
 import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
 import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.List;
 
-public class SsFunction extends AbstractFunction {
+public class HashPasswordFunction extends AbstractFunction {
     @Override
     public String getName() {
-        return "ss";
+        return "hashPassword";
     }
     
     @Override
@@ -24,13 +25,13 @@ public class SsFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) {
-        Object value = arguments.get(0);
-        return value != null ? value.toString() : "";
+    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+        String password = arguments.get(0) != null ? arguments.get(0).toString() : "";
+        return BCrypt.hashpw(password, BCrypt.gensalt());
     }
     
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.OBJECT);
+        return types(ParamType.STRING);
     }
 }

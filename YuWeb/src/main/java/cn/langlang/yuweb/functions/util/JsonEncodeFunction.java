@@ -1,16 +1,19 @@
-package cn.langlang.iapp.functions.string;
+package cn.langlang.yuweb.functions.util;
 
 import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
 import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
+import com.google.gson.Gson;
 
 import java.util.List;
 
-public class SsFunction extends AbstractFunction {
+public class JsonEncodeFunction extends AbstractFunction {
+    private static final Gson gson = new Gson();
+    
     @Override
     public String getName() {
-        return "ss";
+        return "jsonEncode";
     }
     
     @Override
@@ -24,13 +27,13 @@ public class SsFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) {
-        Object value = arguments.get(0);
-        return value != null ? value.toString() : "";
+    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+        Object obj = arguments.get(0);
+        return gson.toJson(obj);
     }
     
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.OBJECT);
+        return null;
     }
 }

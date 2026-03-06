@@ -1,0 +1,36 @@
+f(method() != "POST")
+{
+    json(map("code", 405, "msg", "仅支持 POST 请求"))
+    endcode
+}
+
+s username = post("username")
+s password = post("password")
+
+f(username == null || password == null)
+{
+    s data = json()
+    f(data != null)
+    {
+        username = mget(data, "username")
+        password = mget(data, "password")
+    }
+}
+
+f(username == null || password == null)
+{
+    json(map("code", 400, "msg", "用户名和密码不能为空"))
+    endcode
+}
+
+s result = login("users", username, password)
+
+f(mget(result, "success") == true)
+{
+    setCookie("token", mget(result, "token"), 86400)
+    json(map("code", 0, "msg", "登录成功", "data", result))
+}
+else
+{
+    json(map("code", 401, "msg", mget(result, "msg")))
+}

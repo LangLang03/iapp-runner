@@ -1,0 +1,6 @@
+s page = get("page", "1")
+s size = get("size", "10")
+
+s result = dbpage("users", null, page, size)
+
+json(map("code", 0, "data", result))

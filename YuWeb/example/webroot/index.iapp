@@ -1,0 +1,41 @@
+html("<!DOCTYPE html>
+<html>
+<head>
+    <title>YuWeb - 裕语言 Web 框架</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        h1 { color: #333; }
+        a { color: #007bff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .api-list { background: #f5f5f5; padding: 20px; border-radius: 5px; }
+        .api-list li { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>欢迎使用 YuWeb</h1>
+    <p>YuWeb 是一个基于裕语言的轻量级 Web 后端框架</p>
+    
+    <h2>API 示例</h2>
+    <div class='api-list'>
+        <ul>
+            <li><a href='/user/list.iapp'>GET /user/list</a> - 用户列表</li>
+            <li><a href='/api/user.iapp'>GET /api/user</a> - RESTful 用户 API</li>
+            <li>POST /user/login.iapp - 用户登录</li>
+            <li>POST /user/register.iapp - 用户注册</li>
+        </ul>
+    </div>
+    
+    <h2>快速开始</h2>
+    <pre>
+// 获取请求参数
+s name = get(\"name\")
+s email = post(\"email\")
+
+// 返回 JSON
+json(map(\"code\", 0, \"msg\", \"success\"))
+
+// 数据库查询
+s users = dball(\"users\", \"status = 'active'\")
+    </pre>
+</body>
+</html>")

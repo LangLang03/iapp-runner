@@ -1,4 +1,4 @@
-package cn.langlang.iapp.functions.string;
+package cn.langlang.yuweb.functions.auth;
 
 import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
@@ -7,10 +7,10 @@ import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.util.List;
 
-public class SsFunction extends AbstractFunction {
+public class LogoutFunction extends AbstractFunction {
     @Override
     public String getName() {
-        return "ss";
+        return "logout";
     }
     
     @Override
@@ -24,13 +24,16 @@ public class SsFunction extends AbstractFunction {
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) {
-        Object value = arguments.get(0);
-        return value != null ? value.toString() : "";
+    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+        String token = arguments.get(0) != null ? arguments.get(0).toString() : "";
+        
+        LoginFunction.removeToken(token);
+        
+        return true;
     }
     
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.OBJECT);
+        return types(ParamType.STRING);
     }
 }

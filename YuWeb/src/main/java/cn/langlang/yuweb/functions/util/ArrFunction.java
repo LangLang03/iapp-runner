@@ -1,36 +1,36 @@
-package cn.langlang.iapp.functions.string;
+package cn.langlang.yuweb.functions.util;
 
 import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
 import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class SsFunction extends AbstractFunction {
+public class ArrFunction extends AbstractFunction {
     @Override
     public String getName() {
-        return "ss";
+        return "arr";
     }
     
     @Override
     public int getMinParameters() {
-        return 1;
+        return 0;
     }
     
     @Override
     public int getMaxParameters() {
-        return 1;
+        return Integer.MAX_VALUE;
     }
     
     @Override
-    public Object call(RuntimeContext context, List<Object> arguments) {
-        Object value = arguments.get(0);
-        return value != null ? value.toString() : "";
+    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+        return new ArrayList<>(arguments);
     }
     
     @Override
     public List<ParamType> getParamTypes() {
-        return types(ParamType.OBJECT);
+        return null;
     }
 }
