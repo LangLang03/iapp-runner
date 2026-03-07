@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fibonacci 测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+        .result.error {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+        .result.success {
+            border-left-color: #28a745;
+        }
+        .time {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .loading {
+            display: none;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Fibonacci 性能测试</h1>
+        
+        <div class="form-group">
+            <label for="n">计算 fib(n)，n 的值：</label>
+            <input type="number" id="n" value="30" min="1" max="92">
+        </div>
+        
+        <button onclick="testIterative()">测试迭代</button>
+        
+        <div class="loading" id="loading">计算中...</div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function testIterative() {
+            const n = document.getElementById('n').value;
+            await runTest('/test.iapp?n=' + n);
+        }
+
+        async function runTest(url) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="loading" style="display:block">计算中...</div>';
+            
+            try {
+                const startTime = performance.now();
+                const response = await fetch(url);
+                const endTime = performance.now();
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <h3>迭代方法测试结果</h3>
+                            <p>n = ${data.n}</p>
+                            <p>fib(${data.n}) = <strong>${data.result}</strong></p>
+                            <p>服务器计算耗时: <span class="time">${data.time_ms} ms</span></p>
+                            <p>网络往返耗时: ${(endTime - startTime).toFixed(2)} ms</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="result error">错误: ${data.error}</div>`;
+                }
+            } catch (e) {
+                resultDiv.innerHTML = `<div class="result error">请求失败: ${e.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

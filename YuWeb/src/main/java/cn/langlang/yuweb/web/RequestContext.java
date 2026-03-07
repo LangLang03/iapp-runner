@@ -2,11 +2,17 @@ package cn.langlang.yuweb.web;
 
 import cn.langlang.yuweb.server.YuWebServer;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+import com.google.gson.JsonPrimitive;
 import io.javalin.http.Context;
 import io.javalin.http.Cookie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Type;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,7 +26,20 @@ public class RequestContext {
     private YuWebServer server;
     private Map<String, Object> jsonData;
     private boolean jsonParsed = false;
-    private static final Gson gson = new Gson();
+    private static final Gson gson = new GsonBuilder()
+        .registerTypeAdapter(Long.class, new JsonSerializer<Long>() {
+            @Override
+            public JsonPrimitive serialize(Long src, Type typeOfSrc, JsonSerializationContext context) {
+                return new JsonPrimitive(src.toString());
+            }
+        })
+        .registerTypeAdapter(long.class, new JsonSerializer<Long>() {
+            @Override
+            public JsonPrimitive serialize(Long src, Type typeOfSrc, JsonSerializationContext context) {
+                return new JsonPrimitive(src.toString());
+            }
+        })
+        .create();
     
     private static final long DEFAULT_MAX_FILE_SIZE = 10 * 1024 * 1024;
     

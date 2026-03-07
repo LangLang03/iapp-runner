@@ -1,6 +1,8 @@
 package cn.langlang.yuweb.cache;
 
 import cn.langlang.iapp.ast.Program;
+import cn.langlang.iapp.ast.Statement;
+import cn.langlang.iapp.ast.FunctionDefinitionStatement;
 import cn.langlang.iapp.lexer.Lexer;
 import cn.langlang.iapp.lexer.LexerException;
 import cn.langlang.iapp.lexer.Token;
@@ -28,6 +30,8 @@ public class ScriptPreloader {
     private final Set<String> allowedScriptPaths = ConcurrentHashMap.newKeySet();
     private final FunctionRegistry functionRegistry;
     private final String webrootPath;
+    
+    private final Map<String, FunctionDefinitionStatement> globalUserFunctions = new ConcurrentHashMap<>();
     
     private int totalScripts = 0;
     private int successCount = 0;
@@ -92,6 +96,8 @@ public class ScriptPreloader {
             parser.setFunctionRegistry(functionRegistry);
             Program program = parser.parse();
             
+            extractUserFunctions(program, relativePath);
+            
             long compileTime = System.currentTimeMillis() - compileStart;
             totalCompileTime += compileTime;
             
@@ -124,6 +130,17 @@ public class ScriptPreloader {
         }
     }
     
+    private void extractUserFunctions(Program program, String scriptPath) {
+        for (Statement stmt : program.getStatements()) {
+            if (stmt instanceof FunctionDefinitionStatement) {
+                FunctionDefinitionStatement funcDef = (FunctionDefinitionStatement) stmt;
+                String funcName = funcDef.getFullName();
+                globalUserFunctions.put(funcName, funcDef);
+                logger.debug("Registered global user function: {} from {}", funcName, scriptPath);
+            }
+        }
+    }
+    
     private String getRelativePath(File file) {
         Path basePath = Paths.get(webrootPath);
         Path filePath = file.toPath();
@@ -133,6 +150,10 @@ public class ScriptPreloader {
     
     public PreloadedScript getScript(String path) {
         return preloadedScripts.get(path);
+    }
+    
+    public Map<String, FunctionDefinitionStatement> getGlobalUserFunctions() {
+        return Collections.unmodifiableMap(globalUserFunctions);
     }
     
     public boolean isScriptAllowed(String path) {

@@ -285,7 +285,6 @@ public class RuntimeContext {
         variableManager.resetForReuse();
         breakContextStack.clear();
         javaObjects.clear();
-        userFunctions.clear();
         endCodeRequested = false;
         currentThread = null;
         requestContext = null;

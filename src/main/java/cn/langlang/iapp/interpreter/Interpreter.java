@@ -389,7 +389,16 @@ public class Interpreter implements IInterpreter {
 
         @Override
         public Object visitVariable(VariableExpression expr) {
-            return interpreter.currentContext.getVariable(expr.getName());
+            TokenType scope = expr.getScope();
+            String name = expr.getName();
+            
+            if (scope == TokenType.KEYWORD_SSS) {
+                return interpreter.currentContext.getVariableManager().getGlobalVariables().get(name);
+            } else if (scope == TokenType.KEYWORD_SS) {
+                return interpreter.currentContext.getVariableManager().getInterfaceVariables().get(name);
+            } else {
+                return interpreter.currentContext.getVariable(name);
+            }
         }
 
         @Override

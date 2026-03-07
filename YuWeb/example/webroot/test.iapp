@@ -1,0 +1,33 @@
+fn fibIterative(n)
+    f(n <= 1)
+    {
+        sss.fibIterative_result = n
+    }
+    else
+    {
+        sss.a = 0
+        sss.b = 1
+        s i = 2
+        w(i <= n)
+        {
+            sss.temp = sss.a + sss.b
+            sss.a = sss.b
+            sss.b = sss.temp
+            i = i + 1
+        }
+        sss.fibIterative_result = sss.b
+    }
+end fn
+
+s n = 0
+s(get("n"), n)
+
+s timeMs = 0
+
+s(time(4), startTime)
+fibIterative(n)
+sss.result = sss.fibIterative_result
+s(time(4), endTime)
+s(endTime - startTime, timeMs)
+
+json(map("success", true, "n", n, "result", sss.result, "time_ms", timeMs))

@@ -92,6 +92,9 @@ public class Parser implements IParser {
                 if (nextToken != null && isMathFunctionOperator(nextToken.getType())) {
                     return parseMathFunctionCallStatement(token, nextToken);
                 }
+                if (nextToken != null && nextToken.getType() == TokenType.DOT) {
+                    return parseScopedAssignmentStatement(token);
+                }
                 return parseVariableDeclaration();
             case KEYWORD_IF:
                 return parseIfStatement();
@@ -208,6 +211,34 @@ public class Parser implements IParser {
         }
         
         return new VariableDeclarationStatement(scopeToken.getLine(), scope, variableName, initialValue);
+    }
+    
+    private Statement parseScopedAssignmentStatement(Token scopeToken) throws ParserException {
+        advance();
+        consume(TokenType.DOT, "Expected '.' after scope prefix");
+        
+        TokenType scope = scopeToken.getType();
+        
+        if (!check(TokenType.IDENTIFIER)) {
+            throw new ParserException("Expected variable name after " + scopeToken.getValue() + ".", scopeToken.getLine(), scopeToken.getColumn());
+        }
+        
+        Token nameToken = advance();
+        
+        if (match(TokenType.EQUALS)) {
+            Expression value = parseExpression();
+            return new AssignmentStatement(nameToken.getLine(), nameToken.getValue(), value, scope);
+        }
+        
+        if (match(TokenType.LBRACKET)) {
+            Expression index = parseExpression();
+            consume(TokenType.RBRACKET, "Expected ']' after index");
+            consume(TokenType.EQUALS, "Expected '=' after array access");
+            Expression value = parseExpression();
+            return new AssignmentStatement(nameToken.getLine(), nameToken.getValue(), index, value, scope);
+        }
+        
+        throw new ParserException("Expected '=' after variable name", nameToken.getLine(), nameToken.getColumn());
     }
     
     private Statement parseIfStatement() throws ParserException {
@@ -574,13 +605,35 @@ public class Parser implements IParser {
     private Statement parseIdentifierStatement() throws ParserException {
         Token identifier = advance();
         
+        TokenType scope = null;
+        String scopePrefix = null;
+        
+        if (identifier.getValue().equals("s") || identifier.getValue().equals("ss") || identifier.getValue().equals("sss")) {
+            if (match(TokenType.DOT)) {
+                scopePrefix = identifier.getValue();
+                if (identifier.getValue().equals("s")) {
+                    scope = TokenType.KEYWORD_S;
+                } else if (identifier.getValue().equals("ss")) {
+                    scope = TokenType.KEYWORD_SS;
+                } else {
+                    scope = TokenType.KEYWORD_SSS;
+                }
+                
+                if (!check(TokenType.IDENTIFIER)) {
+                    throw new ParserException("Expected variable name after " + scopePrefix + ".", identifier.getLine(), identifier.getColumn());
+                }
+                identifier = advance();
+            }
+        }
+        
         if (match(TokenType.DOT)) {
-            return parseMemberAccessOrCall(identifier);
+            return parseMemberAccessOrCall(identifier, scope);
         }
         
         if (match(TokenType.EQUALS)) {
             Expression value = parseExpression();
-            return new AssignmentStatement(identifier.getLine(), identifier.getValue(), value, TokenType.KEYWORD_S);
+            TokenType useScope = (scope != null) ? scope : TokenType.KEYWORD_S;
+            return new AssignmentStatement(identifier.getLine(), identifier.getValue(), value, useScope);
         }
         
         if (match(TokenType.LPAREN)) {
@@ -592,13 +645,14 @@ public class Parser implements IParser {
             consume(TokenType.RBRACKET, "Expected ']' after index");
             consume(TokenType.EQUALS, "Expected '=' after array access");
             Expression value = parseExpression();
-            return new AssignmentStatement(identifier.getLine(), identifier.getValue(), index, value, TokenType.KEYWORD_S);
+            TokenType useScope = (scope != null) ? scope : TokenType.KEYWORD_S;
+            return new AssignmentStatement(identifier.getLine(), identifier.getValue(), index, value, useScope);
         }
         
         throw new ParserException("标识符后有意外的 token: " + identifier.getValue(), identifier.getLine(), identifier.getColumn());
     }
     
-    private Statement parseMemberAccessOrCall(Token objectToken) throws ParserException {
+    private Statement parseMemberAccessOrCall(Token objectToken, TokenType scope) throws ParserException {
         Token memberToken = consume(TokenType.IDENTIFIER, "Expected member name");
         
         if (match(TokenType.LPAREN)) {
@@ -607,7 +661,8 @@ public class Parser implements IParser {
         
         if (match(TokenType.EQUALS)) {
             Expression value = parseExpression();
-            return new AssignmentStatement(objectToken.getLine(), objectToken.getValue() + "." + memberToken.getValue(), value, TokenType.KEYWORD_S);
+            TokenType useScope = (scope != null) ? scope : TokenType.KEYWORD_S;
+            return new AssignmentStatement(objectToken.getLine(), objectToken.getValue() + "." + memberToken.getValue(), value, useScope);
         }
         
         throw new ParserException("成员访问后需要 '(' 或 '='", memberToken.getLine(), memberToken.getColumn());
@@ -788,8 +843,60 @@ public class Parser implements IParser {
             return expression;
         }
         
+        if (match(TokenType.KEYWORD_S)) {
+            Token token = previous();
+            if (match(TokenType.DOT)) {
+                if (match(TokenType.IDENTIFIER)) {
+                    Token varToken = previous();
+                    
+                    if (match(TokenType.LPAREN)) {
+                        return parseFunctionCallExpression(varToken.getValue(), varToken.getLine());
+                    }
+                    
+                    if (match(TokenType.DOT)) {
+                        return parseMemberAccessExpression(varToken.getValue(), varToken.getLine(), TokenType.KEYWORD_S);
+                    }
+                    
+                    if (match(TokenType.LBRACKET)) {
+                        Expression index = parseExpression();
+                        consume(TokenType.RBRACKET, "Expected ']' after index");
+                        return new ArrayAccessExpression(varToken.getLine(), new VariableExpression(varToken.getLine(), varToken.getValue(), TokenType.KEYWORD_S), index);
+                    }
+                    
+                    return new VariableExpression(varToken.getLine(), varToken.getValue(), TokenType.KEYWORD_S);
+                }
+                throw new ParserException("Expected variable name after s.", token.getLine(), token.getColumn());
+            }
+            if (match(TokenType.LPAREN)) {
+                return parseFunctionCallExpression(token.getValue(), token.getLine());
+            }
+            return new VariableExpression(token.getLine(), token.getValue(), TokenType.KEYWORD_S);
+        }
+        
         if (match(TokenType.KEYWORD_SS)) {
             Token token = previous();
+            if (match(TokenType.DOT)) {
+                if (match(TokenType.IDENTIFIER)) {
+                    Token varToken = previous();
+                    
+                    if (match(TokenType.LPAREN)) {
+                        return parseFunctionCallExpression(varToken.getValue(), varToken.getLine());
+                    }
+                    
+                    if (match(TokenType.DOT)) {
+                        return parseMemberAccessExpression(varToken.getValue(), varToken.getLine(), TokenType.KEYWORD_SS);
+                    }
+                    
+                    if (match(TokenType.LBRACKET)) {
+                        Expression index = parseExpression();
+                        consume(TokenType.RBRACKET, "Expected ']' after index");
+                        return new ArrayAccessExpression(varToken.getLine(), new VariableExpression(varToken.getLine(), varToken.getValue(), TokenType.KEYWORD_SS), index);
+                    }
+                    
+                    return new VariableExpression(varToken.getLine(), varToken.getValue(), TokenType.KEYWORD_SS);
+                }
+                throw new ParserException("Expected variable name after ss.", token.getLine(), token.getColumn());
+            }
             if (match(TokenType.LPAREN)) {
                 return parseFunctionCallExpression(token.getValue(), token.getLine());
             }
@@ -798,6 +905,28 @@ public class Parser implements IParser {
         
         if (match(TokenType.KEYWORD_SSS)) {
             Token token = previous();
+            if (match(TokenType.DOT)) {
+                if (match(TokenType.IDENTIFIER)) {
+                    Token varToken = previous();
+                    
+                    if (match(TokenType.LPAREN)) {
+                        return parseFunctionCallExpression(varToken.getValue(), varToken.getLine());
+                    }
+                    
+                    if (match(TokenType.DOT)) {
+                        return parseMemberAccessExpression(varToken.getValue(), varToken.getLine(), TokenType.KEYWORD_SSS);
+                    }
+                    
+                    if (match(TokenType.LBRACKET)) {
+                        Expression index = parseExpression();
+                        consume(TokenType.RBRACKET, "Expected ']' after index");
+                        return new ArrayAccessExpression(varToken.getLine(), new VariableExpression(varToken.getLine(), varToken.getValue(), TokenType.KEYWORD_SSS), index);
+                    }
+                    
+                    return new VariableExpression(varToken.getLine(), varToken.getValue(), TokenType.KEYWORD_SSS);
+                }
+                throw new ParserException("Expected variable name after sss.", token.getLine(), token.getColumn());
+            }
             if (match(TokenType.LPAREN)) {
                 return parseFunctionCallExpression(token.getValue(), token.getLine());
             }
@@ -807,12 +936,47 @@ public class Parser implements IParser {
         if (match(TokenType.IDENTIFIER)) {
             Token token = previous();
             
+            if (token.getValue().equals("s") || token.getValue().equals("ss") || token.getValue().equals("sss")) {
+                if (match(TokenType.DOT)) {
+                    TokenType scope;
+                    if (token.getValue().equals("s")) {
+                        scope = TokenType.KEYWORD_S;
+                    } else if (token.getValue().equals("ss")) {
+                        scope = TokenType.KEYWORD_SS;
+                    } else {
+                        scope = TokenType.KEYWORD_SSS;
+                    }
+                    
+                    if (match(TokenType.IDENTIFIER)) {
+                        Token varToken = previous();
+                        
+                        if (match(TokenType.LPAREN)) {
+                            return parseFunctionCallExpression(varToken.getValue(), varToken.getLine());
+                        }
+                        
+                        if (match(TokenType.DOT)) {
+                            return parseMemberAccessExpression(varToken.getValue(), varToken.getLine(), scope);
+                        }
+                        
+                        if (match(TokenType.LBRACKET)) {
+                            Expression index = parseExpression();
+                            consume(TokenType.RBRACKET, "Expected ']' after index");
+                            return new ArrayAccessExpression(varToken.getLine(), new VariableExpression(varToken.getLine(), varToken.getValue(), scope), index);
+                        }
+                        
+                        return new VariableExpression(varToken.getLine(), varToken.getValue(), scope);
+                    }
+                    
+                    throw new ParserException("Expected variable name after " + token.getValue() + ".", token.getLine(), token.getColumn());
+                }
+            }
+            
             if (match(TokenType.LPAREN)) {
                 return parseFunctionCallExpression(token.getValue(), token.getLine());
             }
             
             if (match(TokenType.DOT)) {
-                return parseMemberAccessExpression(token.getValue(), token.getLine());
+                return parseMemberAccessExpression(token.getValue(), token.getLine(), TokenType.KEYWORD_S);
             }
             
             if (match(TokenType.LBRACKET)) {
@@ -821,14 +985,7 @@ public class Parser implements IParser {
                 return new ArrayAccessExpression(token.getLine(), new VariableExpression(token.getLine(), token.getValue(), TokenType.KEYWORD_S), index);
             }
             
-            TokenType scope = TokenType.KEYWORD_S;
-            if (token.getValue().startsWith("sss.")) {
-                scope = TokenType.KEYWORD_SSS;
-            } else if (token.getValue().startsWith("ss.")) {
-                scope = TokenType.KEYWORD_SS;
-            }
-            
-            return new VariableExpression(token.getLine(), token.getValue(), scope);
+            return new VariableExpression(token.getLine(), token.getValue(), TokenType.KEYWORD_S);
         }
         
         throw new ParserException("需要表达式", peek().getLine(), peek().getColumn());
@@ -857,7 +1014,7 @@ public class Parser implements IParser {
         return new FunctionCallExpression(line, functionName, arguments);
     }
     
-    private Expression parseMemberAccessExpression(String objectName, int line) throws ParserException {
+    private Expression parseMemberAccessExpression(String objectName, int line, TokenType scope) throws ParserException {
         Token memberToken = consume(TokenType.IDENTIFIER, "Expected member name");
         
         if (match(TokenType.LPAREN)) {
@@ -865,11 +1022,11 @@ public class Parser implements IParser {
         }
         
         if (match(TokenType.DOT)) {
-            Expression inner = new MemberAccessExpression(line, new VariableExpression(line, objectName, TokenType.KEYWORD_S), memberToken.getValue());
+            Expression inner = new MemberAccessExpression(line, new VariableExpression(line, objectName, scope), memberToken.getValue());
             return parseChainedMemberAccess(inner, line);
         }
         
-        return new MemberAccessExpression(line, new VariableExpression(line, objectName, TokenType.KEYWORD_S), memberToken.getValue());
+        return new MemberAccessExpression(line, new VariableExpression(line, objectName, scope), memberToken.getValue());
     }
     
     private Expression parseChainedMemberAccess(Expression object, int line) throws ParserException {

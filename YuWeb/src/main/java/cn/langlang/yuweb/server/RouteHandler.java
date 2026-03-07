@@ -1,6 +1,7 @@
 package cn.langlang.yuweb.server;
 
 import cn.langlang.iapp.api.IAppScript;
+import cn.langlang.iapp.ast.FunctionDefinitionStatement;
 import cn.langlang.iapp.interpreter.Interpreter;
 import cn.langlang.iapp.runtime.RuntimeContext;
 import cn.langlang.iapp.runtime.RuntimeContextPool;
@@ -193,6 +194,10 @@ public class RouteHandler {
                 runtimeContext.setVariable(entry.getKey(), entry.getValue());
             }
             
+            for (Map.Entry<String, FunctionDefinitionStatement> entry : scriptPreloader.getGlobalUserFunctions().entrySet()) {
+                runtimeContext.registerUserFunction(entry.getKey(), entry.getValue());
+            }
+            
             runtimeContext.resetEndCodeRequest();
             
             long executeStart = System.currentTimeMillis();
@@ -291,9 +296,8 @@ public class RouteHandler {
         ctx.header("X-Content-Type-Options", "nosniff");
         ctx.header("Content-Length", String.valueOf(file.length()));
         
-        try (java.io.InputStream is = new java.io.BufferedInputStream(new java.io.FileInputStream(file))) {
-            ctx.result(is);
-        }
+        java.io.InputStream is = new java.io.BufferedInputStream(new java.io.FileInputStream(file));
+        ctx.result(is);
     }
     
     public void executeAppConfig(String appFile) {
