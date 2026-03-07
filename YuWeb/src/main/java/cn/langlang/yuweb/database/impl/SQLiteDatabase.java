@@ -1,5 +1,6 @@
 package cn.langlang.yuweb.database.impl;
 
+import cn.langlang.yuweb.database.ConnectionPool;
 import cn.langlang.yuweb.database.Database;
 import cn.langlang.yuweb.database.DatabaseException;
 import cn.langlang.yuweb.database.QueryCondition;
@@ -13,41 +14,85 @@ import java.util.stream.Collectors;
 
 public class SQLiteDatabase implements Database {
     private static final Logger logger = LoggerFactory.getLogger(SQLiteDatabase.class);
-    private String path;
-    private Connection connection;
+    
+    private final String path;
+    private ConnectionPool connectionPool;
+    private Connection maintenanceConnection;
     private static final Gson gson = new Gson();
+    
+    private static final String PRAGMA_WAL = "PRAGMA journal_mode=WAL";
+    private static final String PRAGMA_BUSY_TIMEOUT = "PRAGMA busy_timeout=5000";
+    private static final String PRAGMA_SYNCHRONOUS = "PRAGMA synchronous=NORMAL";
+    private static final String PRAGMA_CACHE_SIZE = "PRAGMA cache_size=-64000";
     
     public SQLiteDatabase(String path) {
         this.path = path;
+    }
+    
+    public SQLiteDatabase(String path, ConnectionPool connectionPool) {
+        this.path = path;
+        this.connectionPool = connectionPool;
+    }
+    
+    public void setConnectionPool(ConnectionPool connectionPool) {
+        this.connectionPool = connectionPool;
     }
     
     @Override
     public void connect() throws DatabaseException {
         try {
             Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:" + path);
-            connection.setAutoCommit(true);
+            
+            maintenanceConnection = DriverManager.getConnection("jdbc:sqlite:" + path);
+            configureConnection(maintenanceConnection);
+            
+            logger.info("SQLite database connected: {}", path);
+            logger.info("WAL mode enabled for better concurrency");
+            
         } catch (ClassNotFoundException | SQLException e) {
             throw new DatabaseException("Failed to connect to database: " + e.getMessage(), e);
         }
     }
     
+    private void configureConnection(Connection conn) throws SQLException {
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute(PRAGMA_WAL);
+            stmt.execute(PRAGMA_BUSY_TIMEOUT);
+            stmt.execute(PRAGMA_SYNCHRONOUS);
+            stmt.execute(PRAGMA_CACHE_SIZE);
+        }
+        conn.setAutoCommit(true);
+    }
+    
+    private Connection getConnection() throws SQLException {
+        if (connectionPool != null) {
+            return connectionPool.getConnection();
+        }
+        return maintenanceConnection;
+    }
+    
+    private void releaseConnection(Connection conn) {
+        if (connectionPool != null && conn != null) {
+            connectionPool.releaseConnection(conn);
+        }
+    }
+    
     @Override
     public void disconnect() {
-        if (connection != null) {
+        if (maintenanceConnection != null) {
             try {
-                connection.close();
+                maintenanceConnection.close();
             } catch (SQLException e) {
                 logger.error("Error closing database connection", e);
             }
-            connection = null;
+            maintenanceConnection = null;
         }
     }
     
     @Override
     public boolean isConnected() {
         try {
-            return connection != null && !connection.isClosed();
+            return maintenanceConnection != null && !maintenanceConnection.isClosed();
         } catch (SQLException e) {
             return false;
         }
@@ -77,20 +122,26 @@ public class SQLiteDatabase implements Database {
         
         sql.append(") VALUES (").append(placeholders).append(")");
         
-        try (PreparedStatement stmt = connection.prepareStatement(sql.toString(), Statement.RETURN_GENERATED_KEYS)) {
-            for (int i = 0; i < values.size(); i++) {
-                stmt.setObject(i + 1, values.get(i));
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql.toString(), Statement.RETURN_GENERATED_KEYS)) {
+                for (int i = 0; i < values.size(); i++) {
+                    stmt.setObject(i + 1, values.get(i));
+                }
+                
+                stmt.executeUpdate();
+                
+                ResultSet rs = stmt.getGeneratedKeys();
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
+                return -1;
             }
-            
-            stmt.executeUpdate();
-            
-            ResultSet rs = stmt.getGeneratedKeys();
-            if (rs.next()) {
-                return rs.getLong(1);
-            }
-            return -1;
         } catch (SQLException e) {
             throw new DatabaseException("Insert failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -114,13 +165,19 @@ public class SQLiteDatabase implements Database {
         String whereClause = buildWhereClause(condition, values);
         sql.append(" WHERE ").append(whereClause);
         
-        try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
-            for (int i = 0; i < values.size(); i++) {
-                stmt.setObject(i + 1, values.get(i));
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+                for (int i = 0; i < values.size(); i++) {
+                    stmt.setObject(i + 1, values.get(i));
+                }
+                return stmt.executeUpdate();
             }
-            return stmt.executeUpdate();
         } catch (SQLException e) {
             throw new DatabaseException("Update failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -133,13 +190,19 @@ public class SQLiteDatabase implements Database {
         String whereClause = buildWhereClause(condition, values);
         sql.append(" WHERE ").append(whereClause);
         
-        try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
-            for (int i = 0; i < values.size(); i++) {
-                stmt.setObject(i + 1, values.get(i));
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+                for (int i = 0; i < values.size(); i++) {
+                    stmt.setObject(i + 1, values.get(i));
+                }
+                return stmt.executeUpdate();
             }
-            return stmt.executeUpdate();
         } catch (SQLException e) {
             throw new DatabaseException("Delete failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -156,19 +219,25 @@ public class SQLiteDatabase implements Database {
         
         sql.append(" LIMIT 1");
         
-        try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
-            for (int i = 0; i < values.size(); i++) {
-                stmt.setObject(i + 1, values.get(i));
-            }
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return resultSetToMap(rs);
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+                for (int i = 0; i < values.size(); i++) {
+                    stmt.setObject(i + 1, values.get(i));
                 }
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return resultSetToMap(rs);
+                    }
+                }
+                return null;
             }
-            return null;
         } catch (SQLException e) {
             throw new DatabaseException("Query failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -185,19 +254,25 @@ public class SQLiteDatabase implements Database {
         
         List<Map<String, Object>> results = new ArrayList<>();
         
-        try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
-            for (int i = 0; i < values.size(); i++) {
-                stmt.setObject(i + 1, values.get(i));
-            }
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    results.add(resultSetToMap(rs));
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+                for (int i = 0; i < values.size(); i++) {
+                    stmt.setObject(i + 1, values.get(i));
                 }
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        results.add(resultSetToMap(rs));
+                    }
+                }
+                return results;
             }
-            return results;
         } catch (SQLException e) {
             throw new DatabaseException("Query failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -222,8 +297,10 @@ public class SQLiteDatabase implements Database {
         
         Map<String, Object> result = new HashMap<>();
         
+        Connection conn = null;
         try {
-            try (PreparedStatement countStmt = connection.prepareStatement(countSql.toString())) {
+            conn = getConnection();
+            try (PreparedStatement countStmt = conn.prepareStatement(countSql.toString())) {
                 for (int i = 0; i < values.size(); i++) {
                     countStmt.setObject(i + 1, values.get(i));
                 }
@@ -237,7 +314,7 @@ public class SQLiteDatabase implements Database {
             }
             
             List<Map<String, Object>> data = new ArrayList<>();
-            try (PreparedStatement dataStmt = connection.prepareStatement(dataSql.toString())) {
+            try (PreparedStatement dataStmt = conn.prepareStatement(dataSql.toString())) {
                 int paramIndex = 1;
                 for (Object value : values) {
                     dataStmt.setObject(paramIndex++, value);
@@ -256,6 +333,8 @@ public class SQLiteDatabase implements Database {
             return result;
         } catch (SQLException e) {
             throw new DatabaseException("Page query failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -270,19 +349,25 @@ public class SQLiteDatabase implements Database {
             sql.append(" WHERE ").append(whereClause);
         }
         
-        try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
-            for (int i = 0; i < values.size(); i++) {
-                stmt.setObject(i + 1, values.get(i));
-            }
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getLong(1);
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+                for (int i = 0; i < values.size(); i++) {
+                    stmt.setObject(i + 1, values.get(i));
                 }
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getLong(1);
+                    }
+                }
+                return 0;
             }
-            return 0;
         } catch (SQLException e) {
             throw new DatabaseException("Count failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -333,8 +418,10 @@ public class SQLiteDatabase implements Database {
         
         Map<String, Object> result = new HashMap<>();
         
+        Connection conn = null;
         try {
-            try (PreparedStatement countStmt = connection.prepareStatement(countSql.toString())) {
+            conn = getConnection();
+            try (PreparedStatement countStmt = conn.prepareStatement(countSql.toString())) {
                 for (int i = 0; i < values.size(); i++) {
                     countStmt.setObject(i + 1, values.get(i));
                 }
@@ -349,7 +436,7 @@ public class SQLiteDatabase implements Database {
             }
             
             List<Map<String, Object>> data = new ArrayList<>();
-            try (PreparedStatement dataStmt = connection.prepareStatement(dataSql.toString())) {
+            try (PreparedStatement dataStmt = conn.prepareStatement(dataSql.toString())) {
                 int paramIndex = 1;
                 for (Object value : values) {
                     dataStmt.setObject(paramIndex++, value);
@@ -368,6 +455,8 @@ public class SQLiteDatabase implements Database {
             return result;
         } catch (SQLException e) {
             throw new DatabaseException("Search failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -376,10 +465,16 @@ public class SQLiteDatabase implements Database {
         if (sql == null || sql.trim().isEmpty()) {
             throw new DatabaseException("SQL statement cannot be empty");
         }
-        try (Statement stmt = connection.createStatement()) {
-            stmt.execute(sql);
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            try (Statement stmt = conn.createStatement()) {
+                stmt.execute(sql);
+            }
         } catch (SQLException e) {
             throw new DatabaseException("Execute failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -388,13 +483,19 @@ public class SQLiteDatabase implements Database {
         if (sql == null || sql.trim().isEmpty()) {
             throw new DatabaseException("SQL statement cannot be empty");
         }
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            for (int i = 0; i < params.length; i++) {
-                stmt.setObject(i + 1, params[i]);
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                for (int i = 0; i < params.length; i++) {
+                    stmt.setObject(i + 1, params[i]);
+                }
+                stmt.execute();
             }
-            stmt.execute();
         } catch (SQLException e) {
             throw new DatabaseException("Execute failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -404,14 +505,20 @@ public class SQLiteDatabase implements Database {
             throw new DatabaseException("SQL statement cannot be empty");
         }
         List<Map<String, Object>> results = new ArrayList<>();
-        try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                results.add(resultSetToMap(rs));
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(sql)) {
+                while (rs.next()) {
+                    results.add(resultSetToMap(rs));
+                }
             }
             return results;
         } catch (SQLException e) {
             throw new DatabaseException("Query failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -421,18 +528,24 @@ public class SQLiteDatabase implements Database {
             throw new DatabaseException("SQL statement cannot be empty");
         }
         List<Map<String, Object>> results = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            for (int i = 0; i < params.length; i++) {
-                stmt.setObject(i + 1, params[i]);
-            }
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    results.add(resultSetToMap(rs));
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                for (int i = 0; i < params.length; i++) {
+                    stmt.setObject(i + 1, params[i]);
+                }
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        results.add(resultSetToMap(rs));
+                    }
                 }
             }
             return results;
         } catch (SQLException e) {
             throw new DatabaseException("Query failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     

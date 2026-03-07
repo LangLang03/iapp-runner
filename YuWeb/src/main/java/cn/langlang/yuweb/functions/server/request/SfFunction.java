@@ -6,6 +6,7 @@ import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 import cn.langlang.yuweb.web.UploadedFile;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -82,12 +83,12 @@ public class SfFunction extends AbstractFunction {
             File outputFile = new File(fullPath);
             
             try (InputStream is = uploadedFile.getInputStream();
-                 FileOutputStream fos = new FileOutputStream(outputFile)) {
+                 BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(outputFile))) {
                 
                 byte[] buffer = new byte[8192];
                 int bytesRead;
                 while ((bytesRead = is.read(buffer)) != -1) {
-                    fos.write(buffer, 0, bytesRead);
+                    bos.write(buffer, 0, bytesRead);
                 }
             }
             

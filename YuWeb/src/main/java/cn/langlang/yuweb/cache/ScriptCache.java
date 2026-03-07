@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,15 +22,39 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ScriptCache {
     private static final Logger logger = LoggerFactory.getLogger(ScriptCache.class);
     
-    private final Map<String, CachedScript> cache = new ConcurrentHashMap<>();
-    private final Map<String, Long> fileLastModified = new ConcurrentHashMap<>();
+    private static final int DEFAULT_MAX_SIZE = 500;
+    
+    private final Map<String, CachedScript> cache;
+    private final Map<String, Long> fileLastModified;
     private final FunctionRegistry sharedFunctionRegistry;
+    private final int maxSize;
     
     private int hitCount = 0;
     private int missCount = 0;
+    private int evictionCount = 0;
     
     public ScriptCache(FunctionRegistry sharedFunctionRegistry) {
+        this(sharedFunctionRegistry, DEFAULT_MAX_SIZE);
+    }
+    
+    public ScriptCache(FunctionRegistry sharedFunctionRegistry, int maxSize) {
         this.sharedFunctionRegistry = sharedFunctionRegistry;
+        this.maxSize = maxSize > 0 ? maxSize : DEFAULT_MAX_SIZE;
+        
+        this.cache = Collections.synchronizedMap(new LinkedHashMap<String, CachedScript>(16, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, CachedScript> eldest) {
+                if (size() > ScriptCache.this.maxSize) {
+                    evictionCount++;
+                    fileLastModified.remove(eldest.getKey());
+                    logger.debug("Evicted cache entry: {}", eldest.getKey());
+                    return true;
+                }
+                return false;
+            }
+        });
+        
+        this.fileLastModified = new ConcurrentHashMap<>();
     }
     
     public CachedScript getOrCompile(String filePath, String source) throws CacheException {
@@ -37,21 +63,26 @@ public class ScriptCache {
         
         String cacheKey = generateCacheKey(filePath);
         
-        CachedScript cached = cache.get(cacheKey);
-        Long cachedLastModified = fileLastModified.get(cacheKey);
-        
-        if (cached != null && cachedLastModified != null && cachedLastModified >= lastModified) {
-            hitCount++;
-            logger.debug("Cache hit for script: {}", filePath);
-            return cached;
+        synchronized (cache) {
+            CachedScript cached = cache.get(cacheKey);
+            Long cachedLastModified = fileLastModified.get(cacheKey);
+            
+            if (cached != null && cachedLastModified != null && cachedLastModified >= lastModified) {
+                hitCount++;
+                logger.debug("Cache hit for script: {}", filePath);
+                return cached;
+            }
         }
         
         missCount++;
         logger.debug("Cache miss for script: {}, compiling...", filePath);
         
         CachedScript newCached = compile(source);
-        cache.put(cacheKey, newCached);
-        fileLastModified.put(cacheKey, lastModified);
+        
+        synchronized (cache) {
+            cache.put(cacheKey, newCached);
+            fileLastModified.put(cacheKey, lastModified);
+        }
         
         return newCached;
     }
@@ -77,25 +108,38 @@ public class ScriptCache {
     
     public void invalidate(String filePath) {
         String cacheKey = generateCacheKey(filePath);
-        cache.remove(cacheKey);
-        fileLastModified.remove(cacheKey);
+        synchronized (cache) {
+            cache.remove(cacheKey);
+            fileLastModified.remove(cacheKey);
+        }
         logger.debug("Invalidated cache for: {}", filePath);
     }
     
     public void clear() {
-        cache.clear();
-        fileLastModified.clear();
+        synchronized (cache) {
+            cache.clear();
+            fileLastModified.clear();
+        }
         hitCount = 0;
         missCount = 0;
+        evictionCount = 0;
         logger.info("Script cache cleared");
     }
     
     public int size() {
-        return cache.size();
+        synchronized (cache) {
+            return cache.size();
+        }
+    }
+    
+    public int getMaxSize() {
+        return maxSize;
     }
     
     public CacheStats getStats() {
-        return new CacheStats(hitCount, missCount, cache.size());
+        synchronized (cache) {
+            return new CacheStats(hitCount, missCount, cache.size(), evictionCount, maxSize);
+        }
     }
     
     private String generateCacheKey(String filePath) {
@@ -120,11 +164,15 @@ public class ScriptCache {
         private final int hitCount;
         private final int missCount;
         private final int size;
+        private final int evictionCount;
+        private final int maxSize;
         
-        public CacheStats(int hitCount, int missCount, int size) {
+        public CacheStats(int hitCount, int missCount, int size, int evictionCount, int maxSize) {
             this.hitCount = hitCount;
             this.missCount = missCount;
             this.size = size;
+            this.evictionCount = evictionCount;
+            this.maxSize = maxSize;
         }
         
         public int getHitCount() {
@@ -139,6 +187,14 @@ public class ScriptCache {
             return size;
         }
         
+        public int getEvictionCount() {
+            return evictionCount;
+        }
+        
+        public int getMaxSize() {
+            return maxSize;
+        }
+        
         public double getHitRate() {
             int total = hitCount + missCount;
             return total > 0 ? (double) hitCount / total : 0.0;
@@ -146,8 +202,8 @@ public class ScriptCache {
         
         @Override
         public String toString() {
-            return String.format("CacheStats{hits=%d, misses=%d, size=%d, hitRate=%.2f%%}", 
-                    hitCount, missCount, size, getHitRate() * 100);
+            return String.format("CacheStats{hits=%d, misses=%d, size=%d/%d, evictions=%d, hitRate=%.2f%%}", 
+                    hitCount, missCount, size, maxSize, evictionCount, getHitRate() * 100);
         }
     }
 }

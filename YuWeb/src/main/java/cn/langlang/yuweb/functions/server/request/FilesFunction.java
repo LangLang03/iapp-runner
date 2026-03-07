@@ -9,10 +9,8 @@ import cn.langlang.yuweb.web.RequestContext;
 import java.util.List;
 
 public class FilesFunction extends AbstractFunction {
-    private RequestContext requestContext;
     
-    public FilesFunction(RequestContext requestContext) {
-        this.requestContext = requestContext;
+    public FilesFunction() {
     }
     
     @Override
@@ -32,6 +30,7 @@ public class FilesFunction extends AbstractFunction {
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+        RequestContext requestContext = context.getRequestContext();
         if (requestContext == null) {
             return null;
         }

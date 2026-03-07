@@ -1,5 +1,6 @@
 package cn.langlang.yuweb.database.impl;
 
+import cn.langlang.yuweb.database.ConnectionPool;
 import cn.langlang.yuweb.database.Database;
 import cn.langlang.yuweb.database.DatabaseException;
 import cn.langlang.yuweb.database.QueryCondition;
@@ -20,7 +21,8 @@ public class MySQLDatabase implements Database {
     private String password;
     private String charset;
     private boolean useSSL;
-    private Connection connection;
+    private ConnectionPool connectionPool;
+    private Connection maintenanceConnection;
     
     public MySQLDatabase(String host, int port, String database, String username, String password) {
         this.host = host;
@@ -36,27 +38,49 @@ public class MySQLDatabase implements Database {
         parseConnectionString(connectionString);
     }
     
+    public void setConnectionPool(ConnectionPool connectionPool) {
+        this.connectionPool = connectionPool;
+    }
+    
     private void parseConnectionString(String connectionString) {
         this.host = "localhost";
         this.port = 3306;
-        this.charset = "utf8mb4";
+        this.charset = "UTF-8";
         this.useSSL = true;
         
-        String[] parts = connectionString.split("/");
-        if (parts.length >= 4) {
-            String hostPort = parts[2];
-            this.database = parts[3].split("[?]")[0];
+        int atIndex = connectionString.indexOf("@");
+        if (atIndex > 0) {
+            String userPass = connectionString.substring(0, atIndex);
+            if (userPass.startsWith("mysql://")) {
+                userPass = userPass.substring(8);
+            }
+            String[] up = userPass.split(":", 2);
+            this.username = up[0];
+            this.password = up.length > 1 ? up[1] : "";
+        }
+        
+        String hostAndDb = connectionString;
+        if (atIndex > 0) {
+            hostAndDb = connectionString.substring(atIndex + 1);
+        } else if (hostAndDb.startsWith("mysql://")) {
+            hostAndDb = hostAndDb.substring(8);
+        }
+        
+        String[] parts = hostAndDb.split("/", 2);
+        if (parts.length >= 2) {
+            String hostPort = parts[0];
+            this.database = parts[1].split("[?]")[0];
             
             if (hostPort.contains(":")) {
-                String[] hp = hostPort.split(":");
-                this.host = hp[0];
-                this.port = Integer.parseInt(hp[1]);
+                int lastColon = hostPort.lastIndexOf(":");
+                this.host = hostPort.substring(0, lastColon);
+                this.port = Integer.parseInt(hostPort.substring(lastColon + 1));
             } else {
                 this.host = hostPort;
             }
             
-            if (parts.length > 3 && parts[3].contains("?")) {
-                String queryString = parts[3].split("[?]")[1];
+            if (parts[1].contains("?")) {
+                String queryString = parts[1].split("[?]")[1];
                 for (String param : queryString.split("&")) {
                     String[] kv = param.split("=");
                     if (kv.length == 2) {
@@ -69,17 +93,6 @@ public class MySQLDatabase implements Database {
                 }
             }
         }
-        
-        int atIndex = connectionString.indexOf("@");
-        if (atIndex > 0) {
-            String userPass = connectionString.substring(0, atIndex);
-            if (userPass.startsWith("mysql://")) {
-                userPass = userPass.substring(8);
-            }
-            String[] up = userPass.split(":");
-            this.username = up[0];
-            this.password = up.length > 1 ? up[1] : "";
-        }
     }
     
     public void setCharset(String charset) {
@@ -88,6 +101,30 @@ public class MySQLDatabase implements Database {
     
     public void setUseSSL(boolean useSSL) {
         this.useSSL = useSSL;
+    }
+    
+    public String getHost() {
+        return host;
+    }
+    
+    public int getPort() {
+        return port;
+    }
+    
+    public String getDatabase() {
+        return database;
+    }
+    
+    public String getUsername() {
+        return username;
+    }
+    
+    public String getPassword() {
+        return password;
+    }
+    
+    public boolean isUseSSL() {
+        return useSSL;
     }
     
     @Override
@@ -100,14 +137,22 @@ public class MySQLDatabase implements Database {
             urlBuilder.append("useSSL=").append(useSSL);
             urlBuilder.append("&serverTimezone=UTC");
             urlBuilder.append("&characterEncoding=").append(charset);
+            urlBuilder.append("&cachePrepStmts=true");
+            urlBuilder.append("&prepStmtCacheSize=250");
+            urlBuilder.append("&prepStmtCacheSqlLimit=2048");
+            urlBuilder.append("&useServerPrepStmts=true");
+            urlBuilder.append("&useLocalSessionState=true");
+            urlBuilder.append("&rewriteBatchedStatements=true");
+            urlBuilder.append("&cacheResultSetMetadata=true");
+            urlBuilder.append("&cacheResultSetConfiguration=true");
             if (useSSL) {
                 urlBuilder.append("&requireSSL=true");
             } else {
                 urlBuilder.append("&allowPublicKeyRetrieval=true");
             }
             
-            connection = DriverManager.getConnection(urlBuilder.toString(), username, password);
-            connection.setAutoCommit(true);
+            maintenanceConnection = DriverManager.getConnection(urlBuilder.toString(), username, password);
+            maintenanceConnection.setAutoCommit(true);
             
             logger.info("Connected to MySQL database: {}@{}:{}/{} (SSL: {})", 
                     username, host, port, database, useSSL);
@@ -116,23 +161,36 @@ public class MySQLDatabase implements Database {
         }
     }
     
+    private Connection getConnection() throws SQLException {
+        if (connectionPool != null) {
+            return connectionPool.getConnection();
+        }
+        return maintenanceConnection;
+    }
+    
+    private void releaseConnection(Connection conn) {
+        if (connectionPool != null && conn != null) {
+            connectionPool.releaseConnection(conn);
+        }
+    }
+    
     @Override
     public void disconnect() {
-        if (connection != null) {
+        if (maintenanceConnection != null) {
             try {
-                connection.close();
+                maintenanceConnection.close();
                 logger.info("Disconnected from MySQL database");
             } catch (SQLException e) {
                 logger.error("Error closing MySQL connection: {}", e.getMessage());
             }
-            connection = null;
+            maintenanceConnection = null;
         }
     }
     
     @Override
     public boolean isConnected() {
         try {
-            return connection != null && !connection.isClosed();
+            return maintenanceConnection != null && !maintenanceConnection.isClosed();
         } catch (SQLException e) {
             return false;
         }
@@ -162,20 +220,26 @@ public class MySQLDatabase implements Database {
         
         sql.append(") VALUES (").append(placeholders).append(")");
         
-        try (PreparedStatement stmt = connection.prepareStatement(sql.toString(), Statement.RETURN_GENERATED_KEYS)) {
-            for (int i = 0; i < values.size(); i++) {
-                stmt.setObject(i + 1, values.get(i));
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql.toString(), Statement.RETURN_GENERATED_KEYS)) {
+                for (int i = 0; i < values.size(); i++) {
+                    stmt.setObject(i + 1, values.get(i));
+                }
+                
+                stmt.executeUpdate();
+                
+                ResultSet rs = stmt.getGeneratedKeys();
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
+                return -1;
             }
-            
-            stmt.executeUpdate();
-            
-            ResultSet rs = stmt.getGeneratedKeys();
-            if (rs.next()) {
-                return rs.getLong(1);
-            }
-            return -1;
         } catch (SQLException e) {
             throw new DatabaseException("Insert failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -199,13 +263,19 @@ public class MySQLDatabase implements Database {
         String whereClause = buildWhereClause(condition, values);
         sql.append(" WHERE ").append(whereClause);
         
-        try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
-            for (int i = 0; i < values.size(); i++) {
-                stmt.setObject(i + 1, values.get(i));
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+                for (int i = 0; i < values.size(); i++) {
+                    stmt.setObject(i + 1, values.get(i));
+                }
+                return stmt.executeUpdate();
             }
-            return stmt.executeUpdate();
         } catch (SQLException e) {
             throw new DatabaseException("Update failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -218,13 +288,19 @@ public class MySQLDatabase implements Database {
         String whereClause = buildWhereClause(condition, values);
         sql.append(" WHERE ").append(whereClause);
         
-        try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
-            for (int i = 0; i < values.size(); i++) {
-                stmt.setObject(i + 1, values.get(i));
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+                for (int i = 0; i < values.size(); i++) {
+                    stmt.setObject(i + 1, values.get(i));
+                }
+                return stmt.executeUpdate();
             }
-            return stmt.executeUpdate();
         } catch (SQLException e) {
             throw new DatabaseException("Delete failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -241,19 +317,25 @@ public class MySQLDatabase implements Database {
         
         sql.append(" LIMIT 1");
         
-        try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
-            for (int i = 0; i < values.size(); i++) {
-                stmt.setObject(i + 1, values.get(i));
-            }
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return resultSetToMap(rs);
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+                for (int i = 0; i < values.size(); i++) {
+                    stmt.setObject(i + 1, values.get(i));
                 }
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return resultSetToMap(rs);
+                    }
+                }
+                return null;
             }
-            return null;
         } catch (SQLException e) {
             throw new DatabaseException("Query failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -270,19 +352,25 @@ public class MySQLDatabase implements Database {
         
         List<Map<String, Object>> results = new ArrayList<>();
         
-        try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
-            for (int i = 0; i < values.size(); i++) {
-                stmt.setObject(i + 1, values.get(i));
-            }
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    results.add(resultSetToMap(rs));
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+                for (int i = 0; i < values.size(); i++) {
+                    stmt.setObject(i + 1, values.get(i));
                 }
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        results.add(resultSetToMap(rs));
+                    }
+                }
+                return results;
             }
-            return results;
         } catch (SQLException e) {
             throw new DatabaseException("Query failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -307,8 +395,10 @@ public class MySQLDatabase implements Database {
         
         Map<String, Object> result = new HashMap<>();
         
+        Connection conn = null;
         try {
-            try (PreparedStatement countStmt = connection.prepareStatement(countSql.toString())) {
+            conn = getConnection();
+            try (PreparedStatement countStmt = conn.prepareStatement(countSql.toString())) {
                 for (int i = 0; i < values.size(); i++) {
                     countStmt.setObject(i + 1, values.get(i));
                 }
@@ -322,7 +412,7 @@ public class MySQLDatabase implements Database {
             }
             
             List<Map<String, Object>> data = new ArrayList<>();
-            try (PreparedStatement dataStmt = connection.prepareStatement(dataSql.toString())) {
+            try (PreparedStatement dataStmt = conn.prepareStatement(dataSql.toString())) {
                 int paramIndex = 1;
                 for (Object value : values) {
                     dataStmt.setObject(paramIndex++, value);
@@ -341,6 +431,8 @@ public class MySQLDatabase implements Database {
             return result;
         } catch (SQLException e) {
             throw new DatabaseException("Page query failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -355,19 +447,25 @@ public class MySQLDatabase implements Database {
             sql.append(" WHERE ").append(whereClause);
         }
         
-        try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
-            for (int i = 0; i < values.size(); i++) {
-                stmt.setObject(i + 1, values.get(i));
-            }
-            
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getLong(1);
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+                for (int i = 0; i < values.size(); i++) {
+                    stmt.setObject(i + 1, values.get(i));
                 }
+                
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        return rs.getLong(1);
+                    }
+                }
+                return 0;
             }
-            return 0;
         } catch (SQLException e) {
             throw new DatabaseException("Count failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -418,8 +516,10 @@ public class MySQLDatabase implements Database {
         
         Map<String, Object> result = new HashMap<>();
         
+        Connection conn = null;
         try {
-            try (PreparedStatement countStmt = connection.prepareStatement(countSql.toString())) {
+            conn = getConnection();
+            try (PreparedStatement countStmt = conn.prepareStatement(countSql.toString())) {
                 for (int i = 0; i < values.size(); i++) {
                     countStmt.setObject(i + 1, values.get(i));
                 }
@@ -434,7 +534,7 @@ public class MySQLDatabase implements Database {
             }
             
             List<Map<String, Object>> data = new ArrayList<>();
-            try (PreparedStatement dataStmt = connection.prepareStatement(dataSql.toString())) {
+            try (PreparedStatement dataStmt = conn.prepareStatement(dataSql.toString())) {
                 int paramIndex = 1;
                 for (Object value : values) {
                     dataStmt.setObject(paramIndex++, value);
@@ -453,6 +553,8 @@ public class MySQLDatabase implements Database {
             return result;
         } catch (SQLException e) {
             throw new DatabaseException("Search failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -461,10 +563,16 @@ public class MySQLDatabase implements Database {
         if (sql == null || sql.trim().isEmpty()) {
             throw new DatabaseException("SQL statement cannot be empty");
         }
-        try (Statement stmt = connection.createStatement()) {
-            stmt.execute(sql);
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            try (Statement stmt = conn.createStatement()) {
+                stmt.execute(sql);
+            }
         } catch (SQLException e) {
             throw new DatabaseException("Execute failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -473,13 +581,19 @@ public class MySQLDatabase implements Database {
         if (sql == null || sql.trim().isEmpty()) {
             throw new DatabaseException("SQL statement cannot be empty");
         }
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            for (int i = 0; i < params.length; i++) {
-                stmt.setObject(i + 1, params[i]);
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                for (int i = 0; i < params.length; i++) {
+                    stmt.setObject(i + 1, params[i]);
+                }
+                stmt.execute();
             }
-            stmt.execute();
         } catch (SQLException e) {
             throw new DatabaseException("Execute failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -489,14 +603,20 @@ public class MySQLDatabase implements Database {
             throw new DatabaseException("SQL statement cannot be empty");
         }
         List<Map<String, Object>> results = new ArrayList<>();
-        try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                results.add(resultSetToMap(rs));
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(sql)) {
+                while (rs.next()) {
+                    results.add(resultSetToMap(rs));
+                }
             }
             return results;
         } catch (SQLException e) {
             throw new DatabaseException("Query failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     
@@ -506,18 +626,24 @@ public class MySQLDatabase implements Database {
             throw new DatabaseException("SQL statement cannot be empty");
         }
         List<Map<String, Object>> results = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            for (int i = 0; i < params.length; i++) {
-                stmt.setObject(i + 1, params[i]);
-            }
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    results.add(resultSetToMap(rs));
+        Connection conn = null;
+        try {
+            conn = getConnection();
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                for (int i = 0; i < params.length; i++) {
+                    stmt.setObject(i + 1, params[i]);
+                }
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        results.add(resultSetToMap(rs));
+                    }
                 }
             }
             return results;
         } catch (SQLException e) {
             throw new DatabaseException("Query failed: " + e.getMessage(), e);
+        } finally {
+            releaseConnection(conn);
         }
     }
     

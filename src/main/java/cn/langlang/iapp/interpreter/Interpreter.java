@@ -293,7 +293,7 @@ public class Interpreter implements IInterpreter {
                     FunctionDefinitionStatement funcDef = ctx.getUserFunction(functionName);
                     result = executeUserFunction(funcDef, args, ctx, stmt.getOutputVariables(), interpreter);
                 } else {
-                    IFunction function = ctx.getFunctionRegistry().getFunction(functionName);
+                    IFunction function = ctx.getFunction(functionName);
                     if (function != null) {
                         result = function.call(ctx, args);
                     } else {
@@ -483,7 +483,7 @@ public class Interpreter implements IInterpreter {
                     args.add(interpreter.evaluateExpression(arg, interpreter.currentContext));
                 }
 
-                IFunction function = interpreter.currentContext.getFunctionRegistry().getFunction(functionName);
+                IFunction function = interpreter.currentContext.getFunction(functionName);
                 if (function != null) {
                     return function.call(interpreter.currentContext, args);
                 } else {

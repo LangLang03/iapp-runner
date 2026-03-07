@@ -22,7 +22,8 @@ public class DatabaseManager {
     private String defaultKey;
     
     private boolean useConnectionPool = true;
-    private int maxPoolSize = 10;
+    private int maxPoolSize = 20;
+    private int initialPoolSize = 5;
     private long connectionTimeout = 30000;
     
     public void connect(String type, String path) throws Exception {
@@ -36,13 +37,30 @@ public class DatabaseManager {
         
         Database db;
         if ("sqlite".equalsIgnoreCase(type)) {
+            SQLiteConnectionPool pool = null;
             if (useConnectionPool) {
-                SQLiteConnectionPool pool = new SQLiteConnectionPool(path, maxPoolSize, connectionTimeout);
+                pool = new SQLiteConnectionPool(path, maxPoolSize, connectionTimeout);
+                pool.initialize(initialPoolSize);
                 connectionPools.put(key, pool);
+                logger.info("SQLite connection pool initialized: size={}", maxPoolSize);
             }
             db = new SQLiteDatabase(path);
+            if (pool != null) {
+                ((SQLiteDatabase) db).setConnectionPool(pool);
+            }
         } else if ("mysql".equalsIgnoreCase(type)) {
-            db = new MySQLDatabase(path);
+            MySQLDatabase mysqlDb = new MySQLDatabase(path);
+            if (useConnectionPool) {
+                MySQLConnectionPool mysqlPool = new MySQLConnectionPool(
+                        mysqlDb.getHost(), mysqlDb.getPort(), mysqlDb.getDatabase(),
+                        mysqlDb.getUsername(), mysqlDb.getPassword(),
+                        maxPoolSize, connectionTimeout, mysqlDb.isUseSSL());
+                mysqlPool.initialize(initialPoolSize);
+                connectionPools.put(key, mysqlPool);
+                mysqlDb.setConnectionPool(mysqlPool);
+                logger.info("MySQL connection pool initialized: size={}", maxPoolSize);
+            }
+            db = mysqlDb;
         } else {
             throw new IllegalArgumentException("Unsupported database type: " + type);
         }
@@ -64,13 +82,19 @@ public class DatabaseManager {
             return;
         }
         
+        MySQLConnectionPool pool = null;
         if (useConnectionPool) {
-            MySQLConnectionPool pool = new MySQLConnectionPool(host, port, database, username, password, 
+            pool = new MySQLConnectionPool(host, port, database, username, password, 
                     maxPoolSize, connectionTimeout);
+            pool.initialize(initialPoolSize);
             connectionPools.put(key, pool);
+            logger.info("MySQL connection pool initialized: size={}", maxPoolSize);
         }
         
         MySQLDatabase db = new MySQLDatabase(host, port, database, username, password);
+        if (pool != null) {
+            db.setConnectionPool(pool);
+        }
         db.connect();
         connections.put(key, db);
         defaultDatabase = db;
@@ -165,6 +189,10 @@ public class DatabaseManager {
         this.maxPoolSize = maxPoolSize;
     }
     
+    public void setInitialPoolSize(int initialPoolSize) {
+        this.initialPoolSize = initialPoolSize;
+    }
+    
     public void setConnectionTimeout(long connectionTimeout) {
         this.connectionTimeout = connectionTimeout;
     }
@@ -191,5 +219,40 @@ public class DatabaseManager {
     
     public int getActiveConnectionsCount() {
         return connectionSourceMap.size();
+    }
+    
+    public PoolStats getPoolStats() {
+        int total = 0, available = 0, active = 0;
+        for (ConnectionPool pool : connectionPools.values()) {
+            total += pool.getTotalConnections();
+            available += pool.getAvailableConnections();
+        }
+        active = connectionSourceMap.size();
+        return new PoolStats(total, available, active, maxPoolSize);
+    }
+    
+    public static class PoolStats {
+        private final int total;
+        private final int available;
+        private final int active;
+        private final int maxSize;
+        
+        public PoolStats(int total, int available, int active, int maxSize) {
+            this.total = total;
+            this.available = available;
+            this.active = active;
+            this.maxSize = maxSize;
+        }
+        
+        public int getTotal() { return total; }
+        public int getAvailable() { return available; }
+        public int getActive() { return active; }
+        public int getMaxSize() { return maxSize; }
+        
+        @Override
+        public String toString() {
+            return String.format("PoolStats{total=%d, available=%d, active=%d, maxSize=%d}", 
+                    total, available, active, maxSize);
+        }
     }
 }

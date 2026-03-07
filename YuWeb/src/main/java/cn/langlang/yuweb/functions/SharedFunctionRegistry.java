@@ -26,6 +26,8 @@ import cn.langlang.yuweb.functions.auth.VerifyFunction;
 import cn.langlang.yuweb.functions.auth.VerifyPasswordFunction;
 import cn.langlang.yuweb.functions.database.condition.*;
 import cn.langlang.yuweb.functions.server.request.*;
+import cn.langlang.yuweb.functions.server.response.*;
+import cn.langlang.yuweb.functions.server.InfoFunction;
 import cn.langlang.yuweb.functions.util.*;
 import cn.langlang.yuweb.server.YuWebServer;
 import org.slf4j.Logger;
@@ -38,181 +40,179 @@ import java.util.function.Supplier;
 public class SharedFunctionRegistry {
     private static final Logger logger = LoggerFactory.getLogger(SharedFunctionRegistry.class);
     
-    private static final FunctionRegistry sharedRegistry = new FunctionRegistry();
-    private static final List<Supplier<IFunction>> functionSuppliers = new ArrayList<>();
+    private static FunctionRegistry sharedRegistry;
     private static boolean initialized = false;
-    
-    static {
-        initializeFunctionSuppliers();
-    }
-    
-    private static void initializeFunctionSuppliers() {
-        functionSuppliers.add(SysoFunction::new);
-        functionSuppliers.add(TwFunction::new);
-        functionSuppliers.add(SsFunction::new);
-        functionSuppliers.add(SrFunction::new);
-        functionSuppliers.add(SjFunction::new);
-        functionSuppliers.add(SlFunction::new);
-        functionSuppliers.add(SsgFunction::new);
-        functionSuppliers.add(SlgFunction::new);
-        functionSuppliers.add(StrimFunction::new);
-        functionSuppliers.add(SlowerFunction::new);
-        functionSuppliers.add(SupperFunction::new);
-        functionSuppliers.add(SiofFunction::new);
-        functionSuppliers.add(SlofFunction::new);
-        functionSuppliers.add(StobmFunction::new);
-        functionSuppliers.add(Sutf8toFunction::new);
-        functionSuppliers.add(SAddFunction::new);
-        functionSuppliers.add(SSubFunction::new);
-        functionSuppliers.add(SMulFunction::new);
-        functionSuppliers.add(SDivFunction::new);
-        functionSuppliers.add(SModFunction::new);
-        functionSuppliers.add(SFunction::new);
-        functionSuppliers.add(S2Function::new);
-        functionSuppliers.add(SnFunction::new);
-        functionSuppliers.add(SranFunction::new);
-        functionSuppliers.add(NszFunction::new);
-        functionSuppliers.add(SgszFunction::new);
-        functionSuppliers.add(SsszFunction::new);
-        functionSuppliers.add(SgszlFunction::new);
-        functionSuppliers.add(FdFunction::new);
-        functionSuppliers.add(FeFunction::new);
-        functionSuppliers.add(FsFunction::new);
-        functionSuppliers.add(FrFunction::new);
-        functionSuppliers.add(FwFunction::new);
-        functionSuppliers.add(FcFunction::new);
-        functionSuppliers.add(FlFunction::new);
-        functionSuppliers.add(FtFunction::new);
-        functionSuppliers.add(FdirFunction::new);
-        functionSuppliers.add(FuzFunction::new);
-        functionSuppliers.add(FuzsFunction::new);
-        functionSuppliers.add(FjFunction::new);
-        functionSuppliers.add(FoFunction::new);
-        functionSuppliers.add(FiFunction::new);
-        functionSuppliers.add(HsFunction::new);
-        functionSuppliers.add(HdFunction::new);
-        functionSuppliers.add(HdflFunction::new);
-        functionSuppliers.add(HufFunction::new);
-        functionSuppliers.add(HwFunction::new);
-        functionSuppliers.add(HwsFunction::new);
-        functionSuppliers.add(TimeFunction::new);
-        functionSuppliers.add(StopFunction::new);
-        functionSuppliers.add(JavaFunction::new);
-        functionSuppliers.add(JavaxFunction::new);
-        functionSuppliers.add(JavanewFunction::new);
-        functionSuppliers.add(JavagsFunction::new);
-        functionSuppliers.add(JavassFunction::new);
-        functionSuppliers.add(ClsFunction::new);
-        functionSuppliers.add(CallFunction::new);
-        functionSuppliers.add(AslistFunction::new);
-        functionSuppliers.add(SslistFunction::new);
-        functionSuppliers.add(GslistFunction::new);
-        functionSuppliers.add(GslistlFunction::new);
-        functionSuppliers.add(DslistFunction::new);
-        functionSuppliers.add(GslistszFunction::new);
-        functionSuppliers.add(GslistisFunction::new);
-        functionSuppliers.add(GslistiofFunction::new);
-        functionSuppliers.add(GslistlofFunction::new);
-        functionSuppliers.add(SxbFunction::new);
-        functionSuppliers.add(ShbFunction::new);
-        
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.request.MethodFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.request.GetFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.request.GetsFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.request.PostFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.request.PostsFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.request.FormFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.request.FormsFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.request.BodyFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.request.PathFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.request.UrlFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.request.HeaderFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.request.ClientIpFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.request.UserAgentFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.request.IsJsonFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.request.IsAjaxFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.request.GetCookieFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.request.SetCookieFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.request.DelCookieFunction(null));
-        
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.request.FileFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.request.FilesFunction(null));
-        functionSuppliers.add(GfnFunction::new);
-        functionSuppliers.add(GfsFunction::new);
-        functionSuppliers.add(GftFunction::new);
-        functionSuppliers.add(GfeFunction::new);
-        functionSuppliers.add(SfFunction::new);
-        
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.response.JsonFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.response.TextFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.response.HtmlFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.response.ErrorFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.response.StatusFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.response.SetHeaderFunction(null));
-        functionSuppliers.add(() -> new cn.langlang.yuweb.functions.server.response.RedirectFunction(null));
-        
-        functionSuppliers.add(MapFunction::new);
-        functionSuppliers.add(MgetFunction::new);
-        functionSuppliers.add(MsetFunction::new);
-        functionSuppliers.add(MkeysFunction::new);
-        functionSuppliers.add(MhasFunction::new);
-        functionSuppliers.add(ArrFunction::new);
-        functionSuppliers.add(ArrPushFunction::new);
-        functionSuppliers.add(LengthFunction::new);
-        functionSuppliers.add(JsonEncodeFunction::new);
-        functionSuppliers.add(JsonDecodeFunction::new);
-        
-        functionSuppliers.add(InFunction::new);
-        functionSuppliers.add(LikeFunction::new);
-        functionSuppliers.add(BetweenFunction::new);
-        functionSuppliers.add(IsNullFunction::new);
-        functionSuppliers.add(NotNullFunction::new);
-        functionSuppliers.add(AndFunction::new);
-        functionSuppliers.add(OrFunction::new);
-        
-        functionSuppliers.add(HashPasswordFunction::new);
-        functionSuppliers.add(VerifyPasswordFunction::new);
-        functionSuppliers.add(VerifyFunction::new);
-        functionSuppliers.add(LogoutFunction::new);
-    }
     
     public static synchronized void initialize(YuWebServer server, DatabaseManager dbManager) {
         if (initialized) {
             return;
         }
         
+        sharedRegistry = new FunctionRegistry();
         logger.info("Initializing shared function registry...");
         long startTime = System.currentTimeMillis();
         
-        for (Supplier<IFunction> supplier : functionSuppliers) {
-            IFunction function = supplier.get();
-            sharedRegistry.registerFunction(function);
-        }
-        
-        sharedRegistry.registerFunction(new cn.langlang.yuweb.functions.server.config.PortFunction(server));
-        
-        sharedRegistry.registerFunction(new cn.langlang.yuweb.functions.database.DbFunction(dbManager));
-        sharedRegistry.registerFunction(new cn.langlang.yuweb.functions.database.DbOneFunction(dbManager));
-        sharedRegistry.registerFunction(new cn.langlang.yuweb.functions.database.DbAllFunction(dbManager));
-        sharedRegistry.registerFunction(new cn.langlang.yuweb.functions.database.DbInsertFunction(dbManager));
-        sharedRegistry.registerFunction(new cn.langlang.yuweb.functions.database.DbUpdateFunction(dbManager));
-        sharedRegistry.registerFunction(new cn.langlang.yuweb.functions.database.DbDeleteFunction(dbManager));
-        sharedRegistry.registerFunction(new cn.langlang.yuweb.functions.database.DbPageFunction(dbManager));
-        sharedRegistry.registerFunction(new cn.langlang.yuweb.functions.database.DbCountFunction(dbManager));
-        sharedRegistry.registerFunction(new cn.langlang.yuweb.functions.database.DbExecFunction(dbManager));
-        sharedRegistry.registerFunction(new cn.langlang.yuweb.functions.database.DbSearchFunction(dbManager));
-        sharedRegistry.registerFunction(new cn.langlang.yuweb.functions.database.DbQueryFunction(dbManager));
-        
-        sharedRegistry.registerFunction(new cn.langlang.yuweb.functions.auth.RegisterFunction(dbManager));
-        sharedRegistry.registerFunction(new cn.langlang.yuweb.functions.auth.LoginFunction(dbManager));
-        
-        sharedRegistry.registerFunction(new cn.langlang.yuweb.functions.server.config.UploadConfigFunction());
+        registerBuiltinFunctions(sharedRegistry);
+        registerWebFunctions(sharedRegistry);
+        registerDatabaseFunctions(sharedRegistry, dbManager);
+        registerAuthFunctions(sharedRegistry, dbManager);
+        registerServerFunctions(sharedRegistry, server);
         
         initialized = true;
         
         long elapsed = System.currentTimeMillis() - startTime;
         logger.info("Shared function registry initialized with {} functions in {}ms", 
                 sharedRegistry.getFunctionNames().size(), elapsed);
+    }
+    
+    private static void registerBuiltinFunctions(FunctionRegistry registry) {
+        registry.registerFunction(new SysoFunction());
+        registry.registerFunction(new TwFunction());
+        registry.registerFunction(new SsFunction());
+        registry.registerFunction(new SrFunction());
+        registry.registerFunction(new SjFunction());
+        registry.registerFunction(new SlFunction());
+        registry.registerFunction(new SsgFunction());
+        registry.registerFunction(new SlgFunction());
+        registry.registerFunction(new StrimFunction());
+        registry.registerFunction(new SlowerFunction());
+        registry.registerFunction(new SupperFunction());
+        registry.registerFunction(new SiofFunction());
+        registry.registerFunction(new SlofFunction());
+        registry.registerFunction(new StobmFunction());
+        registry.registerFunction(new Sutf8toFunction());
+        registry.registerFunction(new SAddFunction());
+        registry.registerFunction(new SSubFunction());
+        registry.registerFunction(new SMulFunction());
+        registry.registerFunction(new SDivFunction());
+        registry.registerFunction(new SModFunction());
+        registry.registerFunction(new SFunction());
+        registry.registerFunction(new S2Function());
+        registry.registerFunction(new SnFunction());
+        registry.registerFunction(new SranFunction());
+        registry.registerFunction(new NszFunction());
+        registry.registerFunction(new SgszFunction());
+        registry.registerFunction(new SsszFunction());
+        registry.registerFunction(new SgszlFunction());
+        registry.registerFunction(new FdFunction());
+        registry.registerFunction(new FeFunction());
+        registry.registerFunction(new FsFunction());
+        registry.registerFunction(new FrFunction());
+        registry.registerFunction(new FwFunction());
+        registry.registerFunction(new FcFunction());
+        registry.registerFunction(new FlFunction());
+        registry.registerFunction(new FtFunction());
+        registry.registerFunction(new FdirFunction());
+        registry.registerFunction(new FuzFunction());
+        registry.registerFunction(new FuzsFunction());
+        registry.registerFunction(new FjFunction());
+        registry.registerFunction(new FoFunction());
+        registry.registerFunction(new FiFunction());
+        registry.registerFunction(new HsFunction());
+        registry.registerFunction(new HdFunction());
+        registry.registerFunction(new HdflFunction());
+        registry.registerFunction(new HufFunction());
+        registry.registerFunction(new HwFunction());
+        registry.registerFunction(new HwsFunction());
+        registry.registerFunction(new TimeFunction());
+        registry.registerFunction(new StopFunction());
+        registry.registerFunction(new JavaFunction());
+        registry.registerFunction(new JavaxFunction());
+        registry.registerFunction(new JavanewFunction());
+        registry.registerFunction(new JavagsFunction());
+        registry.registerFunction(new JavassFunction());
+        registry.registerFunction(new ClsFunction());
+        registry.registerFunction(new CallFunction());
+        registry.registerFunction(new AslistFunction());
+        registry.registerFunction(new SslistFunction());
+        registry.registerFunction(new GslistFunction());
+        registry.registerFunction(new GslistlFunction());
+        registry.registerFunction(new DslistFunction());
+        registry.registerFunction(new GslistszFunction());
+        registry.registerFunction(new GslistisFunction());
+        registry.registerFunction(new GslistiofFunction());
+        registry.registerFunction(new GslistlofFunction());
+        registry.registerFunction(new SxbFunction());
+        registry.registerFunction(new ShbFunction());
+    }
+    
+    private static void registerWebFunctions(FunctionRegistry registry) {
+        registry.registerFunction(new MethodFunction());
+        registry.registerFunction(new GetFunction());
+        registry.registerFunction(new GetsFunction());
+        registry.registerFunction(new PostFunction());
+        registry.registerFunction(new PostsFunction());
+        registry.registerFunction(new FormFunction());
+        registry.registerFunction(new FormsFunction());
+        registry.registerFunction(new BodyFunction());
+        registry.registerFunction(new PathFunction());
+        registry.registerFunction(new UrlFunction());
+        registry.registerFunction(new HeaderFunction());
+        registry.registerFunction(new ClientIpFunction());
+        registry.registerFunction(new UserAgentFunction());
+        registry.registerFunction(new IsJsonFunction());
+        registry.registerFunction(new IsAjaxFunction());
+        registry.registerFunction(new GetCookieFunction());
+        registry.registerFunction(new SetCookieFunction());
+        registry.registerFunction(new DelCookieFunction());
+        registry.registerFunction(new FileFunction());
+        registry.registerFunction(new FilesFunction());
+        
+        registry.registerFunction(new JsonFunction());
+        registry.registerFunction(new TextFunction());
+        registry.registerFunction(new HtmlFunction());
+        registry.registerFunction(new ErrorFunction());
+        registry.registerFunction(new StatusFunction());
+        registry.registerFunction(new SetHeaderFunction());
+        registry.registerFunction(new RedirectFunction());
+        
+        registry.registerFunction(new MapFunction());
+        registry.registerFunction(new MgetFunction());
+        registry.registerFunction(new MsetFunction());
+        registry.registerFunction(new MkeysFunction());
+        registry.registerFunction(new MhasFunction());
+        registry.registerFunction(new ArrFunction());
+        registry.registerFunction(new ArrPushFunction());
+        registry.registerFunction(new LengthFunction());
+        registry.registerFunction(new JsonEncodeFunction());
+        registry.registerFunction(new JsonDecodeFunction());
+    }
+    
+    private static void registerDatabaseFunctions(FunctionRegistry registry, DatabaseManager dbManager) {
+        registry.registerFunction(new cn.langlang.yuweb.functions.database.DbFunction(dbManager));
+        registry.registerFunction(new cn.langlang.yuweb.functions.database.DbOneFunction(dbManager));
+        registry.registerFunction(new cn.langlang.yuweb.functions.database.DbAllFunction(dbManager));
+        registry.registerFunction(new cn.langlang.yuweb.functions.database.DbInsertFunction(dbManager));
+        registry.registerFunction(new cn.langlang.yuweb.functions.database.DbUpdateFunction(dbManager));
+        registry.registerFunction(new cn.langlang.yuweb.functions.database.DbDeleteFunction(dbManager));
+        registry.registerFunction(new cn.langlang.yuweb.functions.database.DbPageFunction(dbManager));
+        registry.registerFunction(new cn.langlang.yuweb.functions.database.DbCountFunction(dbManager));
+        registry.registerFunction(new cn.langlang.yuweb.functions.database.DbExecFunction(dbManager));
+        registry.registerFunction(new cn.langlang.yuweb.functions.database.DbSearchFunction(dbManager));
+        registry.registerFunction(new cn.langlang.yuweb.functions.database.DbQueryFunction(dbManager));
+        
+        registry.registerFunction(new InFunction());
+        registry.registerFunction(new LikeFunction());
+        registry.registerFunction(new BetweenFunction());
+        registry.registerFunction(new IsNullFunction());
+        registry.registerFunction(new NotNullFunction());
+        registry.registerFunction(new AndFunction());
+        registry.registerFunction(new OrFunction());
+    }
+    
+    private static void registerAuthFunctions(FunctionRegistry registry, DatabaseManager dbManager) {
+        registry.registerFunction(new HashPasswordFunction());
+        registry.registerFunction(new VerifyPasswordFunction());
+        registry.registerFunction(new VerifyFunction());
+        registry.registerFunction(new LogoutFunction());
+        registry.registerFunction(new cn.langlang.yuweb.functions.auth.RegisterFunction(dbManager));
+        registry.registerFunction(new cn.langlang.yuweb.functions.auth.LoginFunction(dbManager));
+    }
+    
+    private static void registerServerFunctions(FunctionRegistry registry, YuWebServer server) {
+        registry.registerFunction(new InfoFunction());
+        registry.registerFunction(new cn.langlang.yuweb.functions.server.config.PortFunction(server));
+        registry.registerFunction(new cn.langlang.yuweb.functions.server.config.UploadConfigFunction());
     }
     
     public static FunctionRegistry getSharedRegistry() {
@@ -224,6 +224,6 @@ public class SharedFunctionRegistry {
     }
     
     public static int getFunctionCount() {
-        return sharedRegistry.getFunctionNames().size();
+        return sharedRegistry != null ? sharedRegistry.getFunctionNames().size() : 0;
     }
 }

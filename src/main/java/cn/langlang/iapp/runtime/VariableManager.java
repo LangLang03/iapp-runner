@@ -128,4 +128,17 @@ public class VariableManager {
     public Map<String, Object> getGlobalVariables() {
         return globalVariables;
     }
+    
+    public void clearAll() {
+        scopeStack.clear();
+        scopeStack.push(new HashMap<>());
+        interfaceVariables.clear();
+        globalVariables.clear();
+    }
+    
+    public void resetForReuse() {
+        scopeStack.clear();
+        scopeStack.push(new HashMap<>());
+        interfaceVariables.clear();
+    }
 }

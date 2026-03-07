@@ -1,24 +1,25 @@
 port(8080)
 
-db("sqlite", "C:/Users/Administrator/IdeaProjects/iapp-runner/YuWeb/example/data/app.db")
+db("mysql", "mysql://test_iapp:test_iapp@localhost:3306/test_iapp?useSSL=false")
 
 dbexec("CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    email TEXT,
-    status TEXT DEFAULT 'active',
-    created_at INTEGER
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(255),
+    status VARCHAR(50) DEFAULT 'active',
+    created_at BIGINT
 )")
 
 dbexec("CREATE TABLE IF NOT EXISTS posts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(255) NOT NULL,
     content TEXT,
-    user_id INTEGER,
-    created_at INTEGER
+    user_id INT,
+    created_at BIGINT
 )")
 
 syso("YuWeb Server 启动成功")
 syso("端口: 8080")
+syso("数据库: MySQL test_iapp")
 syso("访问: http://localhost:8080")

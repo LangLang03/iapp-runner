@@ -9,11 +9,6 @@ import cn.langlang.yuweb.web.RequestContext;
 import java.util.List;
 
 public class IsJsonFunction extends AbstractFunction {
-    private RequestContext requestContext;
-    
-    public IsJsonFunction(RequestContext requestContext) {
-        this.requestContext = requestContext;
-    }
     
     @Override
     public String getName() {
@@ -32,6 +27,7 @@ public class IsJsonFunction extends AbstractFunction {
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+        RequestContext requestContext = context.getRequestContext();
         if (requestContext == null) {
             return false;
         }

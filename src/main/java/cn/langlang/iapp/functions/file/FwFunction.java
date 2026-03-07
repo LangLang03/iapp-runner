@@ -5,6 +5,7 @@ import cn.langlang.iapp.runtime.FunctionException;
 import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
@@ -44,8 +45,8 @@ public class FwFunction extends AbstractFunction {
                 parentDir.mkdirs();
             }
             
-            try (OutputStreamWriter writer = new OutputStreamWriter(
-                    new FileOutputStream(file), charset)) {
+            try (BufferedWriter writer = new BufferedWriter(
+                    new OutputStreamWriter(new FileOutputStream(file), charset))) {
                 writer.write(content);
             }
             return true;

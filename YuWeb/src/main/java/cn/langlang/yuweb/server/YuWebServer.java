@@ -116,6 +116,8 @@ public class YuWebServer {
             executeAppFile(appFile);
         }
         
+        JitWarmup.warmup();
+        
         if (config.isSafeMode() || config.isPreloadScripts()) {
             String webrootPath = projectPath + "/webroot";
             logger.info("Preloading scripts from: {}", webrootPath);

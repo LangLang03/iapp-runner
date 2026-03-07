@@ -70,7 +70,7 @@ public class RegisterFunction extends AbstractFunction {
                 return result;
             }
             
-            String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+            String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(6));
             
             Map<String, Object> userData = new HashMap<>();
             userData.put("username", username);

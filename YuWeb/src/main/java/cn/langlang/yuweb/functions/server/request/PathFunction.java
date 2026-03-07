@@ -9,11 +9,6 @@ import cn.langlang.yuweb.web.RequestContext;
 import java.util.List;
 
 public class PathFunction extends AbstractFunction {
-    private RequestContext requestContext;
-    
-    public PathFunction(RequestContext requestContext) {
-        this.requestContext = requestContext;
-    }
     
     @Override
     public String getName() {
@@ -32,6 +27,7 @@ public class PathFunction extends AbstractFunction {
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+        RequestContext requestContext = context.getRequestContext();
         if (requestContext == null) {
             return null;
         }

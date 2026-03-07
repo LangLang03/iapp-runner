@@ -13,6 +13,7 @@ import java.util.Stack;
 public class RuntimeContext {
     private final VariableManager variableManager;
     private final FunctionRegistry functionRegistry;
+    private final FunctionRegistry localFunctionRegistry;
     private final Interpreter beanShellInterpreter;
     private final MjavaModuleLoader mjavaModuleLoader;
     private final Stack<BreakContext> breakContextStack;
@@ -22,10 +23,12 @@ public class RuntimeContext {
     private boolean endCodeRequested;
     private Thread currentThread;
     private final boolean useSharedRegistry;
+    private Object requestContext;
     
     public RuntimeContext() {
         this.variableManager = new VariableManager();
         this.functionRegistry = new FunctionRegistry();
+        this.localFunctionRegistry = null;
         this.beanShellInterpreter = new Interpreter();
         this.mjavaModuleLoader = new MjavaModuleLoader();
         this.breakContextStack = new Stack<>();
@@ -41,6 +44,7 @@ public class RuntimeContext {
     public RuntimeContext(FunctionRegistry sharedRegistry) {
         this.variableManager = new VariableManager();
         this.functionRegistry = sharedRegistry;
+        this.localFunctionRegistry = new FunctionRegistry();
         this.beanShellInterpreter = new Interpreter();
         this.mjavaModuleLoader = new MjavaModuleLoader();
         this.breakContextStack = new Stack<>();
@@ -50,6 +54,28 @@ public class RuntimeContext {
         this.endCodeRequested = false;
         this.useSharedRegistry = true;
         initializeBeanShell();
+    }
+    
+    public void registerLocalFunction(IFunction function) {
+        if (localFunctionRegistry != null) {
+            localFunctionRegistry.registerFunction(function);
+        } else {
+            functionRegistry.registerFunction(function);
+        }
+    }
+    
+    public IFunction getFunction(String name) {
+        String lowerName = name.toLowerCase();
+        if (localFunctionRegistry != null && localFunctionRegistry.hasFunction(lowerName)) {
+            return localFunctionRegistry.getFunction(lowerName);
+        }
+        return functionRegistry.getFunction(lowerName);
+    }
+    
+    public void clearLocalFunctions() {
+        if (localFunctionRegistry != null) {
+            localFunctionRegistry.clear();
+        }
     }
     
     private void registerBuiltinFunctions() {
@@ -255,6 +281,41 @@ public class RuntimeContext {
         return userFunctions;
     }
     
+    public void reset() {
+        variableManager.resetForReuse();
+        breakContextStack.clear();
+        javaObjects.clear();
+        userFunctions.clear();
+        endCodeRequested = false;
+        currentThread = null;
+        requestContext = null;
+        clearLocalFunctions();
+    }
+    
+    public void resetFull() {
+        variableManager.clearAll();
+        breakContextStack.clear();
+        javaObjects.clear();
+        userFunctions.clear();
+        endCodeRequested = false;
+        currentThread = null;
+        requestContext = null;
+        clearLocalFunctions();
+    }
+    
+    public boolean isUseSharedRegistry() {
+        return useSharedRegistry;
+    }
+    
+    public void setRequestContext(Object requestContext) {
+        this.requestContext = requestContext;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public <T> T getRequestContext() {
+        return (T) requestContext;
+    }
+
     public static class BreakContext {
         private final String type;
         private boolean shouldBreak;

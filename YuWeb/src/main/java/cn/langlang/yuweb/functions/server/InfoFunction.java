@@ -22,13 +22,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public class InfoFunction extends AbstractFunction {
-    private RequestContext requestContext;
-    private YuWebServer server;
-    
-    public InfoFunction(RequestContext requestContext, YuWebServer server) {
-        this.requestContext = requestContext;
-        this.server = server;
-    }
     
     @Override
     public String getName() {
@@ -52,16 +45,18 @@ public class InfoFunction extends AbstractFunction {
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+        RequestContext requestContext = context.getRequestContext();
         if (requestContext == null) {
             return null;
         }
         
-        String html = generateInfoHtml(context);
+        YuWebServer server = requestContext.getServer();
+        String html = generateInfoHtml(context, server);
         requestContext.html(html);
         return null;
     }
     
-    private String generateInfoHtml(RuntimeContext context) {
+    private String generateInfoHtml(RuntimeContext context, YuWebServer server) {
         StringBuilder sb = new StringBuilder();
         
         sb.append("<!DOCTYPE html>\n");
@@ -83,7 +78,7 @@ public class InfoFunction extends AbstractFunction {
         
         sb.append("<div class=\"content\">\n");
         
-        appendSection(sb, "服务器信息", getServerInfo());
+        appendSection(sb, "服务器信息", getServerInfo(server));
         appendSection(sb, "Java 环境", getJavaInfo());
         appendSection(sb, "内存使用", getMemoryInfo());
         appendSection(sb, "线程信息", getThreadInfo());
@@ -141,7 +136,7 @@ public class InfoFunction extends AbstractFunction {
             """;
     }
     
-    private Map<String, String> getServerInfo() {
+    private Map<String, String> getServerInfo(YuWebServer server) {
         Map<String, String> info = new TreeMap<>();
         
         info.put("服务器名称", server.getConfig().getServerName());

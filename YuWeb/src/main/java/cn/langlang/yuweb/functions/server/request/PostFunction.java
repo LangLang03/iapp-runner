@@ -6,15 +6,9 @@ import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
 import cn.langlang.yuweb.web.RequestContext;
 
-
 import java.util.List;
 
 public class PostFunction extends AbstractFunction {
-    private RequestContext requestContext;
-    
-    public PostFunction(RequestContext requestContext) {
-        this.requestContext = requestContext;
-    }
     
     @Override
     public String getName() {
@@ -33,6 +27,7 @@ public class PostFunction extends AbstractFunction {
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+        RequestContext requestContext = context.getRequestContext();
         if (requestContext == null) {
             return null;
         }

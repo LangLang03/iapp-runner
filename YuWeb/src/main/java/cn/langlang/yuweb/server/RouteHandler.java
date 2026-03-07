@@ -3,15 +3,13 @@ package cn.langlang.yuweb.server;
 import cn.langlang.iapp.api.IAppScript;
 import cn.langlang.iapp.interpreter.Interpreter;
 import cn.langlang.iapp.runtime.RuntimeContext;
+import cn.langlang.iapp.runtime.RuntimeContextPool;
 import cn.langlang.yuweb.YuWebConfig;
 import cn.langlang.yuweb.cache.CachedScript;
 import cn.langlang.yuweb.cache.ScriptCache;
 import cn.langlang.yuweb.cache.ScriptPreloader;
 import cn.langlang.yuweb.database.DatabaseManager;
 import cn.langlang.yuweb.functions.SharedFunctionRegistry;
-import cn.langlang.yuweb.functions.server.InfoFunction;
-import cn.langlang.yuweb.functions.server.request.*;
-import cn.langlang.yuweb.functions.server.response.*;
 import cn.langlang.yuweb.monitor.PerformanceMonitor;
 import cn.langlang.yuweb.web.ErrorPageGenerator;
 import cn.langlang.yuweb.web.RequestContext;
@@ -35,6 +33,7 @@ public class RouteHandler {
     private static final Map<String, Object> globalVariables = new ConcurrentHashMap<>();
     private static ScriptCache scriptCache;
     private static ScriptPreloader scriptPreloader;
+    private static RuntimeContextPool runtimeContextPool;
     private static final ThreadLocal<Interpreter> interpreterPool = ThreadLocal.withInitial(Interpreter::new);
     private static final PerformanceMonitor perfMonitor = PerformanceMonitor.getInstance();
     
@@ -79,18 +78,35 @@ public class RouteHandler {
         ensureInitialized();
     }
     
-    private synchronized void ensureInitialized() {
-        if (scriptCache == null) {
-            SharedFunctionRegistry.initialize(server, dbManager);
-            scriptCache = new ScriptCache(SharedFunctionRegistry.getSharedRegistry());
-            logger.info("Script cache initialized");
+    private static volatile boolean initialized = false;
+    private static final Object initLock = new Object();
+    
+    private void ensureInitialized() {
+        if (!initialized) {
+            synchronized (initLock) {
+                if (!initialized) {
+                    SharedFunctionRegistry.initialize(server, dbManager);
+                    scriptCache = new ScriptCache(SharedFunctionRegistry.getSharedRegistry());
+                    runtimeContextPool = new RuntimeContextPool(SharedFunctionRegistry.getSharedRegistry(), 50);
+                    initialized = true;
+                    logger.info("Script cache and RuntimeContext pool initialized");
+                }
+            }
         }
     }
     
-    public static synchronized void initializePreloader(String webrootPath) {
-        if (scriptPreloader == null) {
-            scriptPreloader = new ScriptPreloader(SharedFunctionRegistry.getSharedRegistry(), webrootPath);
-            scriptPreloader.preloadAll();
+    private static volatile boolean preloaderInitialized = false;
+    private static final Object preloaderLock = new Object();
+    
+    public static void initializePreloader(String webrootPath) {
+        if (!preloaderInitialized) {
+            synchronized (preloaderLock) {
+                if (!preloaderInitialized) {
+                    scriptPreloader = new ScriptPreloader(SharedFunctionRegistry.getSharedRegistry(), webrootPath);
+                    scriptPreloader.preloadAll();
+                    preloaderInitialized = true;
+                }
+            }
         }
     }
     
@@ -166,11 +182,12 @@ public class RouteHandler {
         RequestContext requestCtx = new RequestContext(ctx, server);
         server.setCurrentContext(requestCtx);
         
+        RuntimeContext runtimeContext = null;
         try {
             perfMonitor.incrementCounter(METRIC_CACHE_HIT);
             
-            RuntimeContext runtimeContext = new RuntimeContext(SharedFunctionRegistry.getSharedRegistry());
-            registerRequestFunctions(runtimeContext, requestCtx);
+            runtimeContext = runtimeContextPool.borrow();
+            runtimeContext.setRequestContext(requestCtx);
             
             for (Map.Entry<String, Object> entry : globalVariables.entrySet()) {
                 runtimeContext.setVariable(entry.getKey(), entry.getValue());
@@ -187,6 +204,9 @@ public class RouteHandler {
             logger.error("Error executing preloaded script {}: {}", scriptPath, e.getMessage(), e);
             errorPageGenerator.sendServerError(ctx, "Script execution error: " + e.getMessage(), e);
         } finally {
+            if (runtimeContext != null) {
+                runtimeContextPool.release(runtimeContext);
+            }
             long elapsed = System.currentTimeMillis() - startTime;
             perfMonitor.recordTime(METRIC_REQUEST_TIME, elapsed);
             if (elapsed > 100) {
@@ -205,6 +225,7 @@ public class RouteHandler {
         RequestContext requestCtx = new RequestContext(ctx, server);
         server.setCurrentContext(requestCtx);
         
+        RuntimeContext runtimeContext = null;
         try {
             ScriptCache.CacheStats beforeStats = scriptCache.getStats();
             
@@ -220,9 +241,8 @@ public class RouteHandler {
                 perfMonitor.incrementCounter(METRIC_CACHE_MISS);
             }
             
-            RuntimeContext runtimeContext = new RuntimeContext(SharedFunctionRegistry.getSharedRegistry());
-            
-            registerRequestFunctions(runtimeContext, requestCtx);
+            runtimeContext = runtimeContextPool.borrow();
+            runtimeContext.setRequestContext(requestCtx);
             
             for (Map.Entry<String, Object> entry : globalVariables.entrySet()) {
                 runtimeContext.setVariable(entry.getKey(), entry.getValue());
@@ -239,6 +259,9 @@ public class RouteHandler {
             logger.error("Error executing script {}: {}", scriptPath, e.getMessage(), e);
             errorPageGenerator.sendServerError(ctx, "Script execution error: " + e.getMessage(), e);
         } finally {
+            if (runtimeContext != null) {
+                runtimeContextPool.release(runtimeContext);
+            }
             long elapsed = System.currentTimeMillis() - startTime;
             perfMonitor.recordTime(METRIC_REQUEST_TIME, elapsed);
             if (elapsed > 100) {
@@ -298,35 +321,8 @@ public class RouteHandler {
         }
     }
     
-    private void registerRequestFunctions(RuntimeContext context, RequestContext requestCtx) {
-        context.getFunctionRegistry().registerFunction(new MethodFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new GetFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new GetsFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new PostFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new PostsFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new FormFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new FormsFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new BodyFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new PathFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new UrlFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new HeaderFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new ClientIpFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new UserAgentFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new IsJsonFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new IsAjaxFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new GetCookieFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new SetCookieFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new DelCookieFunction(requestCtx));
-        
-        context.getFunctionRegistry().registerFunction(new JsonFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new TextFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new HtmlFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new ErrorFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new StatusFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new SetHeaderFunction(requestCtx));
-        context.getFunctionRegistry().registerFunction(new RedirectFunction(requestCtx));
-        
-        context.getFunctionRegistry().registerFunction(new InfoFunction(requestCtx, server));
+    public static RuntimeContextPool.PoolStats getContextPoolStats() {
+        return runtimeContextPool != null ? runtimeContextPool.getStats() : null;
     }
     
     public DatabaseManager getDbManager() {
