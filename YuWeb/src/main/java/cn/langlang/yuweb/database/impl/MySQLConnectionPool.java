@@ -24,13 +24,26 @@ public class MySQLConnectionPool implements ConnectionPool {
     private final long connectionTimeout;
     
     public MySQLConnectionPool(String host, int port, String database, String username, String password) {
-        this(host, port, database, username, password, 20, 30000);
+        this(host, port, database, username, password, 20, 30000, true);
     }
     
     public MySQLConnectionPool(String host, int port, String database, String username, String password, 
                                int maxPoolSize, long connectionTimeout) {
-        this.url = "jdbc:mysql://" + host + ":" + port + "/" + database + 
-                   "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+        this(host, port, database, username, password, maxPoolSize, connectionTimeout, true);
+    }
+    
+    public MySQLConnectionPool(String host, int port, String database, String username, String password, 
+                               int maxPoolSize, long connectionTimeout, boolean useSSL) {
+        StringBuilder urlBuilder = new StringBuilder();
+        urlBuilder.append("jdbc:mysql://").append(host).append(":").append(port).append("/").append(database);
+        urlBuilder.append("?useSSL=").append(useSSL);
+        urlBuilder.append("&serverTimezone=UTC");
+        if (useSSL) {
+            urlBuilder.append("&requireSSL=true");
+        } else {
+            urlBuilder.append("&allowPublicKeyRetrieval=true");
+        }
+        this.url = urlBuilder.toString();
         this.username = username;
         this.password = password;
         this.maxPoolSize = maxPoolSize;
@@ -44,7 +57,8 @@ public class MySQLConnectionPool implements ConnectionPool {
             logger.error("MySQL JDBC driver not found", e);
         }
         
-        logger.info("MySQL connection pool created for: {}", url);
+        logger.info("MySQL connection pool created for: {} (SSL: {})", 
+                "jdbc:mysql://" + host + ":" + port + "/" + database, useSSL);
     }
     
     @Override
@@ -111,7 +125,7 @@ public class MySQLConnectionPool implements ConnectionPool {
             closeConnection(conn);
         }
         totalConnections.set(0);
-        logger.info("MySQL connection pool closed for: {}", url);
+        logger.info("MySQL connection pool closed");
     }
     
     @Override

@@ -4,12 +4,15 @@ import cn.langlang.yuweb.database.Database;
 import cn.langlang.yuweb.database.DatabaseException;
 import cn.langlang.yuweb.database.QueryCondition;
 import com.google.gson.Gson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class SQLiteDatabase implements Database {
+    private static final Logger logger = LoggerFactory.getLogger(SQLiteDatabase.class);
     private String path;
     private Connection connection;
     private static final Gson gson = new Gson();
@@ -35,7 +38,7 @@ public class SQLiteDatabase implements Database {
             try {
                 connection.close();
             } catch (SQLException e) {
-                e.printStackTrace();
+                logger.error("Error closing database connection", e);
             }
             connection = null;
         }
@@ -158,9 +161,10 @@ public class SQLiteDatabase implements Database {
                 stmt.setObject(i + 1, values.get(i));
             }
             
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return resultSetToMap(rs);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return resultSetToMap(rs);
+                }
             }
             return null;
         } catch (SQLException e) {
@@ -186,9 +190,10 @@ public class SQLiteDatabase implements Database {
                 stmt.setObject(i + 1, values.get(i));
             }
             
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                results.add(resultSetToMap(rs));
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    results.add(resultSetToMap(rs));
+                }
             }
             return results;
         } catch (SQLException e) {
@@ -222,12 +227,13 @@ public class SQLiteDatabase implements Database {
                 for (int i = 0; i < values.size(); i++) {
                     countStmt.setObject(i + 1, values.get(i));
                 }
-                ResultSet rs = countStmt.executeQuery();
-                long total = rs.next() ? rs.getLong(1) : 0;
-                result.put("total", total);
-                result.put("page", page);
-                result.put("size", size);
-                result.put("totalPages", (total + size - 1) / size);
+                try (ResultSet rs = countStmt.executeQuery()) {
+                    long total = rs.next() ? rs.getLong(1) : 0;
+                    result.put("total", total);
+                    result.put("page", page);
+                    result.put("size", size);
+                    result.put("totalPages", (total + size - 1) / size);
+                }
             }
             
             List<Map<String, Object>> data = new ArrayList<>();
@@ -239,9 +245,10 @@ public class SQLiteDatabase implements Database {
                 dataStmt.setInt(paramIndex++, size);
                 dataStmt.setInt(paramIndex, offset);
                 
-                ResultSet rs = dataStmt.executeQuery();
-                while (rs.next()) {
-                    data.add(resultSetToMap(rs));
+                try (ResultSet rs = dataStmt.executeQuery()) {
+                    while (rs.next()) {
+                        data.add(resultSetToMap(rs));
+                    }
                 }
             }
             result.put("data", data);
@@ -268,9 +275,10 @@ public class SQLiteDatabase implements Database {
                 stmt.setObject(i + 1, values.get(i));
             }
             
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getLong(1);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
             }
             return 0;
         } catch (SQLException e) {
@@ -279,7 +287,95 @@ public class SQLiteDatabase implements Database {
     }
     
     @Override
+    public Map<String, Object> search(String table, Object fields, String keyword, int page, int size) throws DatabaseException {
+        int offset = (page - 1) * size;
+        
+        List<String> searchFields = new ArrayList<>();
+        if (fields instanceof String) {
+            String fieldStr = (String) fields;
+            if (fieldStr.contains(",")) {
+                for (String f : fieldStr.split(",")) {
+                    searchFields.add(f.trim());
+                }
+            } else {
+                searchFields.add(fieldStr.trim());
+            }
+        } else if (fields instanceof List) {
+            for (Object f : (List<?>) fields) {
+                if (f != null) {
+                    searchFields.add(f.toString().trim());
+                }
+            }
+        }
+        
+        if (searchFields.isEmpty()) {
+            throw new DatabaseException("Search fields cannot be empty");
+        }
+        
+        String searchPattern = "%" + keyword + "%";
+        
+        StringBuilder whereClause = new StringBuilder();
+        List<Object> values = new ArrayList<>();
+        
+        for (int i = 0; i < searchFields.size(); i++) {
+            if (i > 0) {
+                whereClause.append(" OR ");
+            }
+            whereClause.append(searchFields.get(i)).append(" LIKE ?");
+            values.add(searchPattern);
+        }
+        
+        StringBuilder countSql = new StringBuilder("SELECT COUNT(*) FROM ");
+        countSql.append(table).append(" WHERE (").append(whereClause).append(")");
+        
+        StringBuilder dataSql = new StringBuilder("SELECT * FROM ");
+        dataSql.append(table).append(" WHERE (").append(whereClause).append(") LIMIT ? OFFSET ?");
+        
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            try (PreparedStatement countStmt = connection.prepareStatement(countSql.toString())) {
+                for (int i = 0; i < values.size(); i++) {
+                    countStmt.setObject(i + 1, values.get(i));
+                }
+                try (ResultSet rs = countStmt.executeQuery()) {
+                    long total = rs.next() ? rs.getLong(1) : 0;
+                    result.put("total", total);
+                    result.put("page", page);
+                    result.put("size", size);
+                    result.put("totalPages", (total + size - 1) / size);
+                    result.put("keyword", keyword);
+                }
+            }
+            
+            List<Map<String, Object>> data = new ArrayList<>();
+            try (PreparedStatement dataStmt = connection.prepareStatement(dataSql.toString())) {
+                int paramIndex = 1;
+                for (Object value : values) {
+                    dataStmt.setObject(paramIndex++, value);
+                }
+                dataStmt.setInt(paramIndex++, size);
+                dataStmt.setInt(paramIndex, offset);
+                
+                try (ResultSet rs = dataStmt.executeQuery()) {
+                    while (rs.next()) {
+                        data.add(resultSetToMap(rs));
+                    }
+                }
+            }
+            result.put("data", data);
+            
+            return result;
+        } catch (SQLException e) {
+            throw new DatabaseException("Search failed: " + e.getMessage(), e);
+        }
+    }
+    
+    @Override
     public void execute(String sql) throws DatabaseException {
+        if (sql == null || sql.trim().isEmpty()) {
+            throw new DatabaseException("SQL statement cannot be empty");
+        }
         try (Statement stmt = connection.createStatement()) {
             stmt.execute(sql);
         } catch (SQLException e) {
@@ -289,6 +385,9 @@ public class SQLiteDatabase implements Database {
     
     @Override
     public void execute(String sql, Object... params) throws DatabaseException {
+        if (sql == null || sql.trim().isEmpty()) {
+            throw new DatabaseException("SQL statement cannot be empty");
+        }
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             for (int i = 0; i < params.length; i++) {
                 stmt.setObject(i + 1, params[i]);
@@ -296,6 +395,44 @@ public class SQLiteDatabase implements Database {
             stmt.execute();
         } catch (SQLException e) {
             throw new DatabaseException("Execute failed: " + e.getMessage(), e);
+        }
+    }
+    
+    @Override
+    public List<Map<String, Object>> query(String sql) throws DatabaseException {
+        if (sql == null || sql.trim().isEmpty()) {
+            throw new DatabaseException("SQL statement cannot be empty");
+        }
+        List<Map<String, Object>> results = new ArrayList<>();
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                results.add(resultSetToMap(rs));
+            }
+            return results;
+        } catch (SQLException e) {
+            throw new DatabaseException("Query failed: " + e.getMessage(), e);
+        }
+    }
+    
+    @Override
+    public List<Map<String, Object>> query(String sql, Object... params) throws DatabaseException {
+        if (sql == null || sql.trim().isEmpty()) {
+            throw new DatabaseException("SQL statement cannot be empty");
+        }
+        List<Map<String, Object>> results = new ArrayList<>();
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            for (int i = 0; i < params.length; i++) {
+                stmt.setObject(i + 1, params[i]);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    results.add(resultSetToMap(rs));
+                }
+            }
+            return results;
+        } catch (SQLException e) {
+            throw new DatabaseException("Query failed: " + e.getMessage(), e);
         }
     }
     

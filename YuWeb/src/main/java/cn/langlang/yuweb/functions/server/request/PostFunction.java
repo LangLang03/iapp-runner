@@ -4,7 +4,8 @@ import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
 import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
-import cn.langlang.yuweb.RequestContext;
+import cn.langlang.yuweb.web.RequestContext;
+
 
 import java.util.List;
 

@@ -4,9 +4,11 @@ import cn.langlang.iapp.runtime.AbstractFunction;
 import cn.langlang.iapp.runtime.FunctionException;
 import cn.langlang.iapp.runtime.ParamType;
 import cn.langlang.iapp.runtime.RuntimeContext;
-import cn.langlang.yuweb.DatabaseManager;
+import cn.langlang.yuweb.database.DatabaseManager;
 import cn.langlang.yuweb.database.Database;
 import org.mindrot.jbcrypt.BCrypt;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -15,11 +17,23 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class LoginFunction extends AbstractFunction {
+    private static final Logger logger = LoggerFactory.getLogger(LoginFunction.class);
+    
     private DatabaseManager dbManager;
-    private static final Map<String, Map<String, Object>> tokenStore = new ConcurrentHashMap<>();
+    private static final Map<String, TokenData> tokenStore = new ConcurrentHashMap<>();
+    private static final long DEFAULT_TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000;
+    private static volatile long tokenExpiryMs = DEFAULT_TOKEN_EXPIRY_MS;
     
     public LoginFunction(DatabaseManager dbManager) {
         this.dbManager = dbManager;
+    }
+    
+    public static void setTokenExpiry(long expiryMs) {
+        tokenExpiryMs = expiryMs > 0 ? expiryMs : DEFAULT_TOKEN_EXPIRY_MS;
+    }
+    
+    public static long getTokenExpiry() {
+        return tokenExpiryMs;
     }
     
     @Override
@@ -70,11 +84,14 @@ public class LoginFunction extends AbstractFunction {
             }
             
             String token = UUID.randomUUID().toString().replace("-", "");
+            long now = System.currentTimeMillis();
             
-            Map<String, Object> tokenData = new HashMap<>();
-            tokenData.put("userId", user.get("id"));
-            tokenData.put("username", user.get("username"));
-            tokenData.put("createdAt", System.currentTimeMillis());
+            Map<String, Object> userData = new HashMap<>();
+            userData.put("userId", user.get("id"));
+            userData.put("username", user.get("username"));
+            userData.put("createdAt", now);
+            
+            TokenData tokenData = new TokenData(userData, now + tokenExpiryMs);
             tokenStore.put(token, tokenData);
             
             user.remove("password");
@@ -82,6 +99,7 @@ public class LoginFunction extends AbstractFunction {
             result.put("success", true);
             result.put("token", token);
             result.put("user", user);
+            result.put("expiresIn", tokenExpiryMs / 1000);
             result.put("msg", "登录成功");
             
         } catch (Exception e) {
@@ -98,10 +116,55 @@ public class LoginFunction extends AbstractFunction {
     }
     
     public static Map<String, Object> getTokenData(String token) {
-        return tokenStore.get(token);
+        TokenData data = tokenStore.get(token);
+        if (data == null) {
+            return null;
+        }
+        if (data.isExpired()) {
+            tokenStore.remove(token);
+            logger.debug("Token expired and removed: {}", token);
+            return null;
+        }
+        return data.getData();
     }
     
     public static void removeToken(String token) {
         tokenStore.remove(token);
+    }
+    
+    public static int getActiveTokenCount() {
+        cleanExpiredTokens();
+        return tokenStore.size();
+    }
+    
+    public static void cleanExpiredTokens() {
+        long now = System.currentTimeMillis();
+        tokenStore.entrySet().removeIf(entry -> entry.getValue().isExpired());
+    }
+    
+    public static void clearAllTokens() {
+        tokenStore.clear();
+    }
+    
+    public static class TokenData {
+        private final Map<String, Object> data;
+        private final long expiresAt;
+        
+        public TokenData(Map<String, Object> data, long expiresAt) {
+            this.data = data;
+            this.expiresAt = expiresAt;
+        }
+        
+        public Map<String, Object> getData() {
+            return data;
+        }
+        
+        public long getExpiresAt() {
+            return expiresAt;
+        }
+        
+        public boolean isExpired() {
+            return System.currentTimeMillis() > expiresAt;
+        }
     }
 }

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YuWeb Static File Test</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .card { background: white; border-radius: 12px; padding: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); text-align: center; max-width: 500px; }
+        h1 { color: #333; margin-bottom: 20px; }
+        p { color: #666; margin-bottom: 15px; }
+        .badge { display: inline-block; background: #28a745; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9em; }
+        .info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px; text-align: left; }
+        .info dt { font-weight: bold; color: #495057; }
+        .info dd { color: #6c757d; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🎉 静态文件服务正常</h1>
+        <p>YuWeb 服务器成功返回了这个静态 HTML 文件</p>
+        <span class="badge">Static File OK</span>
+        
+        <dl class="info">
+            <dt>文件类型</dt>
+            <dd>text/html; charset=utf-8</dd>
+            
+            <dt>缓存策略</dt>
+            <dd>public, max-age=3600</dd>
+            
+            <dt>安全头</dt>
+            <dd>X-Content-Type-Options: nosniff</dd>
+        </dl>
+    </div>
+</body>
+</html>

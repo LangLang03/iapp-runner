@@ -1,5 +1,6 @@
-package cn.langlang.yuweb;
+package cn.langlang.yuweb.web;
 
+import cn.langlang.yuweb.YuWebConfig;
 import io.javalin.http.Context;
 
 public class ErrorPageGenerator {

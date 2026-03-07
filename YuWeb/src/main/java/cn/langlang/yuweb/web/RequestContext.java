@@ -1,5 +1,6 @@
-package cn.langlang.yuweb;
+package cn.langlang.yuweb.web;
 
+import cn.langlang.yuweb.server.YuWebServer;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import io.javalin.http.Context;
@@ -8,7 +9,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class RequestContext {
     private static final Logger logger = LoggerFactory.getLogger(RequestContext.class);
@@ -17,6 +21,44 @@ public class RequestContext {
     private Map<String, Object> jsonData;
     private boolean jsonParsed = false;
     private static final Gson gson = new Gson();
+    
+    private static final long DEFAULT_MAX_FILE_SIZE = 10 * 1024 * 1024;
+    
+    private static long maxFileSize = DEFAULT_MAX_FILE_SIZE;
+    private static Set<String> allowedExtensions = null;
+    private static boolean allowAllExtensions = true;
+    
+    public static void setMaxFileSize(long maxSize) {
+        maxFileSize = maxSize > 0 ? maxSize : DEFAULT_MAX_FILE_SIZE;
+    }
+    
+    public static void setAllowedExtensions(Set<String> extensions) {
+        if (extensions != null && !extensions.isEmpty()) {
+            allowedExtensions = new HashSet<>(extensions);
+            allowAllExtensions = false;
+        } else {
+            allowedExtensions = null;
+            allowAllExtensions = true;
+        }
+    }
+    
+    public static void addAllowedExtension(String extension) {
+        if (extension != null && !extension.isEmpty()) {
+            if (allowedExtensions == null) {
+                allowedExtensions = new HashSet<>();
+                allowAllExtensions = false;
+            }
+            allowedExtensions.add(extension.toLowerCase());
+        }
+    }
+    
+    public static boolean isAllowAllExtensions() {
+        return allowAllExtensions;
+    }
+    
+    public static Set<String> getAllowedExtensions() {
+        return allowedExtensions;
+    }
     
     public RequestContext(Context ctx, YuWebServer server) {
         this.ctx = ctx;
@@ -214,6 +256,113 @@ public class RequestContext {
         } catch (Exception e) {
             ctx.status(404).result("File not found");
         }
+    }
+    
+    public UploadedFile getFile(String name) {
+        try {
+            io.javalin.http.UploadedFile juf = ctx.uploadedFile(name);
+            if (juf == null) {
+                return null;
+            }
+            
+            if (!validateUploadedFile(juf.filename(), juf.size())) {
+                logger.warn("File upload rejected: {} (size: {})", juf.filename(), juf.size());
+                return null;
+            }
+            
+            String safeFilename = sanitizeFilename(juf.filename());
+            
+            return new UploadedFile(
+                name,
+                safeFilename,
+                juf.contentType(),
+                juf.size(),
+                juf.content()
+            );
+        } catch (Exception e) {
+            logger.error("Error getting uploaded file: {}", e.getMessage());
+            return null;
+        }
+    }
+    
+    public Map<String, UploadedFile> getFiles() {
+        Map<String, UploadedFile> files = new HashMap<>();
+        try {
+            List<io.javalin.http.UploadedFile> uploadedFiles = ctx.uploadedFiles();
+            if (uploadedFiles != null) {
+                for (io.javalin.http.UploadedFile juf : uploadedFiles) {
+                    if (juf.filename() != null && !juf.filename().isEmpty()) {
+                        if (!validateUploadedFile(juf.filename(), juf.size())) {
+                            logger.warn("File upload rejected: {} (size: {})", juf.filename(), juf.size());
+                            continue;
+                        }
+                        
+                        String safeFilename = sanitizeFilename(juf.filename());
+                        UploadedFile uf = new UploadedFile(
+                            safeFilename,
+                            safeFilename,
+                            juf.contentType(),
+                            juf.size(),
+                            juf.content()
+                        );
+                        files.put(safeFilename, uf);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error getting uploaded files: {}", e.getMessage());
+        }
+        return files;
+    }
+    
+    private boolean validateUploadedFile(String filename, long size) {
+        if (filename == null || filename.isEmpty()) {
+            return false;
+        }
+        
+        if (size > maxFileSize) {
+            logger.warn("File size exceeds limit: {} > {}", size, maxFileSize);
+            return false;
+        }
+        
+        if (!allowAllExtensions && allowedExtensions != null) {
+            String extension = getFileExtension(filename);
+            if (extension.isEmpty() || !allowedExtensions.contains(extension.toLowerCase())) {
+                logger.warn("File extension not allowed: {}", extension);
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    private String sanitizeFilename(String filename) {
+        if (filename == null) {
+            return "unknown";
+        }
+        
+        String sanitized = filename.replaceAll("[\\\\/]", "_");
+        sanitized = sanitized.replaceAll("[^a-zA-Z0-9._-]", "_");
+        sanitized = sanitized.replaceAll("_{2,}", "_");
+        
+        if (sanitized.length() > 255) {
+            String ext = getFileExtension(sanitized);
+            String name = sanitized.substring(0, sanitized.length() - ext.length());
+            sanitized = name.substring(0, 250 - ext.length()) + ext;
+        }
+        
+        return sanitized;
+    }
+    
+    private String getFileExtension(String filename) {
+        if (filename == null || filename.isEmpty()) {
+            return "";
+        }
+        int dotIndex = filename.lastIndexOf('.');
+        if (dotIndex > 0 && dotIndex < filename.length() - 1) {
+            return filename.substring(dotIndex).toLowerCase();
+        }
+        return "";
     }
     
     public Context getJavalinContext() {
