@@ -5,10 +5,15 @@ import cn.langlang.yuweb.web.ErrorPageGenerator;
 import cn.langlang.yuweb.web.RequestContext;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
+import io.javalin.http.staticfiles.Location;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public class YuWebServer {
     private static final Logger logger = LoggerFactory.getLogger(YuWebServer.class);
@@ -22,6 +27,9 @@ public class YuWebServer {
     private final YuWebConfig config;
     private final ErrorPageGenerator errorPageGenerator;
     private static final ThreadLocal<RequestContext> currentContext = new ThreadLocal<>();
+    
+    private ExecutorService asyncExecutor;
+    private volatile boolean running = false;
     
     public YuWebServer(String projectPath) {
         this.projectPath = projectPath != null ? projectPath : ".";
@@ -79,6 +87,13 @@ public class YuWebServer {
     }
     
     public void start() {
+        running = true;
+        
+        RouteHandler.configureDatabaseManager(config);
+        
+        asyncExecutor = Executors.newFixedThreadPool(config.getAsyncThreadPoolSize());
+        logger.info("Async thread pool initialized with {} threads", config.getAsyncThreadPoolSize());
+        
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             logger.info("Shutting down YuWeb Server...");
             stop();
@@ -87,6 +102,18 @@ public class YuWebServer {
         app = Javalin.create(javalinConfig -> {
             javalinConfig.http.maxRequestSize = 10_000_000L;
             javalinConfig.http.defaultContentType = "text/html; charset=utf-8";
+            
+            if (config.isHttp2Enabled()) {
+                javalinConfig.http.generateEtags = true;
+                logger.info("HTTP/2 optimizations enabled (ETags)");
+            }
+            
+            String webrootPath = projectPath + "/webroot";
+            File webrootDir = new File(webrootPath);
+            if (webrootDir.exists() && webrootDir.isDirectory()) {
+                javalinConfig.staticFiles.add(webrootPath, Location.EXTERNAL);
+                logger.info("Static files served from: {}", webrootPath);
+            }
         });
         
         app.before(ctx -> {
@@ -124,11 +151,22 @@ public class YuWebServer {
         
         app.start(port);
         
+        logger.info("========================================");
         logger.info("YuWeb Server started on port {}", port);
         logger.info("Project path: {}", new File(projectPath).getAbsolutePath());
-        logger.info("Safe mode: {}", config.isSafeMode() ? "ENABLED" : "disabled");
-        logger.info("Preload scripts: {}", config.isPreloadScripts() ? "ENABLED" : "disabled");
-        logger.info("Serve static files: {}", config.isServeStaticFiles() ? "ENABLED" : "disabled");
+        logger.info("----------------------------------------");
+        logger.info("Configuration:");
+        logger.info("  Safe mode: {}", config.isSafeMode() ? "ENABLED" : "disabled");
+        logger.info("  Preload scripts: {}", config.isPreloadScripts() ? "ENABLED" : "disabled");
+        logger.info("  Serve static files: {}", config.isServeStaticFiles() ? "ENABLED" : "disabled");
+        logger.info("  HTTP/2 optimizations: {}", config.isHttp2Enabled() ? "ENABLED" : "disabled");
+        logger.info("  Response compression: {}", config.isCompressionEnabled() ? "ENABLED" : "disabled");
+        logger.info("----------------------------------------");
+        logger.info("Performance:");
+        logger.info("  Connection pool size: {}", config.getMaxPoolSize());
+        logger.info("  Initial pool size: {}", config.getInitialPoolSize());
+        logger.info("  Async thread pool: {}", config.getAsyncThreadPoolSize());
+        logger.info("========================================");
         
         if (config.isDebugMode()) {
             logger.warn("Debug mode is ENABLED - Error details will be shown to clients");
@@ -136,10 +174,53 @@ public class YuWebServer {
     }
     
     public void stop() {
+        running = false;
+        
+        if (asyncExecutor != null) {
+            asyncExecutor.shutdown();
+            try {
+                if (!asyncExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+                    asyncExecutor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                asyncExecutor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+            logger.info("Async thread pool shut down");
+        }
+        
         if (app != null) {
             app.stop();
         }
         RouteHandler.closeDatabase();
+    }
+    
+    public <T> CompletableFuture<T> runAsync(java.util.concurrent.Callable<T> task) {
+        if (!running || asyncExecutor == null) {
+            return CompletableFuture.failedFuture(new IllegalStateException("Server not running"));
+        }
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return task.call();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }, asyncExecutor);
+    }
+    
+    public CompletableFuture<Void> runAsync(Runnable task) {
+        if (!running || asyncExecutor == null) {
+            return CompletableFuture.failedFuture(new IllegalStateException("Server not running"));
+        }
+        return CompletableFuture.runAsync(task, asyncExecutor);
+    }
+    
+    public boolean isRunning() {
+        return running;
+    }
+    
+    public ExecutorService getAsyncExecutor() {
+        return asyncExecutor;
     }
     
     private void handleRequest(Context ctx) {

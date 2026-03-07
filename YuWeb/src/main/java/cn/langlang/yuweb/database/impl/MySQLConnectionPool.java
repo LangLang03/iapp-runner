@@ -26,7 +26,7 @@ public class MySQLConnectionPool implements ConnectionPool {
     private volatile boolean initialized = false;
     
     public MySQLConnectionPool(String host, int port, String database, String username, String password) {
-        this(host, port, database, username, password, 20, 30000, true);
+        this(host, port, database, username, password, 100, 30000, true);
     }
     
     public MySQLConnectionPool(String host, int port, String database, String username, String password, 

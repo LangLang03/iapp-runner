@@ -31,7 +31,7 @@ public class SQLiteConnectionPool implements ConnectionPool {
     private static final String PRAGMA_FOREIGN_KEYS = "PRAGMA foreign_keys=ON";
     
     public SQLiteConnectionPool(String path) {
-        this(path, 50, 5000);
+        this(path, 100, 30000);
     }
     
     public SQLiteConnectionPool(String path, int maxPoolSize, long connectionTimeout) {

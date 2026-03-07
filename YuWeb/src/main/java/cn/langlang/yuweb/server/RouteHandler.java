@@ -38,6 +38,15 @@ public class RouteHandler {
     private static final ThreadLocal<Interpreter> interpreterPool = ThreadLocal.withInitial(Interpreter::new);
     private static final PerformanceMonitor perfMonitor = PerformanceMonitor.getInstance();
     
+    private static volatile boolean dbConfigured = false;
+    
+    public static void configureDatabaseManager(YuWebConfig config) {
+        if (!dbConfigured) {
+            dbManager.configureFromConfig(config);
+            dbConfigured = true;
+        }
+    }
+    
     private static final String METRIC_REQUEST_COUNT = "request.count";
     private static final String METRIC_REQUEST_TIME = "request.time";
     private static final String METRIC_CACHE_HIT = "cache.hit";
@@ -86,11 +95,15 @@ public class RouteHandler {
         if (!initialized) {
             synchronized (initLock) {
                 if (!initialized) {
+                    if (!dbConfigured) {
+                        dbManager.configureFromConfig(config);
+                        dbConfigured = true;
+                    }
                     SharedFunctionRegistry.initialize(server, dbManager);
                     scriptCache = new ScriptCache(SharedFunctionRegistry.getSharedRegistry());
-                    runtimeContextPool = new RuntimeContextPool(SharedFunctionRegistry.getSharedRegistry(), 50);
+                    runtimeContextPool = new RuntimeContextPool(SharedFunctionRegistry.getSharedRegistry(), config.getMaxPoolSize());
                     initialized = true;
-                    logger.info("Script cache and RuntimeContext pool initialized");
+                    logger.info("Script cache and RuntimeContext pool initialized (pool size: {})", config.getMaxPoolSize());
                 }
             }
         }

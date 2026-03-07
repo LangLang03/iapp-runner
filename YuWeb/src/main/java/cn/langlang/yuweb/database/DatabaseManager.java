@@ -22,8 +22,8 @@ public class DatabaseManager {
     private String defaultKey;
     
     private boolean useConnectionPool = true;
-    private int maxPoolSize = 20;
-    private int initialPoolSize = 5;
+    private int maxPoolSize = 100;
+    private int initialPoolSize = 10;
     private long connectionTimeout = 30000;
     
     public void connect(String type, String path) throws Exception {
@@ -186,15 +186,24 @@ public class DatabaseManager {
     }
     
     public void setMaxPoolSize(int maxPoolSize) {
-        this.maxPoolSize = maxPoolSize;
+        this.maxPoolSize = maxPoolSize > 0 ? maxPoolSize : 100;
     }
     
     public void setInitialPoolSize(int initialPoolSize) {
-        this.initialPoolSize = initialPoolSize;
+        this.initialPoolSize = initialPoolSize > 0 ? initialPoolSize : 10;
     }
     
     public void setConnectionTimeout(long connectionTimeout) {
-        this.connectionTimeout = connectionTimeout;
+        this.connectionTimeout = connectionTimeout > 0 ? connectionTimeout : 30000;
+    }
+    
+    public void configureFromConfig(cn.langlang.yuweb.YuWebConfig config) {
+        this.useConnectionPool = config.isUseConnectionPool();
+        this.maxPoolSize = config.getMaxPoolSize();
+        this.initialPoolSize = config.getInitialPoolSize();
+        this.connectionTimeout = config.getConnectionTimeout();
+        logger.info("DatabaseManager configured: poolSize={}, initialSize={}, timeout={}ms", 
+                maxPoolSize, initialPoolSize, connectionTimeout);
     }
     
     public Map<String, ConnectionPool> getConnectionPools() {

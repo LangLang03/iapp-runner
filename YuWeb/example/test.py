@@ -17,9 +17,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # ==================== 配置参数 ====================
 URL = "http://localhost:8080/user/register.iapp"  # 目标接口地址
-TOTAL_REQUESTS = 10000                             # 总请求次数
-CONCURRENT_WORKERS = 20                             # 并发线程数（可根据需要调整）
-TIMEOUT = 5                                         # 请求超时时间（秒）
+TOTAL_REQUESTS = 20000                             # 总请求次数
+CONCURRENT_WORKERS = 100                           # 并发线程数（提高到100测试连接池优化）
+TIMEOUT = 10                                       # 请求超时时间（秒）
 # =================================================
 
 # 生成随机用户名（10 位数字）
