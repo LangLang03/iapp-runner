@@ -131,7 +131,13 @@ public class SQLiteConnectionPool implements ConnectionPool {
     
     private boolean isConnectionValid(Connection conn) {
         try {
-            return conn != null && !conn.isClosed();
+            if (conn == null || conn.isClosed()) {
+                return false;
+            }
+            try (java.sql.Statement stmt = conn.createStatement()) {
+                stmt.execute("SELECT 1");
+            }
+            return true;
         } catch (SQLException e) {
             return false;
         }

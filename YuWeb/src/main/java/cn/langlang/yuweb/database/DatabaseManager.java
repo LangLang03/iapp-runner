@@ -1,7 +1,5 @@
-package cn.langlang.yuweb;
+package cn.langlang.yuweb.database;
 
-import cn.langlang.yuweb.database.ConnectionPool;
-import cn.langlang.yuweb.database.Database;
 import cn.langlang.yuweb.database.impl.MySQLConnectionPool;
 import cn.langlang.yuweb.database.impl.MySQLDatabase;
 import cn.langlang.yuweb.database.impl.SQLiteDatabase;
@@ -19,6 +17,7 @@ public class DatabaseManager {
     
     private final Map<String, Database> connections = new ConcurrentHashMap<>();
     private final Map<String, ConnectionPool> connectionPools = new ConcurrentHashMap<>();
+    private final Map<Connection, String> connectionSourceMap = new ConcurrentHashMap<>();
     private Database defaultDatabase;
     private String defaultKey;
     
@@ -95,7 +94,9 @@ public class DatabaseManager {
         
         ConnectionPool pool = connectionPools.get(defaultKey);
         if (pool != null) {
-            return pool.getConnection();
+            Connection conn = pool.getConnection();
+            connectionSourceMap.put(conn, defaultKey);
+            return conn;
         }
         
         throw new SQLException("No connection pool available");
@@ -104,7 +105,9 @@ public class DatabaseManager {
     public Connection getConnection(String key) throws SQLException {
         ConnectionPool pool = connectionPools.get(key);
         if (pool != null) {
-            return pool.getConnection();
+            Connection conn = pool.getConnection();
+            connectionSourceMap.put(conn, key);
+            return conn;
         }
         
         throw new SQLException("No connection pool available for: " + key);
@@ -115,19 +118,26 @@ public class DatabaseManager {
             return;
         }
         
-        for (ConnectionPool pool : connectionPools.values()) {
-            pool.releaseConnection(connection);
-            return;
+        String sourceKey = connectionSourceMap.remove(connection);
+        if (sourceKey != null) {
+            ConnectionPool pool = connectionPools.get(sourceKey);
+            if (pool != null) {
+                pool.releaseConnection(connection);
+                return;
+            }
         }
         
         try {
             connection.close();
+            logger.debug("Connection closed directly (no pool found)");
         } catch (SQLException e) {
             logger.error("Error closing connection", e);
         }
     }
     
     public void closeAll() {
+        connectionSourceMap.clear();
+        
         for (ConnectionPool pool : connectionPools.values()) {
             pool.closeAll();
         }
@@ -177,5 +187,9 @@ public class DatabaseManager {
             total += pool.getAvailableConnections();
         }
         return total;
+    }
+    
+    public int getActiveConnectionsCount() {
+        return connectionSourceMap.size();
     }
 }

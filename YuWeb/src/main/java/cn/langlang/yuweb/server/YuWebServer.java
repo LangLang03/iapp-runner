@@ -1,13 +1,14 @@
-package cn.langlang.yuweb;
+package cn.langlang.yuweb.server;
 
+import cn.langlang.yuweb.YuWebConfig;
+import cn.langlang.yuweb.web.ErrorPageGenerator;
+import cn.langlang.yuweb.web.RequestContext;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class YuWebServer {
     private static final Logger logger = LoggerFactory.getLogger(YuWebServer.class);
@@ -33,6 +34,12 @@ public class YuWebServer {
     public YuWebServer(String projectPath, boolean debugMode) {
         this(projectPath);
         this.config.setDebugMode(debugMode);
+    }
+    
+    public YuWebServer(String projectPath, YuWebConfig config) {
+        this.projectPath = projectPath != null ? projectPath : ".";
+        this.config = config;
+        this.errorPageGenerator = new ErrorPageGenerator(config);
     }
     
     public void setPort(int port) {
@@ -77,10 +84,9 @@ public class YuWebServer {
             stop();
         }));
         
-        File staticDir = new File(projectPath + "/static");
-        
         app = Javalin.create(javalinConfig -> {
             javalinConfig.http.maxRequestSize = 10_000_000L;
+            javalinConfig.http.defaultContentType = "text/html; charset=utf-8";
         });
         
         app.before(ctx -> {
@@ -110,9 +116,20 @@ public class YuWebServer {
             executeAppFile(appFile);
         }
         
+        if (config.isSafeMode() || config.isPreloadScripts()) {
+            String webrootPath = projectPath + "/webroot";
+            logger.info("Preloading scripts from: {}", webrootPath);
+            RouteHandler.initializePreloader(webrootPath);
+        }
+        
         app.start(port);
+        
         logger.info("YuWeb Server started on port {}", port);
         logger.info("Project path: {}", new File(projectPath).getAbsolutePath());
+        logger.info("Safe mode: {}", config.isSafeMode() ? "ENABLED" : "disabled");
+        logger.info("Preload scripts: {}", config.isPreloadScripts() ? "ENABLED" : "disabled");
+        logger.info("Serve static files: {}", config.isServeStaticFiles() ? "ENABLED" : "disabled");
+        
         if (config.isDebugMode()) {
             logger.warn("Debug mode is ENABLED - Error details will be shown to clients");
         }
@@ -143,7 +160,7 @@ public class YuWebServer {
         
         try {
             RouteHandler handler = new RouteHandler(this);
-            handler.handle(scriptFile.getAbsolutePath(), ctx);
+            handler.handle(scriptPath, ctx);
         } catch (Exception e) {
             logger.error("Error handling request: {}", e.getMessage(), e);
             errorPageGenerator.sendServerError(ctx, "Request handling error", e);
@@ -155,23 +172,68 @@ public class YuWebServer {
             return "/index.iapp";
         }
         
-        if (path.endsWith(".iapp")) {
-            return path;
+        String normalizedPath = normalizePath(path);
+        if (normalizedPath == null) {
+            return null;
         }
         
-        String iappPath = path + ".iapp";
-        File iappFile = new File(projectPath + "/webroot" + iappPath);
-        if (iappFile.exists()) {
+        File webrootDir = new File(projectPath, "webroot");
+        File directFile = new File(webrootDir, normalizedPath);
+        
+        if (!isWithinWebroot(directFile, webrootDir)) {
+            logger.warn("Path traversal attempt detected: {}", path);
+            return null;
+        }
+        
+        if (directFile.exists() && directFile.isFile()) {
+            return normalizedPath;
+        }
+        
+        if (normalizedPath.endsWith(".iapp")) {
+            return normalizedPath;
+        }
+        
+        String iappPath = normalizedPath + ".iapp";
+        File iappFile = new File(webrootDir, iappPath);
+        if (iappFile.exists() && isWithinWebroot(iappFile, webrootDir)) {
             return iappPath;
         }
         
-        String indexPath = path + "/index.iapp";
-        File indexFile = new File(projectPath + "/webroot" + indexPath);
-        if (indexFile.exists()) {
+        String indexPath = normalizedPath + "/index.iapp";
+        File indexFile = new File(webrootDir, indexPath);
+        if (indexFile.exists() && isWithinWebroot(indexFile, webrootDir)) {
             return indexPath;
         }
         
         return null;
+    }
+    
+    private String normalizePath(String path) {
+        if (path == null || path.isEmpty()) {
+            return null;
+        }
+        path = path.replace('\\', '/');
+        while (path.contains("//")) {
+            path = path.replace("//", "/");
+        }
+        if (path.contains("..") || path.contains("~") || path.contains("\0")) {
+            return null;
+        }
+        if (!path.startsWith("/")) {
+            path = "/" + path;
+        }
+        return path;
+    }
+    
+    private boolean isWithinWebroot(File file, File webrootDir) {
+        try {
+            String canonicalPath = file.getCanonicalPath();
+            String canonicalWebroot = webrootDir.getCanonicalPath();
+            return canonicalPath.startsWith(canonicalWebroot + File.separator) || 
+                   canonicalPath.equals(canonicalWebroot);
+        } catch (Exception e) {
+            return false;
+        }
     }
     
     private void executeAppFile(String appFile) {

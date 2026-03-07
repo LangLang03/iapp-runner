@@ -104,8 +104,8 @@ public class ScriptCache {
     
     private String hashSource(String source) {
         try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            byte[] digest = md.digest(source.getBytes());
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] digest = md.digest(source.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             StringBuilder sb = new StringBuilder();
             for (byte b : digest) {
                 sb.append(String.format("%02x", b));

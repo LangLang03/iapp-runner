@@ -7,8 +7,22 @@ import cn.langlang.iapp.runtime.RuntimeContext;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Interpreter implements IInterpreter {
+
+    private static final ExecutorService threadPool = Executors.newCachedThreadPool(new ThreadFactory() {
+        private final AtomicInteger counter = new AtomicInteger(0);
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(r, "iapp-thread-" + counter.incrementAndGet());
+            t.setDaemon(true);
+            return t;
+        }
+    });
 
     private final StatementVisitorImpl statementVisitor = new StatementVisitorImpl();
     private final ExpressionVisitorImpl expressionVisitor = new ExpressionVisitorImpl();
@@ -325,15 +339,15 @@ public class Interpreter implements IInterpreter {
         @Override
         public Object visitThread(ThreadStatement stmt) {
             final RuntimeContext ctx = interpreter.currentContext;
-            new Thread(() -> {
+            threadPool.submit(() -> {
                 try {
                     for (Statement s : stmt.getBody()) {
                         interpreter.executeStatement(s, ctx);
                     }
                 } catch (InterpreterException e) {
-                    e.printStackTrace();
+                    System.err.println("Thread execution error: " + e.getMessage());
                 }
-            }).start();
+            });
             return null;
         }
 
@@ -393,12 +407,16 @@ public class Interpreter implements IInterpreter {
                     }
                     return left + String.valueOf(right);
                 case MINUS:
+                    requireNumbers(left, right, "减法");
                     return subtractNumbers((Number) left, (Number) right);
                 case STAR:
+                    requireNumbers(left, right, "乘法");
                     return multiplyNumbers((Number) left, (Number) right);
                 case SLASH:
+                    requireNumbers(left, right, "除法");
                     return divideNumbers((Number) left, (Number) right);
                 case PERCENT:
+                    requireNumbers(left, right, "取模");
                     return moduloNumbers((Number) left, (Number) right);
                 case EQ:
                     return isEqual(left, right);
@@ -427,13 +445,30 @@ public class Interpreter implements IInterpreter {
             }
         }
 
+        private void requireNumbers(Object left, Object right, String operation) throws InterpreterException {
+            if (!(left instanceof Number)) {
+                throw new InterpreterException(operation + "运算错误: 左操作数不是数字类型 (" + 
+                    (left == null ? "null" : left.getClass().getSimpleName()) + ")");
+            }
+            if (!(right instanceof Number)) {
+                throw new InterpreterException(operation + "运算错误: 右操作数不是数字类型 (" + 
+                    (right == null ? "null" : right.getClass().getSimpleName()) + ")");
+            }
+        }
+
         @Override
         public Object visitUnary(UnaryExpression expr) throws InterpreterException {
             Object operand = interpreter.evaluateExpression(expr.getOperand(), interpreter.currentContext);
 
             return switch (expr.getOperator()) {
                 case NOT -> !isTruthy(operand);
-                case MINUS -> negateNumber((Number) operand);
+                case MINUS -> {
+                    if (!(operand instanceof Number)) {
+                        throw new InterpreterException("负号运算错误: 操作数不是数字类型 (" + 
+                            (operand == null ? "null" : operand.getClass().getSimpleName()) + ")");
+                    }
+                    yield negateNumber((Number) operand);
+                }
                 default -> operand;
             };
         }

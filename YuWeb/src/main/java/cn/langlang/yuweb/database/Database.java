@@ -17,6 +17,11 @@ public interface Database {
     Map<String, Object> findPage(String table, Object condition, int page, int size) throws DatabaseException;
     long count(String table, Object condition) throws DatabaseException;
     
+    Map<String, Object> search(String table, Object fields, String keyword, int page, int size) throws DatabaseException;
+    
     void execute(String sql) throws DatabaseException;
     void execute(String sql, Object... params) throws DatabaseException;
+    
+    List<Map<String, Object>> query(String sql) throws DatabaseException;
+    List<Map<String, Object>> query(String sql, Object... params) throws DatabaseException;
 }

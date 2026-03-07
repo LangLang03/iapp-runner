@@ -19,6 +19,7 @@ public class MySQLDatabase implements Database {
     private String username;
     private String password;
     private String charset;
+    private boolean useSSL;
     private Connection connection;
     
     public MySQLDatabase(String host, int port, String database, String username, String password) {
@@ -28,6 +29,7 @@ public class MySQLDatabase implements Database {
         this.username = username;
         this.password = password;
         this.charset = "utf8mb4";
+        this.useSSL = true;
     }
     
     public MySQLDatabase(String connectionString) {
@@ -38,6 +40,7 @@ public class MySQLDatabase implements Database {
         this.host = "localhost";
         this.port = 3306;
         this.charset = "utf8mb4";
+        this.useSSL = true;
         
         String[] parts = connectionString.split("/");
         if (parts.length >= 4) {
@@ -59,6 +62,8 @@ public class MySQLDatabase implements Database {
                     if (kv.length == 2) {
                         if ("charset".equalsIgnoreCase(kv[0])) {
                             this.charset = kv[1];
+                        } else if ("useSSL".equalsIgnoreCase(kv[0])) {
+                            this.useSSL = Boolean.parseBoolean(kv[1]);
                         }
                     }
                 }
@@ -81,20 +86,31 @@ public class MySQLDatabase implements Database {
         this.charset = charset;
     }
     
+    public void setUseSSL(boolean useSSL) {
+        this.useSSL = useSSL;
+    }
+    
     @Override
     public void connect() throws DatabaseException {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             
-            String url = String.format(
-                "jdbc:mysql://%s:%d/%s?useSSL=false&serverTimezone=UTC&characterEncoding=%s&allowPublicKeyRetrieval=true",
-                host, port, database, charset
-            );
+            StringBuilder urlBuilder = new StringBuilder();
+            urlBuilder.append(String.format("jdbc:mysql://%s:%d/%s?", host, port, database));
+            urlBuilder.append("useSSL=").append(useSSL);
+            urlBuilder.append("&serverTimezone=UTC");
+            urlBuilder.append("&characterEncoding=").append(charset);
+            if (useSSL) {
+                urlBuilder.append("&requireSSL=true");
+            } else {
+                urlBuilder.append("&allowPublicKeyRetrieval=true");
+            }
             
-            connection = DriverManager.getConnection(url, username, password);
+            connection = DriverManager.getConnection(urlBuilder.toString(), username, password);
             connection.setAutoCommit(true);
             
-            logger.info("Connected to MySQL database: {}@{}:{}/{}", username, host, port, database);
+            logger.info("Connected to MySQL database: {}@{}:{}/{} (SSL: {})", 
+                    username, host, port, database, useSSL);
         } catch (ClassNotFoundException | SQLException e) {
             throw new DatabaseException("Failed to connect to MySQL: " + e.getMessage(), e);
         }
@@ -230,9 +246,10 @@ public class MySQLDatabase implements Database {
                 stmt.setObject(i + 1, values.get(i));
             }
             
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return resultSetToMap(rs);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return resultSetToMap(rs);
+                }
             }
             return null;
         } catch (SQLException e) {
@@ -258,9 +275,10 @@ public class MySQLDatabase implements Database {
                 stmt.setObject(i + 1, values.get(i));
             }
             
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                results.add(resultSetToMap(rs));
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    results.add(resultSetToMap(rs));
+                }
             }
             return results;
         } catch (SQLException e) {
@@ -294,12 +312,13 @@ public class MySQLDatabase implements Database {
                 for (int i = 0; i < values.size(); i++) {
                     countStmt.setObject(i + 1, values.get(i));
                 }
-                ResultSet rs = countStmt.executeQuery();
-                long total = rs.next() ? rs.getLong(1) : 0;
-                result.put("total", total);
-                result.put("page", page);
-                result.put("size", size);
-                result.put("totalPages", (total + size - 1) / size);
+                try (ResultSet rs = countStmt.executeQuery()) {
+                    long total = rs.next() ? rs.getLong(1) : 0;
+                    result.put("total", total);
+                    result.put("page", page);
+                    result.put("size", size);
+                    result.put("totalPages", (total + size - 1) / size);
+                }
             }
             
             List<Map<String, Object>> data = new ArrayList<>();
@@ -311,9 +330,10 @@ public class MySQLDatabase implements Database {
                 dataStmt.setInt(paramIndex++, offset);
                 dataStmt.setInt(paramIndex, size);
                 
-                ResultSet rs = dataStmt.executeQuery();
-                while (rs.next()) {
-                    data.add(resultSetToMap(rs));
+                try (ResultSet rs = dataStmt.executeQuery()) {
+                    while (rs.next()) {
+                        data.add(resultSetToMap(rs));
+                    }
                 }
             }
             result.put("data", data);
@@ -340,9 +360,10 @@ public class MySQLDatabase implements Database {
                 stmt.setObject(i + 1, values.get(i));
             }
             
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getLong(1);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
             }
             return 0;
         } catch (SQLException e) {
@@ -351,7 +372,95 @@ public class MySQLDatabase implements Database {
     }
     
     @Override
+    public Map<String, Object> search(String table, Object fields, String keyword, int page, int size) throws DatabaseException {
+        int offset = (page - 1) * size;
+        
+        List<String> searchFields = new ArrayList<>();
+        if (fields instanceof String) {
+            String fieldStr = (String) fields;
+            if (fieldStr.contains(",")) {
+                for (String f : fieldStr.split(",")) {
+                    searchFields.add(f.trim());
+                }
+            } else {
+                searchFields.add(fieldStr.trim());
+            }
+        } else if (fields instanceof List) {
+            for (Object f : (List<?>) fields) {
+                if (f != null) {
+                    searchFields.add(f.toString().trim());
+                }
+            }
+        }
+        
+        if (searchFields.isEmpty()) {
+            throw new DatabaseException("Search fields cannot be empty");
+        }
+        
+        String searchPattern = "%" + keyword + "%";
+        
+        StringBuilder whereClause = new StringBuilder();
+        List<Object> values = new ArrayList<>();
+        
+        for (int i = 0; i < searchFields.size(); i++) {
+            if (i > 0) {
+                whereClause.append(" OR ");
+            }
+            whereClause.append(searchFields.get(i)).append(" LIKE ?");
+            values.add(searchPattern);
+        }
+        
+        StringBuilder countSql = new StringBuilder("SELECT COUNT(*) FROM ");
+        countSql.append(table).append(" WHERE (").append(whereClause).append(")");
+        
+        StringBuilder dataSql = new StringBuilder("SELECT * FROM ");
+        dataSql.append(table).append(" WHERE (").append(whereClause).append(") LIMIT ?, ?");
+        
+        Map<String, Object> result = new HashMap<>();
+        
+        try {
+            try (PreparedStatement countStmt = connection.prepareStatement(countSql.toString())) {
+                for (int i = 0; i < values.size(); i++) {
+                    countStmt.setObject(i + 1, values.get(i));
+                }
+                try (ResultSet rs = countStmt.executeQuery()) {
+                    long total = rs.next() ? rs.getLong(1) : 0;
+                    result.put("total", total);
+                    result.put("page", page);
+                    result.put("size", size);
+                    result.put("totalPages", (total + size - 1) / size);
+                    result.put("keyword", keyword);
+                }
+            }
+            
+            List<Map<String, Object>> data = new ArrayList<>();
+            try (PreparedStatement dataStmt = connection.prepareStatement(dataSql.toString())) {
+                int paramIndex = 1;
+                for (Object value : values) {
+                    dataStmt.setObject(paramIndex++, value);
+                }
+                dataStmt.setInt(paramIndex++, offset);
+                dataStmt.setInt(paramIndex, size);
+                
+                try (ResultSet rs = dataStmt.executeQuery()) {
+                    while (rs.next()) {
+                        data.add(resultSetToMap(rs));
+                    }
+                }
+            }
+            result.put("data", data);
+            
+            return result;
+        } catch (SQLException e) {
+            throw new DatabaseException("Search failed: " + e.getMessage(), e);
+        }
+    }
+    
+    @Override
     public void execute(String sql) throws DatabaseException {
+        if (sql == null || sql.trim().isEmpty()) {
+            throw new DatabaseException("SQL statement cannot be empty");
+        }
         try (Statement stmt = connection.createStatement()) {
             stmt.execute(sql);
         } catch (SQLException e) {
@@ -361,6 +470,9 @@ public class MySQLDatabase implements Database {
     
     @Override
     public void execute(String sql, Object... params) throws DatabaseException {
+        if (sql == null || sql.trim().isEmpty()) {
+            throw new DatabaseException("SQL statement cannot be empty");
+        }
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             for (int i = 0; i < params.length; i++) {
                 stmt.setObject(i + 1, params[i]);
@@ -368,6 +480,44 @@ public class MySQLDatabase implements Database {
             stmt.execute();
         } catch (SQLException e) {
             throw new DatabaseException("Execute failed: " + e.getMessage(), e);
+        }
+    }
+    
+    @Override
+    public List<Map<String, Object>> query(String sql) throws DatabaseException {
+        if (sql == null || sql.trim().isEmpty()) {
+            throw new DatabaseException("SQL statement cannot be empty");
+        }
+        List<Map<String, Object>> results = new ArrayList<>();
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                results.add(resultSetToMap(rs));
+            }
+            return results;
+        } catch (SQLException e) {
+            throw new DatabaseException("Query failed: " + e.getMessage(), e);
+        }
+    }
+    
+    @Override
+    public List<Map<String, Object>> query(String sql, Object... params) throws DatabaseException {
+        if (sql == null || sql.trim().isEmpty()) {
+            throw new DatabaseException("SQL statement cannot be empty");
+        }
+        List<Map<String, Object>> results = new ArrayList<>();
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            for (int i = 0; i < params.length; i++) {
+                stmt.setObject(i + 1, params[i]);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    results.add(resultSetToMap(rs));
+                }
+            }
+            return results;
+        } catch (SQLException e) {
+            throw new DatabaseException("Query failed: " + e.getMessage(), e);
         }
     }
     
