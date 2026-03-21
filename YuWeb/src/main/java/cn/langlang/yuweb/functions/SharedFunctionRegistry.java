@@ -213,6 +213,7 @@ public class SharedFunctionRegistry {
         registry.registerFunction(new InfoFunction());
         registry.registerFunction(new cn.langlang.yuweb.functions.server.config.PortFunction(server));
         registry.registerFunction(new cn.langlang.yuweb.functions.server.config.UploadConfigFunction());
+        registry.registerFunction(new cn.langlang.yuweb.functions.server.config.ConfigFunction(server));
         
         cn.langlang.yuweb.functions.server.AsyncFunction.setServer(server);
         registry.registerFunction(new cn.langlang.yuweb.functions.server.AsyncFunction());
