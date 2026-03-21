@@ -118,10 +118,6 @@ def main():
     print(f"最大响应时间    : {max_elapsed*1000:.2f} ms")
     print(f"最小响应时间    : {min_elapsed*1000:.2f} ms")
 
-    # 可选：将详细结果保存到文件
-    with open("stress_test_results.json", "w", encoding="utf-8") as f:
-        json.dump(results, f, indent=2, ensure_ascii=False)
-    print("\n详细结果已保存至 stress_test_results.json")
 
 if __name__ == "__main__":
     main()
