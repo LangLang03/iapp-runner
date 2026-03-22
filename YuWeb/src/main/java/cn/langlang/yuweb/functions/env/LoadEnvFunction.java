@@ -12,7 +12,7 @@ public class LoadEnvFunction extends AbstractFunction {
     
     @Override
     public String getName() {
-        return "loadEnv";
+        return "loadenv";
     }
     
     @Override

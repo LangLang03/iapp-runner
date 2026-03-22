@@ -12,7 +12,7 @@ public class IsJsonFunction extends AbstractFunction {
     
     @Override
     public String getName() {
-        return "isJson";
+        return "isjson";
     }
     
     @Override

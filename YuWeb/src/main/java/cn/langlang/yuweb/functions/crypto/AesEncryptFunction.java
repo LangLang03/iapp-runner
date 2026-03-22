@@ -21,7 +21,7 @@ public class AesEncryptFunction extends AbstractFunction {
     
     @Override
     public String getName() {
-        return "aesEncrypt";
+        return "aesencrypt";
     }
     
     @Override

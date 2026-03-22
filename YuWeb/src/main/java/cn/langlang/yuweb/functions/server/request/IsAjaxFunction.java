@@ -12,7 +12,7 @@ public class IsAjaxFunction extends AbstractFunction {
     
     @Override
     public String getName() {
-        return "isAjax";
+        return "isajax";
     }
     
     @Override

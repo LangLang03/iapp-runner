@@ -12,7 +12,7 @@ public class MailConfigFunction extends AbstractFunction {
     
     @Override
     public String getName() {
-        return "mailConfig";
+        return "mailconfig";
     }
     
     @Override

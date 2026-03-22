@@ -12,7 +12,7 @@ public class DelCookieFunction extends AbstractFunction {
     
     @Override
     public String getName() {
-        return "delCookie";
+        return "delcookie";
     }
     
     @Override

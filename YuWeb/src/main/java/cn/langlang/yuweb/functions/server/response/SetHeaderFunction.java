@@ -12,7 +12,7 @@ public class SetHeaderFunction extends AbstractFunction {
     
     @Override
     public String getName() {
-        return "setHeader";
+        return "setheader";
     }
     
     @Override

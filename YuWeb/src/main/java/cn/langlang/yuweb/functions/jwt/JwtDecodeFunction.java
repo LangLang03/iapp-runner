@@ -13,7 +13,7 @@ public class JwtDecodeFunction extends AbstractFunction {
     
     @Override
     public String getName() {
-        return "jwtDecode";
+        return "jwtdecode";
     }
     
     @Override

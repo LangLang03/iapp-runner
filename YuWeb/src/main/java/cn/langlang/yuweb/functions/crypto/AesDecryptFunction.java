@@ -19,7 +19,7 @@ public class AesDecryptFunction extends AbstractFunction {
     
     @Override
     public String getName() {
-        return "aesDecrypt";
+        return "aesdecrypt";
     }
     
     @Override

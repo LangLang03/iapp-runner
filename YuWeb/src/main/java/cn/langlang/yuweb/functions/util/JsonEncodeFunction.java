@@ -13,7 +13,7 @@ public class JsonEncodeFunction extends AbstractFunction {
     
     @Override
     public String getName() {
-        return "jsonEncode";
+        return "jsonencode";
     }
     
     @Override

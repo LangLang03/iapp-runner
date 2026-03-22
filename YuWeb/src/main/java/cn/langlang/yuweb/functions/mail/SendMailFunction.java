@@ -12,7 +12,7 @@ public class SendMailFunction extends AbstractFunction {
     
     @Override
     public String getName() {
-        return "sendMail";
+        return "sendmail";
     }
     
     @Override

@@ -11,7 +11,7 @@ import java.util.List;
 public class HashPasswordFunction extends AbstractFunction {
     @Override
     public String getName() {
-        return "hashPassword";
+        return "hashpassword";
     }
     
     @Override

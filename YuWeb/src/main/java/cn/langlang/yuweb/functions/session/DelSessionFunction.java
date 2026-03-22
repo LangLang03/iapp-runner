@@ -13,7 +13,7 @@ public class DelSessionFunction extends AbstractFunction {
     
     @Override
     public String getName() {
-        return "delSession";
+        return "delsession";
     }
     
     @Override

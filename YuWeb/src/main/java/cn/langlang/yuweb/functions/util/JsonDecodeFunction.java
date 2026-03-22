@@ -15,7 +15,7 @@ public class JsonDecodeFunction extends AbstractFunction {
     
     @Override
     public String getName() {
-        return "jsonDecode";
+        return "jsondecode";
     }
     
     @Override

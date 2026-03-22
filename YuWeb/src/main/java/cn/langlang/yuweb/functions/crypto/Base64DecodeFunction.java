@@ -13,7 +13,7 @@ public class Base64DecodeFunction extends AbstractFunction {
     
     @Override
     public String getName() {
-        return "base64Decode";
+        return "base64decode";
     }
     
     @Override

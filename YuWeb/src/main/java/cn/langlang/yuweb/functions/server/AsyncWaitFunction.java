@@ -10,7 +10,7 @@ import java.util.List;
 public class AsyncWaitFunction extends AbstractFunction {
     @Override
     public String getName() {
-        return "asyncWait";
+        return "asyncwait";
     }
     
     @Override

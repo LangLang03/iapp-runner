@@ -13,7 +13,7 @@ public class JwtEncodeFunction extends AbstractFunction {
     
     @Override
     public String getName() {
-        return "jwtEncode";
+        return "jwtencode";
     }
     
     @Override

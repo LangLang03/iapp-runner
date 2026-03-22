@@ -15,7 +15,7 @@ public class HmacSha256Function extends AbstractFunction {
     
     @Override
     public String getName() {
-        return "hmacSha256";
+        return "hmacsha256";
     }
     
     @Override

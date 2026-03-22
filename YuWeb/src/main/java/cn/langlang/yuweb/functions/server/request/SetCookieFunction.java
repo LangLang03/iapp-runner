@@ -12,7 +12,7 @@ public class SetCookieFunction extends AbstractFunction {
     
     @Override
     public String getName() {
-        return "setCookie";
+        return "setcookie";
     }
     
     @Override

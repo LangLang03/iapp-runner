@@ -13,7 +13,7 @@ public class HasSessionFunction extends AbstractFunction {
     
     @Override
     public String getName() {
-        return "hasSession";
+        return "hassession";
     }
     
     @Override

@@ -13,7 +13,7 @@ public class JwtVerifyFunction extends AbstractFunction {
     
     @Override
     public String getName() {
-        return "jwtVerify";
+        return "jwtverify";
     }
     
     @Override

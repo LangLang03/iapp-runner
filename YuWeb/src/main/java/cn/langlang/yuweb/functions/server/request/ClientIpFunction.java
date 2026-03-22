@@ -12,7 +12,7 @@ public class ClientIpFunction extends AbstractFunction {
     
     @Override
     public String getName() {
-        return "clientIp";
+        return "clientip";
     }
     
     @Override

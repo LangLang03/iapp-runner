@@ -11,7 +11,7 @@ import java.util.List;
 public class VerifyPasswordFunction extends AbstractFunction {
     @Override
     public String getName() {
-        return "verifyPassword";
+        return "verifypassword";
     }
     
     @Override

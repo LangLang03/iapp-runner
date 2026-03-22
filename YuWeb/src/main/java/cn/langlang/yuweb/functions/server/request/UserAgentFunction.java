@@ -12,7 +12,7 @@ public class UserAgentFunction extends AbstractFunction {
     
     @Override
     public String getName() {
-        return "userAgent";
+        return "useragent";
     }
     
     @Override
