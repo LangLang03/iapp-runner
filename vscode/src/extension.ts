@@ -1,77 +1,37 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { workspace, ExtensionContext, window, OutputChannel, commands, StatusBarAlignment, StatusBarItem } from 'vscode';
-import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind, Executable, ExecutableOptions } from 'vscode-languageclient/node';
+import { LanguageClient, LanguageClientOptions, ServerOptions, Executable, ExecutableOptions } from 'vscode-languageclient/node';
 
 let client: LanguageClient | undefined;
 let outputChannel: OutputChannel;
 let statusBarItem: StatusBarItem;
 
 export function activate(context: ExtensionContext) {
-    outputChannel = window.createOutputChannel('iApp Language Server');
+    outputChannel = window.createOutputChannel('iApp 语言服务器');
+    outputChannel.appendLine('iApp 扩展正在激活...');
     
     statusBarItem = window.createStatusBarItem(StatusBarAlignment.Right, 100);
     statusBarItem.text = '$(sync~spin) iApp LSP';
-    statusBarItem.tooltip = 'iApp Language Server is starting...';
+    statusBarItem.tooltip = 'iApp 语言服务器启动中...';
     statusBarItem.show();
     context.subscriptions.push(statusBarItem);
 
-    const serverOptions = createServerOptions(context);
-    const clientOptions: LanguageClientOptions = {
-        documentSelector: [
-            { scheme: 'file', language: 'iapp' },
-            { scheme: 'untitled', language: 'iapp' }
-        ],
-        synchronize: {
-            fileEvents: workspace.createFileSystemWatcher('**/*.{iyu,myu,mjava,iapp}')
-        },
-        outputChannel: outputChannel,
-        traceOutputChannel: outputChannel,
-        initializationOptions: {
-            enableYuWeb: workspace.getConfiguration('iapp').get('lsp.enableYuWeb', false)
-        }
-    };
-
-    client = new LanguageClient(
-        'iappLanguageServer',
-        'iApp Language Server',
-        serverOptions,
-        clientOptions
-    );
-
-    client.start().then(() => {
-        statusBarItem.text = '$(check) iApp LSP';
-        statusBarItem.tooltip = 'iApp Language Server is running';
-        outputChannel.appendLine('iApp Language Server started successfully');
-    }).catch((error) => {
-        statusBarItem.text = '$(error) iApp LSP';
-        statusBarItem.tooltip = 'iApp Language Server failed to start';
-        outputChannel.appendLine(`Failed to start iApp Language Server: ${error}`);
-        window.showErrorMessage(`Failed to start iApp Language Server: ${error}`);
-    });
-
     const restartCommand = commands.registerCommand('iapp.restartServer', async () => {
+        outputChannel.appendLine('收到重启命令');
         if (client) {
             statusBarItem.text = '$(sync~spin) iApp LSP';
-            statusBarItem.tooltip = 'Restarting iApp Language Server...';
+            statusBarItem.tooltip = '正在重启 iApp 语言服务器...';
             
-            await client.stop();
-            outputChannel.appendLine('iApp Language Server stopped');
-            
-            const newServerOptions = createServerOptions(context);
-            client = new LanguageClient(
-                'iappLanguageServer',
-                'iApp Language Server',
-                newServerOptions,
-                clientOptions
-            );
-            
-            await client.start();
-            statusBarItem.text = '$(check) iApp LSP';
-            statusBarItem.tooltip = 'iApp Language Server is running';
-            outputChannel.appendLine('iApp Language Server restarted successfully');
-            window.showInformationMessage('iApp Language Server restarted');
+            try {
+                await client.stop();
+                outputChannel.appendLine('iApp 语言服务器已停止');
+            } catch (e) {
+                outputChannel.appendLine(`停止服务器时出错: ${e}`);
+            }
         }
+        
+        startLanguageServer(context);
     });
 
     const showOutputCommand = commands.registerCommand('iapp.showOutput', () => {
@@ -79,6 +39,54 @@ export function activate(context: ExtensionContext) {
     });
 
     context.subscriptions.push(restartCommand, showOutputCommand);
+    outputChannel.appendLine('命令已注册');
+
+    startLanguageServer(context);
+}
+
+function startLanguageServer(context: ExtensionContext) {
+    try {
+        const serverOptions = createServerOptions(context);
+        const clientOptions: LanguageClientOptions = {
+            documentSelector: [
+                { scheme: 'file', language: 'iapp' },
+                { scheme: 'untitled', language: 'iapp' }
+            ],
+            synchronize: {
+                fileEvents: workspace.createFileSystemWatcher('**/*.{iyu,myu,mjava,iapp}')
+            },
+            outputChannel: outputChannel,
+            traceOutputChannel: outputChannel,
+            initializationOptions: {
+                enableYuWeb: workspace.getConfiguration('iapp').get('lsp.enableYuWeb', false)
+            }
+        };
+
+        client = new LanguageClient(
+            'iappLanguageServer',
+            'iApp 语言服务器',
+            serverOptions,
+            clientOptions
+        );
+
+        client.start().then(() => {
+            statusBarItem.text = '$(check) iApp LSP';
+            statusBarItem.tooltip = 'iApp 语言服务器运行中';
+            outputChannel.appendLine('iApp 语言服务器启动成功');
+        }).catch((error) => {
+            statusBarItem.text = '$(error) iApp LSP';
+            statusBarItem.tooltip = 'iApp 语言服务器启动失败';
+            const errorMsg = `iApp 语言服务器启动失败: ${error}`;
+            outputChannel.appendLine(errorMsg);
+            window.showErrorMessage(errorMsg);
+        });
+    } catch (error) {
+        statusBarItem.text = '$(error) iApp LSP';
+        statusBarItem.tooltip = 'iApp 语言服务器启动失败';
+        const errorMsg = `iApp 语言服务器启动失败: ${error}`;
+        outputChannel.appendLine(errorMsg);
+        window.showErrorMessage(errorMsg);
+    }
 }
 
 function createServerOptions(context: ExtensionContext): ServerOptions {
@@ -92,15 +100,17 @@ function createServerOptions(context: ExtensionContext): ServerOptions {
     
     if (jarPath && fs.existsSync(jarPath)) {
         actualJarPath = jarPath;
+        outputChannel.appendLine(`使用自定义 JAR: ${actualJarPath}`);
     } else {
         actualJarPath = findBundledJar(context);
+        if (actualJarPath) {
+            outputChannel.appendLine(`使用内置 JAR: ${actualJarPath}`);
+        }
     }
 
     if (!actualJarPath) {
-        throw new Error('iAppLSP JAR file not found. Please set iapp.lsp.jarPath in settings or ensure the JAR is bundled with the extension.');
+        throw new Error('未找到 iAppLSP JAR 文件。请在设置中配置 iapp.lsp.jarPath 或确保扩展包含内置 JAR。');
     }
-
-    outputChannel.appendLine(`Using JAR: ${actualJarPath}`);
 
     const args: string[] = ['-jar', actualJarPath];
     if (enableYuWeb) {
@@ -110,11 +120,14 @@ function createServerOptions(context: ExtensionContext): ServerOptions {
         args.push('--debug');
     }
 
+    outputChannel.appendLine(`Java 路径: ${javaPath}`);
+    outputChannel.appendLine(`启动参数: ${args.join(' ')}`);
+
     const executable: Executable = {
         command: javaPath,
         args: args,
         options: {
-            cwd: workspace.rootPath || process.cwd()
+            cwd: workspace.workspaceFolders?.[0]?.uri?.fsPath || process.cwd()
         } as ExecutableOptions
     };
 
@@ -128,6 +141,7 @@ function findBundledJar(context: ExtensionContext): string | undefined {
     const jarDir = path.join(context.extensionPath, 'jars');
     
     if (!fs.existsSync(jarDir)) {
+        outputChannel.appendLine(`内置 JAR 目录不存在: ${jarDir}`);
         return undefined;
     }
 
@@ -138,6 +152,7 @@ function findBundledJar(context: ExtensionContext): string | undefined {
         return path.join(jarDir, jarFile);
     }
 
+    outputChannel.appendLine(`内置 JAR 目录中未找到 JAR 文件: ${jarDir}`);
     return undefined;
 }
 

@@ -2,6 +2,8 @@ package cn.langlang.iapp.lsp.core;
 
 import cn.langlang.iapp.api.FunctionRegistryProvider;
 import cn.langlang.iapp.lsp.core.provider.*;
+import cn.langlang.iapp.lsp.header.HeaderFunctionInfo;
+import cn.langlang.iapp.lsp.header.HeaderLoader;
 import cn.langlang.iapp.lsp.registry.FunctionCategory;
 import cn.langlang.iapp.lsp.registry.ModuleLoader;
 import cn.langlang.iapp.runtime.FunctionRegistry;
@@ -21,12 +23,16 @@ public class LSContext {
     private final List<ModuleLoader> moduleLoaders;
     private boolean yuWebAvailable;
     
+    private final HeaderLoader headerLoader;
+    private boolean showYuWebCompletions;
+    
     private FunctionProvider functionProvider;
     private VariableProvider variableProvider;
     private CompletionProvider completionProvider;
     private HoverProvider hoverProvider;
     private SignatureProvider signatureProvider;
     private DiagnosticProvider diagnosticProvider;
+    private SnippetProvider snippetProvider;
 
     public LSContext() {
         this.functionRegistry = new FunctionRegistry();
@@ -34,6 +40,8 @@ public class LSContext {
         this.functionCategoryMap = new ConcurrentHashMap<>();
         this.moduleLoaders = new ArrayList<>();
         this.yuWebAvailable = false;
+        this.headerLoader = new HeaderLoader();
+        this.showYuWebCompletions = true;
     }
 
     public void registerCoreFunctions() {

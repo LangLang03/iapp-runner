@@ -19,9 +19,12 @@
   ],
   "activationEvents": [
     "onLanguage:iapp",
+    "onCommand:iapp.restartServer",
+    "onCommand:iapp.showOutput",
     "workspaceContains:**/*.iyu",
     "workspaceContains:**/*.myu",
-    "workspaceContains:**/*.mjava"
+    "workspaceContains:**/*.mjava",
+    "workspaceContains:**/*.iapp"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -100,9 +103,9 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "pnpm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "webpack --mode production",
+    "compile": "webpack --mode development",
+    "watch": "webpack --mode development --watch",
     "lint": "eslint src --ext ts",
     "package": "vsce package --no-dependencies",
     "test": "node ./out/test/runTest.js"
@@ -112,7 +115,10 @@
     "@types/vscode": "^1.85.0",
     "@vscode/test-electron": "^2.3.8",
     "@vscode/vsce": "^2.22.0",
-    "typescript": "^5.3.0"
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.3.0",
+    "webpack": "^5.105.4",
+    "webpack-cli": "^7.0.2"
   },
   "dependencies": {
     "vscode-languageclient": "^9.0.1"

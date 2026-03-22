@@ -46,8 +46,23 @@ public class SemanticAnalyzer {
             parser.setFunctionRegistry(context.getFunctionRegistry());
             Program program = parser.parse();
             
+            // 第一遍：收集所有函数定义
+            for (Statement stmt : program.getStatements()) {
+                if (stmt instanceof FunctionDefinitionStatement) {
+                    FunctionDefinitionStatement funcStmt = (FunctionDefinitionStatement) stmt;
+                    userFunctions.put(funcStmt.getFunctionName(), funcStmt);
+                    
+                    SymbolInfo symbol = new SymbolInfo(funcStmt.getFunctionName(), SymbolInfo.SymbolType.USER_FUNCTION, funcStmt.getLine(), 0);
+                    symbol.setEndLine(funcStmt.getLine());
+                    symbol.setEndColumn(funcStmt.getFunctionName().length() + 3);
+                    symbol.setDetail("用户定义函数");
+                    symbolTable.put(funcStmt.getFunctionName(), symbol);
+                }
+            }
+            
             pushScope();
             
+            // 第二遍：分析所有语句
             for (Statement stmt : program.getStatements()) {
                 analyzeStatement(stmt);
             }
@@ -240,11 +255,7 @@ public class SemanticAnalyzer {
         String funcName = stmt.getFunctionName();
         int line = stmt.getLine();
         
-        userFunctions.put(funcName, stmt);
-        
-        SymbolInfo symbol = new SymbolInfo(funcName, SymbolInfo.SymbolType.USER_FUNCTION, line, 0);
-        symbol.setDetail("用户定义函数");
-        symbolTable.put(funcName, symbol);
+        // 函数定义已在第一遍扫描中收集，这里只分析函数体
         
         pushScope();
         
@@ -398,6 +409,8 @@ public class SemanticAnalyzer {
         }
         
         SymbolInfo symbol = new SymbolInfo(name, SymbolInfo.SymbolType.VARIABLE, line, column);
+        symbol.setEndLine(line);
+        symbol.setEndColumn(column + name.length());
         symbol.setVariableInfo(info);
         symbolTable.put(name, symbol);
     }
