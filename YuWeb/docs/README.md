@@ -15,7 +15,16 @@ YuWeb 是一个基于裕语言(IApp)的轻量级 Web 后端框架，提供简洁
 7. [工具函数](#工具函数)
 8. [认证函数](#认证函数)
 9. [条件查询函数](#条件查询函数)
-10. [完整示例](#完整示例)
+10. [加密函数](#加密函数)
+11. [JWT函数](#jwt函数)
+12. [Session函数](#session函数)
+13. [邮件函数](#邮件函数)
+14. [环境变量函数](#环境变量函数)
+15. [CORS函数](#cors函数)
+16. [服务器配置函数](#服务器配置函数)
+17. [异步函数](#异步函数)
+18. [服务器信息函数](#服务器信息函数)
+19. [完整示例](#完整示例)
 
 ***
 
@@ -1373,6 +1382,584 @@ s users = dball("users", or(
     map("role", "moderator")
 ))
 ```
+
+***
+
+## 加密函数
+
+### md5(data)
+
+计算 MD5 哈希值。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| data | String | 是 | 要哈希的数据 |
+
+**返回值**: `String` - 32位十六进制哈希值
+
+**示例**:
+
+```iapp
+s hash = md5("hello world")
+```
+
+***
+
+### sha1(data)
+
+计算 SHA-1 哈希值（已弃用，建议使用 sha256）。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| data | String | 是 | 要哈希的数据 |
+
+**返回值**: `String` - 40位十六进制哈希值
+
+**注意**: SHA-1 已被证明存在碰撞漏洞，建议使用 sha256() 替代。
+
+**示例**:
+
+```iapp
+s hash = sha1("hello world")
+```
+
+***
+
+### sha256(data)
+
+计算 SHA-256 哈希值。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| data | String | 是 | 要哈希的数据 |
+
+**返回值**: `String` - 64位十六进制哈希值
+
+**示例**:
+
+```iapp
+s hash = sha256("hello world")
+```
+
+***
+
+### hmacsha256(data, key)
+
+计算 HMAC-SHA256 哈希值。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| data | String | 是 | 要哈希的数据 |
+| key | String | 是 | 密钥 |
+
+**返回值**: `String` - 64位十六进制哈希值
+
+**示例**:
+
+```iapp
+s signature = hmacsha256("message", "secret_key")
+```
+
+***
+
+### base64encode(data)
+
+Base64 编码。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| data | String | 是 | 要编码的数据 |
+
+**返回值**: `String` - Base64 编码字符串
+
+**示例**:
+
+```iapp
+s encoded = base64encode("hello world")
+```
+
+***
+
+### base64decode(data)
+
+Base64 解码。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| data | String | 是 | Base64 编码字符串 |
+
+**返回值**: `String` - 解码后的字符串
+
+**示例**:
+
+```iapp
+s decoded = base64decode("aGVsbG8gd29ybGQ=")
+```
+
+***
+
+### aesencrypt(data, key)
+
+AES 加密。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| data | String | 是 | 要加密的数据 |
+| key | String | 是 | 加密密钥（16字节） |
+
+**返回值**: `String` - Base64 编码的加密数据（包含IV）
+
+**示例**:
+
+```iapp
+s encrypted = aesencrypt("敏感数据", "mysecretkey12345")
+```
+
+***
+
+### aesdecrypt(data, key)
+
+AES 解密。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| data | String | 是 | 加密数据（Base64编码） |
+| key | String | 是 | 加密密钥（16字节） |
+
+**返回值**: `String` - 解密后的原始数据
+
+**示例**:
+
+```iapp
+s decrypted = aesdecrypt(encrypted, "mysecretkey12345")
+```
+
+***
+
+## JWT函数
+
+### jwtencode(payload, secret)
+
+生成 JWT Token。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| payload | Map | 是 | JWT 载荷数据 |
+| secret | String | 是 | 签名密钥 |
+
+**返回值**: `String` - JWT Token
+
+**示例**:
+
+```iapp
+s token = jwtencode(map("userId", 1, "username", "admin"), "my_secret_key")
+```
+
+***
+
+### jwtdecode(token)
+
+解码 JWT Token（不验证签名）。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| token | String | 是 | JWT Token |
+
+**返回值**: `Map` - 解码后的载荷数据
+
+**示例**:
+
+```iapp
+s payload = jwtdecode(token)
+s userId = mget(payload, "userId")
+```
+
+***
+
+### jwtverify(token, secret)
+
+验证并解码 JWT Token。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| token | String | 是 | JWT Token |
+| secret | String | 是 | 签名密钥 |
+
+**返回值**: `Map` - 验证成功返回载荷数据，失败抛出异常
+
+**示例**:
+
+```iapp
+s payload = jwtverify(token, "my_secret_key")
+s userId = mget(payload, "userId")
+```
+
+***
+
+## Session函数
+
+### session(key)
+
+获取 Session 值。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| key | String | 是 | Session 键名 |
+
+**返回值**: `Object` - Session 值
+
+**示例**:
+
+```iapp
+s userId = session("userId")
+```
+
+***
+
+### setsession(key, value, ttl?)
+
+设置 Session 值。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| key | String | 是 | Session 键名 |
+| value | Object | 是 | Session 值 |
+| ttl | Number | 否 | 有效期（秒），默认1800秒 |
+
+**返回值**: `Boolean` - 是否设置成功
+
+**示例**:
+
+```iapp
+setsession("userId", 1)
+setsession("cart", map("items", arr()), 3600)
+```
+
+***
+
+### delsession(key)
+
+删除 Session 值。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| key | String | 是 | Session 键名 |
+
+**返回值**: `Boolean` - 是否删除成功
+
+**示例**:
+
+```iapp
+delsession("userId")
+```
+
+***
+
+### hassession(key)
+
+检查 Session 是否存在。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| key | String | 是 | Session 键名 |
+
+**返回值**: `Boolean` - 是否存在
+
+**示例**:
+
+```iapp
+f(hassession("userId"))
+{
+    s userId = session("userId")
+}
+```
+
+***
+
+## 邮件函数
+
+### mailconfig(host, port, username, password, ssl?)
+
+配置邮件服务器。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| host | String | 是 | SMTP 服务器地址 |
+| port | Number | 是 | SMTP 端口 |
+| username | String | 是 | 用户名 |
+| password | String | 是 | 密码 |
+| ssl | Boolean | 否 | 是否启用SSL，默认false |
+
+**返回值**: `Boolean` - 是否配置成功
+
+**示例**:
+
+```iapp
+mailconfig("smtp.example.com", 587, "user@example.com", "password", true)
+```
+
+***
+
+### sendmail(to, subject, body, html?)
+
+发送邮件。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| to | String | 是 | 收件人邮箱 |
+| subject | String | 是 | 邮件主题 |
+| body | String | 是 | 邮件内容 |
+| html | Boolean | 否 | 是否HTML格式，默认false |
+
+**返回值**: `Boolean` - 是否发送成功
+
+**示例**:
+
+```iapp
+s result = sendmail("user@example.com", "欢迎注册", "<h1>欢迎</h1><p>感谢注册</p>", true)
+```
+
+***
+
+## 环境变量函数
+
+### env(key, default?)
+
+获取环境变量。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| key | String | 是 | 环境变量名 |
+| default | String | 否 | 默认值 |
+
+**返回值**: `String` - 环境变量值或默认值
+
+**示例**:
+
+```iapp
+s dbHost = env("DB_HOST", "localhost")
+s dbPort = env("DB_PORT", "3306")
+```
+
+***
+
+### loadenv(path?)
+
+加载 .env 文件。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| path | String | 否 | .env 文件路径，默认项目根目录 |
+
+**返回值**: `Boolean` - 是否加载成功
+
+**示例**:
+
+```iapp
+loadenv()
+loadenv("./config/.env")
+```
+
+***
+
+## CORS函数
+
+### cors(config)
+
+配置 CORS 跨域。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| config | Map | 是 | CORS 配置 |
+
+**配置项**:
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| origins | String/List | 允许的源 |
+| methods | String/List | 允许的方法 |
+| headers | String/List | 允许的请求头 |
+| exposedHeaders | String/List | 暴露的响应头 |
+| credentials | Boolean | 是否允许携带凭证 |
+| maxAge | Number | 预检请求缓存时间（秒） |
+
+**返回值**: `Boolean` - 是否配置成功
+
+**示例**:
+
+```iapp
+cors(map(
+    "origins", arr("http://localhost:3000", "https://example.com"),
+    "methods", arr("GET", "POST", "PUT", "DELETE"),
+    "headers", arr("Content-Type", "Authorization"),
+    "credentials", true,
+    "maxAge", 3600
+))
+```
+
+***
+
+## 服务器配置函数
+
+### port(port)
+
+设置服务器端口。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| port | Number | 是 | 端口号（1-65535） |
+
+**返回值**: 无
+
+**示例**:
+
+```iapp
+port(8080)
+```
+
+***
+
+### config(key, value)
+
+设置服务器配置。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| key | String | 是 | 配置项名称 |
+| value | Object | 是 | 配置值 |
+
+**可用配置项**:
+
+| 配置项 | 类型 | 说明 |
+|--------|------|------|
+| port | Number | 服务端口 |
+| debug | Boolean | 调试模式 |
+| safe | Boolean | 安全模式 |
+| preload | Boolean | 脚本预加载 |
+| static | Boolean | 静态文件服务 |
+| poolsize | Number | 连接池最大大小 |
+| poolinit | Number | 连接池初始大小 |
+| pooltimeout | Number | 连接超时时间（毫秒） |
+| usepool | Boolean | 使用连接池 |
+| asyncpool | Number | 异步线程池大小 |
+| asynctimeout | Number | 异步超时时间（毫秒） |
+| http2 | Boolean | 启用HTTP/2 |
+| compression | Boolean | 启用响应压缩 |
+| compression_min | Number | 最小压缩大小（字节） |
+| max_upload_size | Number | 最大上传文件大小（字节） |
+
+**返回值**: `Boolean` - 是否设置成功
+
+**示例**:
+
+```iapp
+config("port", 8080)
+config("debug", true)
+config("poolsize", 100)
+config("compression", true)
+config("max_upload_size", 50 * 1024 * 1024)
+```
+
+***
+
+### upc(action, value?)
+
+配置文件上传。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| action | String | 是 | 操作类型 |
+| value | Object | 否 | 配置值 |
+
+**可用操作**:
+
+| 操作 | 说明 |
+|------|------|
+| extensions | 设置允许的文件扩展名列表 |
+| maxsize | 设置最大文件大小（字节） |
+| add_extensions | 添加允许的文件扩展名 |
+| reset | 重置为默认配置 |
+
+**返回值**: `Boolean` - 是否设置成功
+
+**示例**:
+
+```iapp
+upc("extensions", arr(".jpg", ".png", ".gif"))
+upc("maxsize", 10 * 1024 * 1024)
+upc("add_extensions", arr(".pdf", ".doc"))
+upc("reset")
+```
+
+***
+
+## 异步函数
+
+### async(task, timeout?)
+
+执行异步任务。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| task | Object | 是 | 任务对象 |
+| timeout | Number | 否 | 超时时间（毫秒），默认30000 |
+
+**返回值**: `Number` - 任务ID
+
+**示例**:
+
+```iapp
+s taskId = async(task, 60000)
+```
+
+***
+
+### asyncwait(taskId, timeout?)
+
+等待异步任务完成。
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| taskId | Number | 是 | 任务ID |
+| timeout | Number | 否 | 超时时间（毫秒），默认30000 |
+
+**返回值**: `Object` - 任务结果
+
+**示例**:
+
+```iapp
+s result = asyncwait(taskId, 60000)
+```
+
+***
+
+## 服务器信息函数
+
+### info()
+
+显示服务器信息页面。
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| 无 | - | - |
+
+**返回值**: 无（直接输出HTML页面）
+
+**示例**:
+
+```iapp
+info()
+```
+
+显示的信息包括：
+- 服务器信息（名称、版本、端口等）
+- Java 环境（版本、供应商、主目录等）
+- 内存使用（堆内存、非堆内存、使用率等）
+- 线程信息（活动线程数、峰值线程数等）
+- 性能监控（请求总数、缓存命中率等）
+- 脚本缓存（缓存脚本数、命中次数等）
+- 已注册函数列表
+- 系统属性
 
 ***
 
