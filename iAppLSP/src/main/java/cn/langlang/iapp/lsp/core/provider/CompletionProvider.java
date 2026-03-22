@@ -4,6 +4,8 @@ import cn.langlang.iapp.lsp.core.LSContext;
 import cn.langlang.iapp.lsp.core.model.FunctionInfo;
 import cn.langlang.iapp.lsp.core.model.VariableInfo;
 import cn.langlang.iapp.lsp.core.util.ScopeUtils;
+import cn.langlang.iapp.lsp.header.HeaderFile;
+import cn.langlang.iapp.lsp.header.HeaderFunctionInfo;
 import cn.langlang.iapp.lsp.registry.FunctionCategory;
 import cn.langlang.iapp.lexer.TokenType;
 
@@ -14,6 +16,7 @@ public class CompletionProvider {
     private final LSContext context;
     private final FunctionProvider functionProvider;
     private final VariableProvider variableProvider;
+    private SnippetProvider snippetProvider;
 
     private static final Map<String, String> KEYWORDS = new LinkedHashMap<>();
     
@@ -46,14 +49,36 @@ public class CompletionProvider {
         this.functionProvider = functionProvider != null ? functionProvider : new FunctionProvider(context);
         this.variableProvider = variableProvider != null ? variableProvider : new VariableProvider(context);
     }
+    
+    private SnippetProvider getSnippetProvider() {
+        if (snippetProvider == null) {
+            snippetProvider = context.getSnippetProvider();
+        }
+        return snippetProvider;
+    }
 
     public List<CompletionItem> getCompletions(String prefix) {
         List<CompletionItem> items = new ArrayList<>();
         String lowerPrefix = prefix != null ? prefix.toLowerCase() : "";
         
+        items.addAll(getSnippetCompletions(lowerPrefix));
         items.addAll(getKeywordCompletions(lowerPrefix));
         items.addAll(getFunctionCompletions(lowerPrefix));
         items.addAll(getVariableCompletions(lowerPrefix));
+        
+        return items;
+    }
+    
+    public List<CompletionItem> getSnippetCompletions(String prefix) {
+        List<CompletionItem> items = new ArrayList<>();
+        String lowerPrefix = prefix != null ? prefix.toLowerCase() : "";
+        
+        SnippetProvider snippets = getSnippetProvider();
+        if (snippets != null) {
+            for (HeaderFile.SnippetInfo snippet : snippets.getSnippetsByPrefix(prefix)) {
+                items.add(createSnippetCompletion(snippet));
+            }
+        }
         
         return items;
     }
@@ -65,11 +90,22 @@ public class CompletionProvider {
         List<FunctionInfo> functions = functionProvider.getAllFunctions();
         for (FunctionInfo func : functions) {
             if (func.getName().toLowerCase().startsWith(lowerPrefix)) {
+                if (isYuWebFunction(func) && !context.isShowYuWebCompletions()) {
+                    continue;
+                }
                 items.add(createFunctionCompletion(func));
             }
         }
         
         return items;
+    }
+    
+    private boolean isYuWebFunction(FunctionInfo func) {
+        if (func.getCategory() != null && func.getCategory().isYuWebCategory()) {
+            return true;
+        }
+        HeaderFunctionInfo headerInfo = context.getHeaderFunctionInfo(func.getName());
+        return headerInfo != null && headerInfo.isYuWeb();
     }
 
     public List<CompletionItem> getFunctionCompletionsByCategory(FunctionCategory category, String prefix) {
@@ -140,12 +176,92 @@ public class CompletionProvider {
 
     private CompletionItem createFunctionCompletion(FunctionInfo func) {
         CompletionItem item = new CompletionItem();
-        item.setLabel(func.getName());
+        
+        String signature = buildFunctionSignature(func);
+        item.setLabel(signature);
+        
         item.setKind(CompletionItemKind.FUNCTION);
-        item.setDetail(func.getCategory() != null ? func.getCategory().getDisplayName() : "函数");
+        
+        String categoryDisplay = func.getCategory() != null ? func.getCategory().getDisplayName() : "函数";
+        String description = extractDescription(func.getDocumentation());
+        if (description != null && !description.isEmpty()) {
+            item.setDetail(categoryDisplay + " - " + description);
+        } else {
+            item.setDetail(categoryDisplay);
+        }
+        
         item.setDocumentation(func.getDocumentation());
         item.setInsertText(func.getInsertText());
         item.setSortText("1" + func.getName());
+        return item;
+    }
+    
+    private String buildFunctionSignature(FunctionInfo func) {
+        StringBuilder sb = new StringBuilder(func.getName());
+        sb.append("(");
+        
+        HeaderFunctionInfo headerInfo = context.getHeaderFunctionInfo(func.getName());
+        if (headerInfo != null && headerInfo.getParams() != null && !headerInfo.getParams().isEmpty()) {
+            List<String> paramNames = new ArrayList<>();
+            for (HeaderFunctionInfo.ParamInfo param : headerInfo.getParams()) {
+                paramNames.add(param.getName());
+            }
+            sb.append(String.join(", ", paramNames));
+        } else if (func.getParamTypes() != null && !func.getParamTypes().isEmpty()) {
+            List<String> paramLabels = new ArrayList<>();
+            int inputIndex = 0;
+            for (cn.langlang.iapp.runtime.ParamType type : func.getParamTypes()) {
+                if (type == cn.langlang.iapp.runtime.ParamType.OUTPUT) {
+                    paramLabels.add("out");
+                } else {
+                    paramLabels.add(type.name().toLowerCase());
+                    inputIndex++;
+                }
+            }
+            sb.append(String.join(", ", paramLabels));
+        }
+        
+        sb.append(")");
+        return sb.toString();
+    }
+    
+    private String extractDescription(String documentation) {
+        if (documentation == null || documentation.isEmpty()) {
+            return null;
+        }
+        
+        int descStart = documentation.indexOf("\n\n");
+        if (descStart > 0) {
+            String afterName = documentation.substring(descStart + 2);
+            
+            int categoryIndex = afterName.indexOf("类别:");
+            if (categoryIndex >= 0) {
+                int descEnd = afterName.indexOf("\n\n", categoryIndex);
+                if (descEnd > categoryIndex) {
+                    return afterName.substring(categoryIndex).replace("\n", " ").trim();
+                }
+            }
+            
+            String[] lines = afterName.split("\n");
+            for (String line : lines) {
+                String trimmed = line.trim();
+                if (!trimmed.isEmpty() && !trimmed.startsWith("**") && !trimmed.startsWith("类别:")) {
+                    return trimmed;
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    private CompletionItem createSnippetCompletion(HeaderFile.SnippetInfo snippet) {
+        CompletionItem item = new CompletionItem();
+        item.setLabel(snippet.getLabel());
+        item.setKind(CompletionItemKind.SNIPPET);
+        item.setDetail(snippet.getDescription());
+        item.setDocumentation(snippet.getDocumentation());
+        item.setInsertText(snippet.getBody());
+        item.setSortText("0s" + snippet.getPrefix());
         return item;
     }
 

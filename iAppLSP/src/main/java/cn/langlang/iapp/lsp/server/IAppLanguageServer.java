@@ -8,10 +8,14 @@ import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CompletableFuture;
 
 public class IAppLanguageServer implements LanguageServer, LanguageClientAware {
+    private static final Logger logger = LoggerFactory.getLogger(IAppLanguageServer.class);
+    
     private IAppTextDocumentService textDocumentService;
     private IAppWorkspaceService workspaceService;
     private LanguageClient client;
@@ -23,6 +27,8 @@ public class IAppLanguageServer implements LanguageServer, LanguageClientAware {
         
         ModuleRegistry moduleRegistry = new ModuleRegistry(context);
         moduleRegistry.autoDiscover();
+        
+        loadDefaultHeaders();
         
         this.textDocumentService = new IAppTextDocumentService(context);
         this.workspaceService = new IAppWorkspaceService(context);
@@ -37,8 +43,17 @@ public class IAppLanguageServer implements LanguageServer, LanguageClientAware {
             moduleRegistry.registerModule("yuweb");
         }
         
+        loadDefaultHeaders();
+        
         this.textDocumentService = new IAppTextDocumentService(context);
         this.workspaceService = new IAppWorkspaceService(context);
+    }
+    
+    private void loadDefaultHeaders() {
+        context.loadHeaderFilesFromClasspath("headers");
+        logger.info("Default headers loaded: {} functions, {} snippets", 
+            context.getHeaderLoader().getFunctionCount(),
+            context.getHeaderLoader().getSnippetCount());
     }
 
     @Override
@@ -65,8 +80,46 @@ public class IAppLanguageServer implements LanguageServer, LanguageClientAware {
         
         capabilities.setDocumentFormattingProvider(true);
         
+        if (params != null && params.getInitializationOptions() != null) {
+            handleInitializationOptions(params.getInitializationOptions());
+        }
+        
         InitializeResult result = new InitializeResult(capabilities);
         return CompletableFuture.completedFuture(result);
+    }
+    
+    private void handleInitializationOptions(Object options) {
+        try {
+            if (options instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> optionsMap = (java.util.Map<String, Object>) options;
+                
+                if (optionsMap.containsKey("enableYuWeb")) {
+                    boolean enableYuWeb = Boolean.TRUE.equals(optionsMap.get("enableYuWeb"));
+                    context.setShowYuWebCompletions(enableYuWeb);
+                    logger.info("YuWeb completions enabled: {}", enableYuWeb);
+                }
+                
+                if (optionsMap.containsKey("headerDirectories")) {
+                    Object dirs = optionsMap.get("headerDirectories");
+                    if (dirs instanceof java.util.List) {
+                        @SuppressWarnings("unchecked")
+                        java.util.List<String> dirList = (java.util.List<String>) dirs;
+                        for (String dir : dirList) {
+                            context.loadHeaderFiles(dir);
+                        }
+                    }
+                }
+                
+                if (optionsMap.containsKey("showYuWebCompletions")) {
+                    boolean show = Boolean.TRUE.equals(optionsMap.get("showYuWebCompletions"));
+                    context.setShowYuWebCompletions(show);
+                    logger.info("Show YuWeb completions: {}", show);
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Error handling initialization options: {}", e.getMessage());
+        }
     }
 
     @Override

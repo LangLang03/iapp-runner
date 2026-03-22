@@ -3,6 +3,7 @@ package cn.langlang.iapp.lsp.core.provider;
 import cn.langlang.iapp.lsp.core.LSContext;
 import cn.langlang.iapp.lsp.core.model.FunctionInfo;
 import cn.langlang.iapp.lsp.core.util.SignatureUtils;
+import cn.langlang.iapp.lsp.header.HeaderFunctionInfo;
 import cn.langlang.iapp.lsp.registry.FunctionCategory;
 import cn.langlang.iapp.runtime.IFunction;
 import cn.langlang.iapp.runtime.ParamType;
@@ -54,18 +55,26 @@ public class FunctionProvider {
     }
 
     public List<FunctionInfo> getCoreFunctions() {
-        return getAllFunctions().stream()
-                .filter(f -> !f.getCategory().isYuWebCategory())
+        buildCacheIfNeeded();
+        return functionInfoCache.values().stream()
+                .filter(f -> !isYuWebFunction(f.getName()))
                 .collect(Collectors.toList());
     }
 
     public List<FunctionInfo> getYuWebFunctions() {
-        if (!context.isYuWebAvailable()) {
-            return Collections.emptyList();
-        }
-        return getAllFunctions().stream()
-                .filter(f -> f.getCategory().isYuWebCategory())
+        buildCacheIfNeeded();
+        return functionInfoCache.values().stream()
+                .filter(f -> isYuWebFunction(f.getName()))
                 .collect(Collectors.toList());
+    }
+    
+    private boolean isYuWebFunction(String name) {
+        HeaderFunctionInfo headerInfo = context.getHeaderFunctionInfo(name);
+        if (headerInfo != null) {
+            return headerInfo.isYuWeb();
+        }
+        FunctionCategory category = context.getFunctionCategory(name);
+        return category != null && category.isYuWebCategory();
     }
 
     private synchronized void buildCacheIfNeeded() {
@@ -80,6 +89,98 @@ public class FunctionProvider {
                 functionInfoCache.put(name.toLowerCase(), info);
             }
         }
+        
+        for (HeaderFunctionInfo headerFunc : context.getHeaderLoader().getAllFunctions()) {
+            String funcName = headerFunc.getName();
+            if (funcName != null) {
+                String key = funcName.toLowerCase();
+                if (functionInfoCache.containsKey(key)) {
+                    FunctionInfo existing = functionInfoCache.get(key);
+                    mergeHeaderInfo(existing, headerFunc);
+                } else {
+                    FunctionInfo info = createFunctionInfoFromHeader(headerFunc);
+                    functionInfoCache.put(key, info);
+                }
+            }
+        }
+    }
+    
+    private void mergeHeaderInfo(FunctionInfo info, HeaderFunctionInfo headerInfo) {
+        if (headerInfo.getDescription() != null && !headerInfo.getDescription().isEmpty()) {
+            info.setDocumentation(headerInfo.getFullDocumentation());
+        }
+        if (headerInfo.getInsertText() != null && !headerInfo.getInsertText().isEmpty()) {
+            info.setInsertText(headerInfo.getInsertText());
+        }
+    }
+    
+    private FunctionInfo createFunctionInfoFromHeader(HeaderFunctionInfo headerInfo) {
+        FunctionInfo info = new FunctionInfo();
+        info.setName(headerInfo.getName());
+        
+        List<ParamType> paramTypes = convertParamTypes(headerInfo.getParams());
+        info.setParamTypes(paramTypes);
+        info.setMinParameters(paramTypes.size());
+        info.setMaxParameters(paramTypes.size());
+        
+        String categoryStr = headerInfo.getCategory();
+        if (categoryStr != null) {
+            FunctionCategory category = FunctionCategory.fromString(categoryStr);
+            if (category != null) {
+                info.setCategory(category);
+            }
+        }
+        if (headerInfo.isYuWeb() && info.getCategory() == null) {
+            info.setCategory(FunctionCategory.WEB_REQUEST);
+        }
+        
+        info.setDocumentation(headerInfo.getFullDocumentation());
+        info.setInsertText(headerInfo.getInsertText());
+        
+        return info;
+    }
+    
+    private List<ParamType> convertParamTypes(List<HeaderFunctionInfo.ParamInfo> params) {
+        List<ParamType> result = new ArrayList<>();
+        if (params != null) {
+            for (HeaderFunctionInfo.ParamInfo param : params) {
+                ParamType type = convertToParamType(param.getType());
+                result.add(type);
+            }
+        }
+        return result;
+    }
+    
+    private ParamType convertToParamType(String typeName) {
+        if (typeName == null || typeName.isEmpty()) {
+            return ParamType.OBJECT;
+        }
+        
+        switch (typeName.toLowerCase()) {
+            case "string":
+            case "str":
+                return ParamType.STRING;
+            case "int":
+            case "integer":
+                return ParamType.INT;
+            case "long":
+                return ParamType.LONG;
+            case "double":
+            case "float":
+            case "number":
+                return ParamType.DOUBLE;
+            case "boolean":
+            case "bool":
+                return ParamType.BOOLEAN;
+            case "array":
+            case "list":
+                return ParamType.ARRAY;
+            case "output":
+            case "out":
+                return ParamType.OUTPUT;
+            default:
+                return ParamType.OBJECT;
+        }
     }
 
     private FunctionInfo createFunctionInfo(IFunction func) {
@@ -90,8 +191,16 @@ public class FunctionProvider {
         info.setParamTypes(func.getParamTypes());
         info.setParamTypeLists(func.getParamTypeLists());
         info.setCategory(context.getFunctionCategory(func.getName()));
-        info.setDocumentation(generateDocumentation(func));
-        info.setInsertText(SignatureUtils.buildInsertText(func.getName(), func.getParamTypes(), func.getMinParameters()));
+        
+        HeaderFunctionInfo headerInfo = context.getHeaderFunctionInfo(func.getName());
+        if (headerInfo != null) {
+            info.setDocumentation(headerInfo.getFullDocumentation());
+            info.setInsertText(headerInfo.getInsertText());
+        } else {
+            info.setDocumentation(generateDocumentation(func));
+            info.setInsertText(SignatureUtils.buildInsertText(func.getName(), func.getParamTypes(), func.getMinParameters()));
+        }
+        
         return info;
     }
 

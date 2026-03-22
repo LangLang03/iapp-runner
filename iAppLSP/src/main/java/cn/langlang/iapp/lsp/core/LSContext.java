@@ -238,9 +238,42 @@ public class LSContext {
         }
         return diagnosticProvider;
     }
+    
+    public synchronized SnippetProvider getSnippetProvider() {
+        if (snippetProvider == null) {
+            snippetProvider = new SnippetProvider(headerLoader);
+        }
+        return snippetProvider;
+    }
 
     public FunctionRegistry getFunctionRegistry() {
         return functionRegistry;
+    }
+    
+    public HeaderLoader getHeaderLoader() {
+        return headerLoader;
+    }
+    
+    public void loadHeaderFiles(String directory) {
+        if (directory != null && !directory.isEmpty()) {
+            headerLoader.loadDirectory(directory);
+            logger.info("Loaded header files from: {}", directory);
+        }
+    }
+    
+    public void loadHeaderFilesFromClasspath(String path) {
+        if (path != null && !path.isEmpty()) {
+            headerLoader.loadFromClasspathDirectory(path);
+            logger.info("Loaded header files from classpath: {}", path);
+        }
+    }
+    
+    public HeaderFunctionInfo getHeaderFunctionInfo(String name) {
+        return headerLoader.getFunction(name);
+    }
+    
+    public boolean hasHeaderFunctionInfo(String name) {
+        return headerLoader.hasFunction(name);
     }
 
     public IFunction getFunction(String name) {
@@ -281,6 +314,14 @@ public class LSContext {
 
     public boolean isYuWebAvailable() {
         return yuWebAvailable;
+    }
+    
+    public boolean isShowYuWebCompletions() {
+        return showYuWebCompletions;
+    }
+    
+    public void setShowYuWebCompletions(boolean showYuWebCompletions) {
+        this.showYuWebCompletions = showYuWebCompletions;
     }
 
     public boolean hasFunction(String name) {
