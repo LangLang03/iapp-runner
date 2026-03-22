@@ -58,8 +58,8 @@ json(map("code", 0, "msg", "Hello World"))
 
 ```iapp
 s name = "张三"           # 字符串变量
-n age = 25               # 数值变量
-b active = true          # 布尔变量
+s age = 25               # 数值变量
+s active = true          # 布尔变量
 ```
 
 ### 条件判断
