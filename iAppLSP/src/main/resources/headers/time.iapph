@@ -1,0 +1,47 @@
+/**
+ * @function time
+ * @category 时间函数
+ * @returns Long - 当前时间戳（毫秒）
+ * @description 获取当前时间戳
+ * @example
+ * s timestamp = time()
+ * syso(timestamp)
+ */
+fn time()
+
+/**
+ * @function time
+ * @category 时间函数
+ * @param type Int - 格式类型 (0-5)
+ * @returns String - 格式化后的时间字符串
+ * @description 按指定类型格式化时间
+ * type=0: "yyyy-MM-dd HH:mm:ss"
+ * type=1: "yyyy/MM/dd HH:mm:ss"
+ * type=2: "yyyy-MM-dd"
+ * type=3: "HH:mm:ss"
+ * type=4: 时间戳
+ * type=5: "yyyy年MM月dd日 HH:mm:ss"
+ * @example
+ * s datetime = time(0)
+ * syso(datetime)  // 输出: "2024-01-15 10:30:00"
+ * 
+ * s date = time(2)
+ * syso(date)  // 输出: "2024-01-15"
+ */
+fn time(type)
+
+/**
+ * @function time
+ * @category 时间函数
+ * @param format String - 时间格式
+ * @param timestamp Long - 时间戳 (可选)
+ * @returns String - 格式化后的时间字符串
+ * @description 按指定格式格式化时间
+ * @example
+ * s datetime = time("yyyy-MM-dd HH:mm:ss")
+ * syso(datetime)
+ * 
+ * s custom = time("yyyy年MM月dd日", 1705286400000)
+ * syso(custom)
+ */
+fn time(format, timestamp)

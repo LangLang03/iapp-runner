@@ -1,0 +1,104 @@
+/**
+ * @function in
+ * @category Web数据库条件函数
+ * @yuweb
+ * @param field String - 字段名
+ * @param values Object - 值列表
+ * @returns QueryCondition - IN条件
+ * @description IN条件查询
+ * @example
+ * s condition = in("id", arr(1, 2, 3))
+ * s users = dball("users", condition)
+ */
+fn in(field, values)
+
+/**
+ * @function like
+ * @category Web数据库条件函数
+ * @yuweb
+ * @param field String - 字段名
+ * @param pattern String - 匹配模式
+ * @returns QueryCondition - LIKE条件
+ * @description LIKE模糊匹配
+ * @example
+ * s condition = like("name", "%张%")
+ * s users = dball("users", condition)
+ */
+fn like(field, pattern)
+
+/**
+ * @function between
+ * @category Web数据库条件函数
+ * @yuweb
+ * @param field String - 字段名
+ * @param value1 Object - 起始值
+ * @param value2 Object - 结束值
+ * @returns QueryCondition - BETWEEN条件
+ * @description BETWEEN范围查询
+ * @example
+ * s condition = between("age", 18, 30)
+ * s users = dball("users", condition)
+ */
+fn between(field, value1, value2)
+
+/**
+ * @function isnull
+ * @category Web数据库条件函数
+ * @yuweb
+ * @param field String - 字段名
+ * @returns QueryCondition - IS NULL条件
+ * @description IS NULL条件
+ * @example
+ * s condition = isnull("deleted_at")
+ * s users = dball("users", condition)
+ */
+fn isnull(field)
+
+/**
+ * @function notnull
+ * @category Web数据库条件函数
+ * @yuweb
+ * @param field String - 字段名
+ * @returns QueryCondition - IS NOT NULL条件
+ * @description IS NOT NULL条件
+ * @example
+ * s condition = notnull("email")
+ * s users = dball("users", condition)
+ */
+fn notnull(field)
+
+/**
+ * @function and
+ * @category Web数据库条件函数
+ * @yuweb
+ * @param condition1 QueryCondition - 第一个条件
+ * @param condition2 QueryCondition - 第二个条件
+ * @param ... - 更多条件
+ * @returns QueryCondition - AND逻辑组合
+ * @description AND逻辑组合
+ * @example
+ * s condition = and(
+ *     map("status", 1),
+ *     like("name", "%张%")
+ * )
+ * s users = dball("users", condition)
+ */
+fn and(condition1, condition2)
+
+/**
+ * @function or
+ * @category Web数据库条件函数
+ * @yuweb
+ * @param condition1 QueryCondition - 第一个条件
+ * @param condition2 QueryCondition - 第二个条件
+ * @param ... - 更多条件
+ * @returns QueryCondition - OR逻辑组合
+ * @description OR逻辑组合
+ * @example
+ * s condition = or(
+ *     map("role", "admin"),
+ *     map("role", "superadmin")
+ * )
+ * s users = dball("users", condition)
+ */
+fn or(condition1, condition2)

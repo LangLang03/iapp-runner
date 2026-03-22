@@ -1,0 +1,116 @@
+/**
+ * @function s
+ * @category 数学函数
+ * @param value Object - 要转换的值
+ * @returns Long/Boolean - 整数值或布尔值
+ * @description 将值转换为整数或布尔值
+ * @example
+ * s num = s("123")
+ * syso(num)  // 输出: 123
+ */
+fn s(value)
+
+/**
+ * @function s+
+ * @category 数学函数
+ * @param a Object - 第一个操作数
+ * @param b Object - 第二个操作数
+ * @returns Double/String - 相加结果，非数字则字符串拼接
+ * @description 加法运算，非数字则字符串拼接
+ * @example
+ * s result = s+(1, 2)
+ * syso(result)  // 输出: 3.0
+ * 
+ * s str = s+("hello", "world")
+ * syso(str)  // 输出: "helloworld"
+ */
+fn s+(a, b)
+
+/**
+ * @function s-
+ * @category 数学函数
+ * @param a Object - 被减数
+ * @param b Object - 减数
+ * @returns Double - 减法结果
+ * @description 减法运算
+ * @example
+ * s result = s-(5, 3)
+ * syso(result)  // 输出: 2.0
+ */
+fn s-(a, b)
+
+/**
+ * @function s*
+ * @category 数学函数
+ * @param a Object - 第一个乘数
+ * @param b Object - 第二个乘数
+ * @returns Double - 乘法结果
+ * @description 乘法运算
+ * @example
+ * s result = s*(4, 5)
+ * syso(result)  // 输出: 20.0
+ */
+fn s*(a, b)
+
+/**
+ * @function s/
+ * @category 数学函数
+ * @param a Object - 被除数
+ * @param b Object - 除数
+ * @returns Double - 除法结果，除数为0返回0
+ * @description 除法运算
+ * @example
+ * s result = s/(10, 2)
+ * syso(result)  // 输出: 5.0
+ */
+fn s/(a, b)
+
+/**
+ * @function s%
+ * @category 数学函数
+ * @param a Object - 被除数
+ * @param b Object - 除数
+ * @returns Long - 取模结果
+ * @description 取模运算
+ * @example
+ * s result = s%(10, 3)
+ * syso(result)  // 输出: 1
+ */
+fn s%(a, b)
+
+/**
+ * @function s2
+ * @category 数学函数
+ * @param value Object - 要处理的值
+ * @returns Double - 四舍五入保留两位小数
+ * @description 四舍五入保留两位小数
+ * @example
+ * s result = s2(3.14159)
+ * syso(result)  // 输出: 3.14
+ */
+fn s2(value)
+
+/**
+ * @function sn
+ * @category 数学函数
+ * @param value Object - 要转换的值
+ * @returns Double - 浮点数值
+ * @description 将值转换为double类型
+ * @example
+ * s result = sn("3.14")
+ * syso(result)  // 输出: 3.14
+ */
+fn sn(value)
+
+/**
+ * @function sran
+ * @category 数学函数
+ * @param min Int - 最小值
+ * @param max Int - 最大值
+ * @returns Int - 随机整数
+ * @description 生成指定范围内的随机整数（包含边界）
+ * @example
+ * s num = sran(1, 100)
+ * syso(num)  // 输出: 1-100之间的随机数
+ */
+fn sran(min, max)

@@ -1,0 +1,164 @@
+/**
+ * @snippet 函数定义
+ * @prefix fn
+ * @description 快速创建函数定义
+ * @body
+fn ${1:functionName}(${2:params}) {
+    ${3:// code}
+}
+ */
+
+/**
+ * @snippet 条件语句
+ * @prefix f
+ * @description 快速创建条件语句
+ * @body
+f (${1:condition}) {
+    ${2:// code}
+}
+ */
+
+/**
+ * @snippet 条件-否则语句
+ * @prefix f-else
+ * @description 快速创建条件-否则语句
+ * @body
+f (${1:condition}) {
+    ${2:// code}
+} else {
+    ${3:// code}
+}
+ */
+
+/**
+ * @snippet 循环语句
+ * @prefix w
+ * @description 快速创建循环语句
+ * @body
+w (${1:condition}) {
+    ${2:// code}
+}
+ */
+
+/**
+ * @snippet for循环
+ * @prefix for
+ * @description 快速创建for循环
+ * @body
+for (${1:i}=0; ${1:i}<${2:n}; ${1:i}++) {
+    ${3:// code}
+}
+ */
+
+/**
+ * @snippet 线程执行
+ * @prefix t
+ * @description 快速创建线程执行
+ * @body
+t {
+    ${1:// code}
+}
+ */
+
+/**
+ * @snippet 局部变量声明
+ * @prefix s
+ * @description 快速声明局部变量
+ * @body
+s ${1:varName} = ${2:value}
+ */
+
+/**
+ * @snippet 界面变量声明
+ * @prefix ss
+ * @description 快速声明界面变量
+ * @body
+ss ${1:varName} = ${2:value}
+ */
+
+/**
+ * @snippet 全局变量声明
+ * @prefix sss
+ * @description 快速声明全局变量
+ * @body
+sss ${1:varName} = ${2:value}
+ */
+
+/**
+ * @snippet try-catch异常处理
+ * @prefix try
+ * @description 快速创建异常处理
+ * @body
+try {
+    ${1:// code}
+} catch (${2:e}) {
+    ${3:// handle error}
+}
+ */
+
+/**
+ * @snippet JSON响应
+ * @prefix json
+ * @yuweb
+ * @description 快速创建JSON响应
+ * @body
+json(map(
+    "code", ${1:200},
+    "message", "${2:success}",
+    "data", ${3:null}
+))
+ */
+
+/**
+ * @snippet 数据库查询
+ * @prefix dball
+ * @yuweb
+ * @description 快速创建数据库查询
+ * @body
+s list = dball("${1:table}", map(
+    ${2:// conditions}
+))
+syso(gslistl(list))
+ */
+
+/**
+ * @snippet 数据库插入
+ * @prefix dbinsert
+ * @yuweb
+ * @description 快速创建数据库插入
+ * @body
+s id = dbinsert("${1:table}", map(
+    ${2:// fields}
+))
+syso(id)
+ */
+
+/**
+ * @snippet HTTP GET请求
+ * @prefix hs
+ * @description 快速创建HTTP GET请求
+ * @body
+s response = hs("${1:url}")
+syso(response)
+ */
+
+/**
+ * @snippet Map创建
+ * @prefix map
+ * @yuweb
+ * @description 快速创建Map对象
+ * @body
+map(
+    "${1:key1}", ${2:value1},
+    "${3:key2}", ${4:value2}
+)
+ */
+
+/**
+ * @snippet 数组创建
+ * @prefix arr
+ * @yuweb
+ * @description 快速创建数组
+ * @body
+arr(${1:item1}, ${2:item2}, ${3:item3})
+ */

@@ -1,0 +1,37 @@
+/**
+ * @function syso
+ * @category 输出函数
+ * @param value Object - 要输出的值
+ * @returns null
+ * @description 输出内容到控制台 (System.out.println)
+ * @example
+ * syso("Hello, World!")
+ * syso(123)
+ * syso(ss.变量名)
+ */
+fn syso(value)
+
+/**
+ * @function stop
+ * @category 其他函数
+ * @param value int - 休眠毫秒数 (可选)
+ * @returns null
+ * @description 无参数时结束代码执行；有数字参数时休眠指定毫秒
+ * @example
+ * stop()      // 结束代码执行
+ * stop(1000)  // 休眠1秒
+ */
+fn stop(value)
+
+/**
+ * @function call
+ * @category 其他函数
+ * @param language String - 语言类型 (如 "mjava")
+ * @param methodName String - 方法名
+ * @param args Object... - 方法参数 (可变参数)
+ * @returns Object - 方法返回值
+ * @description 调用 Mjava 模块方法
+ * @example
+ * s result = call("mjava", "methodName", arg1, arg2)
+ */
+fn call(language, methodName, args)

@@ -1,0 +1,350 @@
+/**
+ * @function method
+ * @category Web请求函数
+ * @yuweb
+ * @returns String - HTTP请求方法 (GET/POST/PUT/DELETE等)
+ * @description 获取HTTP请求方法
+ * @example
+ * s m = method()
+ * syso(m)  // 输出: "GET" 或 "POST" 等
+ */
+fn method()
+
+/**
+ * @function get
+ * @category Web请求函数
+ * @yuweb
+ * @param name String - 参数名
+ * @param default String - 默认值 (可选)
+ * @returns String - URL查询参数值
+ * @description 获取URL查询参数值
+ * @example
+ * s id = get("id")
+ * s name = get("name", "default")
+ */
+fn get(name, default)
+
+/**
+ * @function gets
+ * @category Web请求函数
+ * @yuweb
+ * @returns Map - 所有URL查询参数
+ * @description 获取所有URL查询参数
+ * @example
+ * s params = gets()
+ * syso(params)
+ */
+fn gets()
+
+/**
+ * @function post
+ * @category Web请求函数
+ * @yuweb
+ * @param name String - 参数名
+ * @param default String - 默认值 (可选)
+ * @returns String - POST请求参数值
+ * @description 获取POST请求参数值
+ * @example
+ * s username = post("username")
+ */
+fn post(name, default)
+
+/**
+ * @function posts
+ * @category Web请求函数
+ * @yuweb
+ * @returns Map - 所有POST参数
+ * @description 获取所有POST参数
+ * @example
+ * s params = posts()
+ * syso(params)
+ */
+fn posts()
+
+/**
+ * @function form
+ * @category Web请求函数
+ * @yuweb
+ * @param name String - 字段名
+ * @param default String - 默认值 (可选)
+ * @returns String - 表单字段值
+ * @description 获取表单字段值
+ * @example
+ * s value = form("field")
+ */
+fn form(name, default)
+
+/**
+ * @function forms
+ * @category Web请求函数
+ * @yuweb
+ * @returns Map - 所有表单字段
+ * @description 获取所有表单字段
+ * @example
+ * s fields = forms()
+ * syso(fields)
+ */
+fn forms()
+
+/**
+ * @function body
+ * @category Web请求函数
+ * @yuweb
+ * @returns String - 请求体原始内容
+ * @description 获取请求体原始内容
+ * @example
+ * s content = body()
+ * syso(content)
+ */
+fn body()
+
+/**
+ * @function path
+ * @category Web请求函数
+ * @yuweb
+ * @returns String - 请求路径
+ * @description 获取请求路径
+ * @example
+ * s p = path()
+ * syso(p)  // 输出: "/api/user"
+ */
+fn path()
+
+/**
+ * @function url
+ * @category Web请求函数
+ * @yuweb
+ * @returns String - 完整请求URL
+ * @description 获取完整请求URL
+ * @example
+ * s u = url()
+ * syso(u)  // 输出: "http://example.com/api/user?id=1"
+ */
+fn url()
+
+/**
+ * @function header
+ * @category Web请求函数
+ * @yuweb
+ * @param name String - 请求头名称
+ * @returns String - 请求头值
+ * @description 获取请求头值
+ * @example
+ * s contentType = header("Content-Type")
+ * syso(contentType)
+ */
+fn header(name)
+
+/**
+ * @function clientip
+ * @category Web请求函数
+ * @yuweb
+ * @returns String - 客户端IP地址
+ * @description 获取客户端IP地址
+ * @example
+ * s ip = clientip()
+ * syso(ip)  // 输出: "192.168.1.1"
+ */
+fn clientip()
+
+/**
+ * @function useragent
+ * @category Web请求函数
+ * @yuweb
+ * @returns String - User-Agent字符串
+ * @description 获取User-Agent字符串
+ * @example
+ * s ua = useragent()
+ * syso(ua)
+ */
+fn useragent()
+
+/**
+ * @function isjson
+ * @category Web请求函数
+ * @yuweb
+ * @returns Boolean - 是JSON请求返回true
+ * @description 判断请求是否为JSON格式
+ * @example
+ * f(isjson()) {
+ *     syso("JSON请求")
+ * }
+ */
+fn isjson()
+
+/**
+ * @function isajax
+ * @category Web请求函数
+ * @yuweb
+ * @returns Boolean - 是AJAX请求返回true
+ * @description 判断是否为AJAX请求
+ * @example
+ * f(isajax()) {
+ *     syso("AJAX请求")
+ * }
+ */
+fn isajax()
+
+/**
+ * @function getcookie
+ * @category Web请求函数
+ * @yuweb
+ * @param name String - Cookie名称
+ * @returns String - Cookie值
+ * @description 获取Cookie值
+ * @example
+ * s sessionId = getcookie("session_id")
+ * syso(sessionId)
+ */
+fn getcookie(name)
+
+/**
+ * @function setcookie
+ * @category Web请求函数
+ * @yuweb
+ * @param name String - Cookie名称
+ * @param value String - Cookie值
+ * @param maxAge Int - 过期时间（秒）
+ * @returns null
+ * @description 设置Cookie
+ * @example
+ * setcookie("token", "abc123", 3600)
+ */
+fn setcookie(name, value, maxAge)
+
+/**
+ * @function delcookie
+ * @category Web请求函数
+ * @yuweb
+ * @param name String - Cookie名称
+ * @returns null
+ * @description 删除Cookie
+ * @example
+ * delcookie("session_id")
+ */
+fn delcookie(name)
+
+/**
+ * @function file
+ * @category Web请求函数
+ * @yuweb
+ * @param name String - 文件字段名
+ * @returns UploadedFile - 上传文件对象
+ * @description 获取上传文件对象
+ * @example
+ * s uploadedFile = file("avatar")
+ * f(uploadedFile != null) {
+ *     syso(gfn(uploadedFile))
+ * }
+ */
+fn file(name)
+
+/**
+ * @function files
+ * @category Web请求函数
+ * @yuweb
+ * @returns List - 所有上传文件列表
+ * @description 获取所有上传文件
+ * @example
+ * s fileList = files()
+ * syso(gslistl(fileList))
+ */
+fn files()
+
+/**
+ * @function param
+ * @category Web请求函数
+ * @yuweb
+ * @param name String - 路由参数名
+ * @returns String - 路由参数值
+ * @description 获取路由参数
+ * @example
+ * // 路由: /user/:id
+ * s userId = param("id")
+ * syso(userId)
+ */
+fn param(name)
+
+/**
+ * @function params
+ * @category Web请求函数
+ * @yuweb
+ * @returns Map - 所有路由参数
+ * @description 获取所有路由参数
+ * @example
+ * s routeParams = params()
+ * syso(routeParams)
+ */
+fn params()
+
+/**
+ * @function gft
+ * @category Web请求函数
+ * @yuweb
+ * @param fileObj Object - 上传文件对象
+ * @returns String - 文件类型
+ * @description 获取上传文件的类型
+ * @example
+ * s uploadedFile = file("document")
+ * s fileType = gft(uploadedFile)
+ * syso(fileType)  // 输出: "image/jpeg"
+ */
+fn gft(fileObj)
+
+/**
+ * @function gfs
+ * @category Web请求函数
+ * @yuweb
+ * @param fileObj Object - 上传文件对象
+ * @returns Long - 文件大小（字节）
+ * @description 获取上传文件的大小
+ * @example
+ * s uploadedFile = file("document")
+ * s fileSize = gfs(uploadedFile)
+ * syso(fileSize)
+ */
+fn gfs(fileObj)
+
+/**
+ * @function gfn
+ * @category Web请求函数
+ * @yuweb
+ * @param fileObj Object - 上传文件对象
+ * @returns String - 文件名
+ * @description 获取上传文件的原始文件名
+ * @example
+ * s uploadedFile = file("document")
+ * s fileName = gfn(uploadedFile)
+ * syso(fileName)  // 输出: "photo.jpg"
+ */
+fn gfn(fileObj)
+
+/**
+ * @function gfe
+ * @category Web请求函数
+ * @yuweb
+ * @param fileObj Object - 上传文件对象
+ * @returns String - 文件扩展名
+ * @description 获取上传文件的扩展名
+ * @example
+ * s uploadedFile = file("document")
+ * s ext = gfe(uploadedFile)
+ * syso(ext)  // 输出: "jpg"
+ */
+fn gfe(fileObj)
+
+/**
+ * @function sf
+ * @category Web请求函数
+ * @yuweb
+ * @param fileObj Object - 上传文件对象
+ * @param path String - 保存目录路径
+ * @param generateName Boolean - 是否自动生成文件名 (可选)
+ * @returns Map - 保存结果，包含fileName、filePath等信息
+ * @description 保存上传文件到指定路径
+ * @example
+ * s uploadedFile = file("avatar")
+ * s result = sf(uploadedFile, "/uploads/", true)
+ * syso(result)
+ */
+fn sf(fileObj, path, generateName)

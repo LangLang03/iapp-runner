@@ -1,0 +1,134 @@
+/**
+ * @function aslist
+ * @category 列表函数
+ * @param array Array - 数组
+ * @returns ArrayList - 转换后的列表
+ * @description 将数组转换为ArrayList
+ * @example
+ * s arr = nsz(3)
+ * sssz(arr, 0, "a")
+ * sssz(arr, 1, "b")
+ * sssz(arr, 2, "c")
+ * s list = aslist(arr)
+ * syso(gslistl(list))  // 输出: 3
+ */
+fn aslist(array)
+
+/**
+ * @function sslist
+ * @category 列表函数
+ * @param list List - 列表
+ * @param index Int - 索引位置
+ * @param value Object - 要设置的值
+ * @returns null
+ * @description 设置列表中指定索引的元素值
+ * @example
+ * s list = aslist(nsz(3))
+ * sslist(list, 0, "hello")
+ * syso(gslist(list, 0))  // 输出: "hello"
+ */
+fn sslist(list, index, value)
+
+/**
+ * @function gslist
+ * @category 列表函数
+ * @param list List - 列表
+ * @param index Int - 索引位置
+ * @returns Object - 列表元素值
+ * @description 获取列表中指定索引的元素
+ * @example
+ * s list = aslist(nsz(3))
+ * sslist(list, 0, "hello")
+ * s val = gslist(list, 0)
+ * syso(val)  // 输出: "hello"
+ */
+fn gslist(list, index)
+
+/**
+ * @function gslistl
+ * @category 列表函数
+ * @param list List - 列表
+ * @returns Long - 列表长度
+ * @description 获取列表长度
+ * @example
+ * s list = aslist(nsz(5))
+ * s len = gslistl(list)
+ * syso(len)  // 输出: 5
+ */
+fn gslistl(list)
+
+/**
+ * @function dslist
+ * @category 列表函数
+ * @param list List - 列表
+ * @param index Int - 索引位置 (可选)
+ * @returns null
+ * @description 删除列表元素，无索引则清空列表
+ * @example
+ * s list = aslist(nsz(3))
+ * dslist(list, 0)  // 删除第一个元素
+ * dslist(list)     // 清空列表
+ */
+fn dslist(list, index)
+
+/**
+ * @function gslistiof
+ * @category 列表函数
+ * @param list List - 列表
+ * @param value Object - 要查找的值
+ * @returns Long - 元素首次出现的索引，不存在返回-1
+ * @description 获取元素在列表中首次出现的索引
+ * @example
+ * s list = aslist(nsz(3))
+ * sslist(list, 0, "a")
+ * sslist(list, 1, "b")
+ * sslist(list, 2, "a")
+ * s idx = gslistiof(list, "a")
+ * syso(idx)  // 输出: 0
+ */
+fn gslistiof(list, value)
+
+/**
+ * @function gslistlof
+ * @category 列表函数
+ * @param list List - 列表
+ * @param value Object - 要查找的值
+ * @returns Long - 元素最后出现的索引，不存在返回-1
+ * @description 获取元素在列表中最后出现的索引
+ * @example
+ * s list = aslist(nsz(3))
+ * sslist(list, 0, "a")
+ * sslist(list, 1, "b")
+ * sslist(list, 2, "a")
+ * s idx = gslistlof(list, "a")
+ * syso(idx)  // 输出: 2
+ */
+fn gslistlof(list, value)
+
+/**
+ * @function gslistis
+ * @category 列表函数
+ * @param list List - 列表
+ * @param value Object - 要查找的值
+ * @returns Boolean - 包含返回true
+ * @description 判断列表是否包含指定元素
+ * @example
+ * s list = aslist(nsz(2))
+ * sslist(list, 0, "a")
+ * s has = gslistis(list, "a")
+ * syso(has)  // 输出: true
+ */
+fn gslistis(list, value)
+
+/**
+ * @function gslistsz
+ * @category 列表函数
+ * @param list List - 列表
+ * @returns Array - 转换后的数组
+ * @description 将列表转换为数组
+ * @example
+ * s list = aslist(nsz(3))
+ * s arr = gslistsz(list)
+ * syso(sgszl(arr))
+ */
+fn gslistsz(list)

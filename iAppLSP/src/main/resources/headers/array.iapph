@@ -1,0 +1,51 @@
+/**
+ * @function nsz
+ * @category 数组函数
+ * @param size Int - 数组大小
+ * @returns Array - 新创建的数组
+ * @description 创建指定大小的数组
+ * @example
+ * s arr = nsz(5)
+ * syso(sgszl(arr))  // 输出: 5
+ */
+fn nsz(size)
+
+/**
+ * @function sgsz
+ * @category 数组函数
+ * @param array Array - 数组或列表
+ * @param index Int - 索引位置
+ * @returns Object - 数组元素值
+ * @description 获取数组/列表中指定索引的元素
+ * @example
+ * s arr = nsz(3)
+ * s val = sgsz(arr, 0)
+ */
+fn sgsz(array, index)
+
+/**
+ * @function sgszl
+ * @category 数组函数
+ * @param array Array - 数组或列表
+ * @returns Long - 数组/列表长度
+ * @description 获取数组/列表的长度
+ * @example
+ * s arr = nsz(5)
+ * syso(sgszl(arr))  // 输出: 5
+ */
+fn sgszl(array)
+
+/**
+ * @function sssz
+ * @category 数组函数
+ * @param array Array - 数组或列表
+ * @param index Int - 索引位置
+ * @param value Object - 要设置的值
+ * @returns null
+ * @description 设置数组/列表中指定索引的元素值
+ * @example
+ * s arr = nsz(3)
+ * sssz(arr, 0, "hello")
+ * syso(sgsz(arr, 0))  // 输出: "hello"
+ */
+fn sssz(array, index, value)

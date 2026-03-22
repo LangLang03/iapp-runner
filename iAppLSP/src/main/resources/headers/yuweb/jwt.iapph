@@ -1,0 +1,44 @@
+/**
+ * @function jwtencode
+ * @category Web JWT函数
+ * @yuweb
+ * @param payload Map - JWT载荷
+ * @param secret String - 签名密钥
+ * @returns String - JWT令牌
+ * @description 编码JWT令牌
+ * @example
+ * s token = jwtencode(map("userId", 123, "username", "admin"), "secret_key")
+ * syso(token)
+ */
+fn jwtencode(payload, secret)
+
+/**
+ * @function jwtdecode
+ * @category Web JWT函数
+ * @yuweb
+ * @param token String - JWT令牌
+ * @returns Map - JWT载荷（不验证签名）
+ * @description 解码JWT令牌（不验证签名）
+ * @example
+ * s payload = jwtdecode(token)
+ * syso(payload)
+ */
+fn jwtdecode(token)
+
+/**
+ * @function jwtverify
+ * @category Web JWT函数
+ * @yuweb
+ * @param token String - JWT令牌
+ * @param secret String - 签名密钥
+ * @returns Map - JWT载荷（验证签名后）
+ * @description 验证并解码JWT令牌
+ * @example
+ * s payload = jwtverify(token, "secret_key")
+ * f(payload != null) {
+ *     syso("令牌有效")
+ * } else {
+ *     syso("令牌无效")
+ * }
+ */
+fn jwtverify(token, secret)

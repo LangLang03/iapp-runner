@@ -1,0 +1,90 @@
+/**
+ * @function json
+ * @category Web响应函数
+ * @yuweb
+ * @param data Object - JSON数据 (可选)
+ * @returns Object - 无参数时返回当前JSON数据
+ * @description 设置或获取JSON响应
+ * @example
+ * // 设置JSON响应
+ * json(map("code", 200, "message", "success"))
+ * 
+ * // 获取当前JSON数据
+ * s data = json()
+ */
+fn json(data)
+
+/**
+ * @function text
+ * @category Web响应函数
+ * @yuweb
+ * @param content String - 文本内容
+ * @returns null
+ * @description 返回纯文本响应
+ * @example
+ * text("Hello World")
+ */
+fn text(content)
+
+/**
+ * @function html
+ * @category Web响应函数
+ * @yuweb
+ * @param content String - HTML内容
+ * @returns null
+ * @description 返回HTML响应
+ * @example
+ * html("<h1>Hello World</h1>")
+ */
+fn html(content)
+
+/**
+ * @function error
+ * @category Web响应函数
+ * @yuweb
+ * @param code Int - 错误码
+ * @param message String - 错误消息
+ * @returns null
+ * @description 返回错误响应
+ * @example
+ * error(404, "页面不存在")
+ */
+fn error(code, message)
+
+/**
+ * @function status
+ * @category Web响应函数
+ * @yuweb
+ * @param code Int - HTTP状态码
+ * @returns null
+ * @description 设置HTTP状态码
+ * @example
+ * status(201)
+ * json(map("message", "创建成功"))
+ */
+fn status(code)
+
+/**
+ * @function setheader
+ * @category Web响应函数
+ * @yuweb
+ * @param name String - 响应头名称
+ * @param value String - 响应头值
+ * @returns null
+ * @description 设置响应头
+ * @example
+ * setheader("X-Custom-Header", "value")
+ */
+fn setheader(name, value)
+
+/**
+ * @function redirect
+ * @category Web响应函数
+ * @yuweb
+ * @param location String - 重定向URL
+ * @returns null
+ * @description 重定向到指定URL
+ * @example
+ * redirect("http://example.com/login")
+ */
+fn redirect(location)

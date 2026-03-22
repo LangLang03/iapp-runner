@@ -1,0 +1,85 @@
+/**
+ * @function java
+ * @category Java交互函数
+ * @param targetObj Object - 目标对象或类名
+ * @param methodPath String - 方法路径
+ * @param args Object... - 方法参数 (可变参数)
+ * @returns Object - 方法返回值
+ * @description 调用Java方法（支持完整类路径）
+ * @example
+ * s result = java(null, "java.lang.Math.sqrt", 16.0)
+ * syso(result)  // 输出: 4.0
+ */
+fn java(targetObj, methodPath, args)
+
+/**
+ * @function javax
+ * @category Java交互函数
+ * @param instance Object - 对象实例
+ * @param class Class/String - 类对象或类名
+ * @param methodName String - 方法名
+ * @param typeName1 String - 第一个参数类型名 (可选)
+ * @param value1 Object - 第一个参数值 (可选)
+ * @param ... - 更多参数类型和值
+ * @returns Object - 方法返回值
+ * @description 调用对象的指定方法，支持指定参数类型
+ * @example
+ * s result = javax(obj, "java.lang.String", "substring", "int", 0, "int", 5)
+ * syso(result)
+ */
+fn javax(instance, class, methodName, typeName1, value1)
+
+/**
+ * @function javanew
+ * @category Java交互函数
+ * @param class Class/String - 类对象或类名
+ * @param typeName1 String - 第一个构造参数类型名 (可选)
+ * @param value1 Object - 第一个构造参数值 (可选)
+ * @param ... - 更多参数类型和值
+ * @returns Object - 新创建的对象实例
+ * @description 创建Java对象实例，支持指定构造参数类型
+ * @example
+ * s list = javanew("java.util.ArrayList")
+ * s sb = javanew("java.lang.StringBuilder", "String", "Hello")
+ */
+fn javanew(class, typeName1, value1)
+
+/**
+ * @function javags
+ * @category Java交互函数
+ * @param instance Object - 对象实例
+ * @param class Class/String - 类对象或类名
+ * @param fieldName String - 字段名
+ * @returns Object - 字段值
+ * @description 获取对象的字段值（支持私有字段）
+ * @example
+ * s value = javags(obj, "java.lang.Class", "name")
+ * syso(value)
+ */
+fn javags(instance, class, fieldName)
+
+/**
+ * @function javass
+ * @category Java交互函数
+ * @param instance Object - 对象实例
+ * @param class Class/String - 类对象或类名
+ * @param fieldName String - 字段名
+ * @param value Object - 要设置的值
+ * @returns Object - 设置前的字段值
+ * @description 设置对象的字段值（支持私有字段）
+ * @example
+ * javass(obj, "java.lang.Class", "field", "newValue")
+ */
+fn javass(instance, class, fieldName, value)
+
+/**
+ * @function cls
+ * @category Java交互函数
+ * @param className String - 完整类名
+ * @returns Class - Class对象
+ * @description 根据类名获取Class对象
+ * @example
+ * s stringClass = cls("java.lang.String")
+ * syso(stringClass)
+ */
+fn cls(className)

@@ -1,0 +1,168 @@
+/**
+ * @function ss
+ * @category 字符串函数
+ * @param value Object - 要转换的值
+ * @returns String - 转换后的字符串
+ * @description 将任意值转换为字符串
+ * @example
+ * s a = ss(123)
+ * syso(a)  // 输出: "123"
+ */
+fn ss(value)
+
+/**
+ * @function sr
+ * @category 字符串函数
+ * @param source String - 源字符串
+ * @param target String - 要替换的内容
+ * @param replacement String - 替换为的内容
+ * @returns String - 替换后的字符串
+ * @description 替换字符串中的内容
+ * @example
+ * s result = sr("hello world", "world", "iApp")
+ * syso(result)  // 输出: "hello iApp"
+ */
+fn sr(source, target, replacement)
+
+/**
+ * @function sl
+ * @category 字符串函数
+ * @param source String - 要分割的字符串
+ * @param delimiter String - 分隔符
+ * @param useRegex Boolean - 是否使用正则表达式 (可选)
+ * @returns Array - 分割后的字符串数组
+ * @description 分割字符串
+ * @example
+ * s arr = sl("a,b,c", ",")
+ * s arr2 = sl("a1b2c", "\\d", true)
+ */
+fn sl(source, delimiter, useRegex)
+
+/**
+ * @function ssg
+ * @category 字符串函数
+ * @param str String - 源字符串
+ * @param start Int - 起始位置
+ * @param end Int - 结束位置 (可选)
+ * @returns String - 截取的子字符串
+ * @description 截取子字符串
+ * @example
+ * s result = ssg("hello", 1, 3)
+ * syso(result)  // 输出: "el"
+ */
+fn ssg(str, start, end)
+
+/**
+ * @function slg
+ * @category 字符串函数
+ * @param str String - 要计算长度的字符串
+ * @returns Long - 字符串长度
+ * @description 获取字符串长度
+ * @example
+ * s len = slg("hello")
+ * syso(len)  // 输出: 5
+ */
+fn slg(str)
+
+/**
+ * @function siof
+ * @category 字符串函数
+ * @param source String - 源字符串
+ * @param target String - 要查找的子字符串
+ * @param fromIndex Int - 起始位置 (可选)
+ * @returns Long - 子字符串首次出现的位置，不存在返回-1
+ * @description 查找子字符串首次出现的位置
+ * @example
+ * s pos = siof("hello world", "o")
+ * syso(pos)  // 输出: 4
+ */
+fn siof(source, target, fromIndex)
+
+/**
+ * @function slof
+ * @category 字符串函数
+ * @param source String - 源字符串
+ * @param target String - 要查找的子字符串
+ * @param fromIndex Int - 起始位置 (可选)
+ * @returns Long - 子字符串最后出现的位置，不存在返回-1
+ * @description 查找子字符串最后出现的位置
+ * @example
+ * s pos = slof("hello world", "o")
+ * syso(pos)  // 输出: 7
+ */
+fn slof(source, target, fromIndex)
+
+/**
+ * @function slower
+ * @category 字符串函数
+ * @param str String - 要转换的字符串
+ * @returns String - 小写字符串
+ * @description 转换为小写
+ * @example
+ * s result = slower("HELLO")
+ * syso(result)  // 输出: "hello"
+ */
+fn slower(str)
+
+/**
+ * @function supper
+ * @category 字符串函数
+ * @param str String - 要转换的字符串
+ * @returns String - 大写字符串
+ * @description 转换为大写
+ * @example
+ * s result = supper("hello")
+ * syso(result)  // 输出: "HELLO"
+ */
+fn supper(str)
+
+/**
+ * @function sj
+ * @category 字符串函数
+ * @param source String - 源字符串
+ * @param prefix String - 前缀
+ * @param suffix String - 后缀
+ * @returns String - 截取前缀和后缀之间的内容
+ * @description 截取前缀和后缀之间的内容
+ * @example
+ * s result = sj("<div>content</div>", "<div>", "</div>")
+ * syso(result)  // 输出: "content"
+ */
+fn sj(source, prefix, suffix)
+
+/**
+ * @function strim
+ * @category 字符串函数
+ * @param str String - 要处理的字符串
+ * @returns String - 去除首尾空白后的字符串
+ * @description 去除字符串首尾空白
+ * @example
+ * s result = strim("  hello  ")
+ * syso(result)  // 输出: "hello"
+ */
+fn strim(str)
+
+/**
+ * @function stobm
+ * @category 字符串函数
+ * @param str String - 要编码的字符串
+ * @param charset String - 字符编码 (可选，默认UTF-8)
+ * @param forUrl Boolean - 是否URL编码 (可选)
+ * @returns String - 编码后的字符串
+ * @description URL编码
+ * @example
+ * s result = stobm("你好", "UTF-8", true)
+ */
+fn stobm(str, charset, forUrl)
+
+/**
+ * @function sutf8to
+ * @category 字符串函数
+ * @param str String - 要解码的字符串
+ * @param charset String - 字符编码 (可选，默认UTF-8)
+ * @returns String - 解码后的字符串
+ * @description URL解码
+ * @example
+ * s result = sutf8to("%E4%BD%A0%E5%A5%BD", "UTF-8")
+ */
+fn sutf8to(str, charset)

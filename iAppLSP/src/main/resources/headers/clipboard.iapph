@@ -1,0 +1,22 @@
+/**
+ * @function sxb
+ * @category 剪贴板函数
+ * @param content String - 要设置的内容
+ * @returns Boolean - 设置成功返回true
+ * @description 设置系统剪贴板内容（写入剪贴板）
+ * @example
+ * s result = sxb("Hello Clipboard")
+ * syso(result)
+ */
+fn sxb(content)
+
+/**
+ * @function shb
+ * @category 剪贴板函数
+ * @returns String - 剪贴板内容
+ * @description 获取系统剪贴板内容（读取剪贴板）
+ * @example
+ * s content = shb()
+ * syso(content)
+ */
+fn shb()

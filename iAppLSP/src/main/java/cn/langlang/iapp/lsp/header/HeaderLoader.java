@@ -145,19 +145,33 @@ public class HeaderLoader {
             jarPath = jarPath + "/";
         }
         
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream(jarPath)) {
-            if (is == null) {
-                return;
-            }
+        try {
+            java.net.URL jarUrl = getClass().getProtectionDomain()
+                .getCodeSource().getLocation();
             
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.endsWith(".iapph")) {
-                    loadFromClasspath(jarPath + line);
+            if (jarUrl != null && "file".equals(jarUrl.getProtocol())) {
+                String path = jarUrl.getPath();
+                if (path.endsWith(".jar")) {
+                    try (java.util.jar.JarFile jarFile = new java.util.jar.JarFile(path)) {
+                        java.util.Enumeration<java.util.jar.JarEntry> entries = jarFile.entries();
+                        
+                        while (entries.hasMoreElements()) {
+                            java.util.jar.JarEntry entry = entries.nextElement();
+                            String name = entry.getName();
+                            
+                            if (name.startsWith(jarPath) && name.endsWith(".iapph")) {
+                                loadFromClasspath(name);
+                            }
+                        }
+                    }
+                } else {
+                    Path dirPath = Paths.get(path, jarPath);
+                    if (Files.exists(dirPath)) {
+                        loadDirectory(dirPath.toString());
+                    }
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error("Error reading jar directory: {}", directoryPath, e);
         }
     }

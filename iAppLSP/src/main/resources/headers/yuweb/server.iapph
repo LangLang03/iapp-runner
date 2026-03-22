@@ -1,0 +1,97 @@
+/**
+ * @function info
+ * @category Web服务器函数
+ * @yuweb
+ * @returns null
+ * @description 显示服务器信息页面
+ * @example
+ * info()
+ */
+fn info()
+
+/**
+ * @function cors
+ * @category Web服务器函数
+ * @yuweb
+ * @param config Map - CORS配置
+ * @returns Boolean - 配置成功返回true
+ * @description 配置CORS跨域
+ * @example
+ * cors(map(
+ *     "origins", "*",
+ *     "methods", "GET,POST,PUT,DELETE",
+ *     "headers", "Content-Type,Authorization"
+ * ))
+ */
+fn cors(config)
+
+/**
+ * @function async
+ * @category Web服务器函数
+ * @yuweb
+ * @param task Object - 异步任务
+ * @param timeout Long - 超时时间（毫秒）(可选)
+ * @returns Long - 任务ID
+ * @description 异步执行任务，返回任务ID
+ * @example
+ * s taskId = async({
+ *     // 异步执行的任务
+ *     syso("异步任务执行中")
+ * })
+ * syso(taskId)
+ */
+fn async(task, timeout)
+
+/**
+ * @function asyncwait
+ * @category Web服务器函数
+ * @yuweb
+ * @param taskId Long - 任务ID
+ * @param timeout Long - 超时时间（毫秒）(可选)
+ * @returns Object - 任务执行结果
+ * @description 等待异步任务完成并获取结果
+ * @example
+ * s result = asyncwait(taskId, 5000)
+ * syso(result)
+ */
+fn asyncwait(taskId, timeout)
+
+/**
+ * @function port
+ * @category Web服务器函数
+ * @yuweb
+ * @param port Int - 端口号
+ * @returns null
+ * @description 设置服务器端口
+ * @example
+ * port(8080)
+ */
+fn port(port)
+
+/**
+ * @function upc
+ * @category Web服务器函数
+ * @yuweb
+ * @param action String - 配置动作 ("maxSize", "allowedTypes"等)
+ * @param value Object - 配置值 (可选)
+ * @returns Boolean - 配置成功返回true
+ * @description 配置上传限制
+ * @example
+ * upc("maxSize", 10485760)  // 最大10MB
+ * upc("allowedTypes", "jpg,png,gif")
+ */
+fn upc(action, value)
+
+/**
+ * @function config
+ * @category Web服务器函数
+ * @yuweb
+ * @param key String - 配置键名
+ * @param value Object - 配置值
+ * @returns Boolean - 配置成功返回true
+ * @description 配置服务器参数
+ * @example
+ * config("staticDir", "/static")
+ * config("templateDir", "/templates")
+ */
+fn config(key, value)

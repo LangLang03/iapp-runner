@@ -1,0 +1,88 @@
+/**
+ * @function hs
+ * @category 网络函数
+ * @param url String - 请求URL
+ * @param postData String - POST数据 (可选)
+ * @param charset String - 字符编码 (可选)
+ * @param cookie String - Cookie (可选)
+ * @param autoCookie Boolean - 自动处理Cookie (可选)
+ * @returns String - 响应内容
+ * @description 发送HTTP请求（支持POST数据和Cookie）
+ * @example
+ * s response = hs("http://example.com/api")
+ * syso(response)
+ * 
+ * s postResponse = hs("http://example.com/api", "key=value", "UTF-8", "", true)
+ */
+fn hs(url, postData, charset, cookie, autoCookie)
+
+/**
+ * @function hd
+ * @category 网络函数
+ * @param url String - 请求URL
+ * @param method String - 请求方法 (可选，默认GET)
+ * @param charset String - 字符编码 (可选)
+ * @returns String - 响应内容
+ * @description 发送HTTP请求，默认GET方法
+ * @example
+ * s response = hd("http://example.com/api")
+ * syso(response)
+ * 
+ * s postResponse = hd("http://example.com/api", "POST", "UTF-8")
+ */
+fn hd(url, method, charset)
+
+/**
+ * @function hdfl
+ * @category 网络函数
+ * @param url String - 文件URL
+ * @param filePath String - 保存路径
+ * @returns Boolean - 下载成功返回true
+ * @description 下载文件到指定路径
+ * @example
+ * s result = hdfl("http://example.com/file.zip", "/sdcard/file.zip")
+ * syso(result)
+ */
+fn hdfl(url, filePath)
+
+/**
+ * @function huf
+ * @category 网络函数
+ * @param url String - 请求URL
+ * @param params Map/Object[] - 表单参数
+ * @param charset String - 字符编码 (可选)
+ * @param method String - 请求方法 (可选)
+ * @returns String - 响应内容
+ * @description 发送URL编码的表单请求
+ * @example
+ * s params = map("username", "test", "password", "123456")
+ * s response = huf("http://example.com/login", params)
+ * syso(response)
+ */
+fn huf(url, params, charset, method)
+
+/**
+ * @function hw
+ * @category 网络函数
+ * @param url String - 请求URL
+ * @param charset String - 字符编码 (可选)
+ * @returns Long - HTTP响应状态码
+ * @description 获取HTTP响应状态码
+ * @example
+ * s code = hw("http://example.com")
+ * syso(code)  // 输出: 200
+ */
+fn hw(url, charset)
+
+/**
+ * @function hws
+ * @category 网络函数
+ * @param url String - 请求URL
+ * @param charset String - 字符编码 (可选)
+ * @returns String - 带换行的响应内容
+ * @description 发送HTTP GET请求，返回带换行的响应内容
+ * @example
+ * s response = hws("http://example.com")
+ * syso(response)
+ */
+fn hws(url, charset)

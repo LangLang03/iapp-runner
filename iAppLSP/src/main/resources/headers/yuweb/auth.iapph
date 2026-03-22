@@ -1,0 +1,92 @@
+/**
+ * @function hashpassword
+ * @category Web认证函数
+ * @yuweb
+ * @param password String - 原始密码
+ * @returns String - BCrypt哈希后的密码
+ * @description 使用BCrypt哈希密码
+ * @example
+ * s hashedPassword = hashpassword("123456")
+ * syso(hashedPassword)
+ */
+fn hashpassword(password)
+
+/**
+ * @function verifypassword
+ * @category Web认证函数
+ * @yuweb
+ * @param password String - 原始密码
+ * @param hash String - BCrypt哈希值
+ * @returns Boolean - 密码匹配返回true
+ * @description 验证密码与哈希是否匹配
+ * @example
+ * f(verifypassword("123456", hashedPassword)) {
+ *     syso("密码正确")
+ * }
+ */
+fn verifypassword(password, hash)
+
+/**
+ * @function login
+ * @category Web认证函数
+ * @yuweb
+ * @param table String - 用户表名
+ * @param username String - 用户名
+ * @param password String - 密码
+ * @returns Map - 登录结果，包含token和用户信息
+ * @description 用户登录，返回token和用户信息
+ * @example
+ * s result = login("users", "admin", "123456")
+ * f(result != null) {
+ *     syso(result.token)
+ *     setsession("user_id", result.user.id)
+ * }
+ */
+fn login(table, username, password)
+
+/**
+ * @function register
+ * @category Web认证函数
+ * @yuweb
+ * @param table String - 用户表名
+ * @param username String - 用户名
+ * @param password String - 密码
+ * @param extra Map - 额外字段 (可选)
+ * @returns Map - 注册结果，包含用户ID和信息
+ * @description 用户注册
+ * @example
+ * s result = register("users", "newuser", "123456", map("email", "user@example.com"))
+ * f(result != null) {
+ *     syso(result.userId)
+ * }
+ */
+fn register(table, username, password, extra)
+
+/**
+ * @function verify
+ * @category Web认证函数
+ * @yuweb
+ * @param token String - 登录令牌
+ * @returns Map - 验证结果，包含用户信息
+ * @description 验证登录令牌有效性
+ * @example
+ * s token = getcookie("token")
+ * s result = verify(token)
+ * f(result != null) {
+ *     syso("已登录: " + result.username)
+ * }
+ */
+fn verify(token)
+
+/**
+ * @function logout
+ * @category Web认证函数
+ * @yuweb
+ * @param token String - 登录令牌
+ * @returns Boolean - 注销成功返回true
+ * @description 注销登录令牌
+ * @example
+ * s token = getcookie("token")
+ * logout(token)
+ */
+fn logout(token)

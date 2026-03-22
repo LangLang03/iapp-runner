@@ -1,0 +1,53 @@
+/**
+ * @function session
+ * @category Web会话函数
+ * @yuweb
+ * @param key String - Session键名
+ * @returns Object - Session值
+ * @description 获取Session值
+ * @example
+ * s userId = session("user_id")
+ * syso(userId)
+ */
+fn session(key)
+
+/**
+ * @function setsession
+ * @category Web会话函数
+ * @yuweb
+ * @param key String - Session键名
+ * @param value Object - Session值
+ * @param ttl Long - 过期时间（秒）(可选)
+ * @returns Boolean - 设置成功返回true
+ * @description 设置Session值
+ * @example
+ * setsession("user_id", 123)
+ * setsession("token", "abc123", 3600)
+ */
+fn setsession(key, value, ttl)
+
+/**
+ * @function delsession
+ * @category Web会话函数
+ * @yuweb
+ * @param key String - Session键名
+ * @returns Boolean - 删除成功返回true
+ * @description 删除Session键
+ * @example
+ * delsession("user_id")
+ */
+fn delsession(key)
+
+/**
+ * @function hassession
+ * @category Web会话函数
+ * @yuweb
+ * @param key String - Session键名
+ * @returns Boolean - 存在返回true
+ * @description 检查Session键是否存在
+ * @example
+ * f(hassession("user_id")) {
+ *     syso("已登录")
+ * }
+ */
+fn hassession(key)

@@ -2,6 +2,8 @@ package cn.langlang.iapp.lsp.core.provider;
 
 import cn.langlang.iapp.lsp.header.HeaderFile;
 import cn.langlang.iapp.lsp.header.HeaderLoader;
+import org.eclipse.lsp4j.CompletionItem;
+import org.eclipse.lsp4j.CompletionItemKind;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -68,10 +70,6 @@ public class SnippetProvider {
         addBuiltInSnippet("syso", "syso",
             "syso(${1:value})",
             "控制台输出");
-        
-        addBuiltInSnippet("tw", "tw",
-            "tw(${1:message})",
-            "提示消息");
         
     }
     
@@ -140,7 +138,7 @@ public class SnippetProvider {
     public CompletionItem toCompletionItem(HeaderFile.SnippetInfo snippet) {
         CompletionItem item = new CompletionItem();
         item.setLabel(snippet.getLabel());
-        item.setKind(CompletionItemKind.SNIPPET);
+        item.setKind(CompletionItemKind.Snippet);
         item.setDetail(snippet.getDescription());
         item.setDocumentation(snippet.getDocumentation());
         item.setInsertText(snippet.getBody());

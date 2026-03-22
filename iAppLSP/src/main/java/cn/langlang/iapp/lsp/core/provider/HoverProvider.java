@@ -4,6 +4,7 @@ import cn.langlang.iapp.lsp.core.LSContext;
 import cn.langlang.iapp.lsp.core.model.FunctionInfo;
 import cn.langlang.iapp.lsp.core.model.VariableInfo;
 import cn.langlang.iapp.lsp.core.util.ScopeUtils;
+import cn.langlang.iapp.lsp.header.HeaderFunctionInfo;
 import cn.langlang.iapp.runtime.IFunction;
 
 public class HoverProvider {
@@ -28,6 +29,11 @@ public class HoverProvider {
             return null;
         }
         
+        HeaderFunctionInfo headerInfo = context.getHeaderFunctionInfo(word);
+        if (headerInfo != null) {
+            return getHeaderFunctionHoverText(headerInfo);
+        }
+        
         IFunction function = context.getFunction(word);
         if (function != null) {
             return getFunctionHoverText(function);
@@ -40,10 +46,66 @@ public class HoverProvider {
         
         return null;
     }
+    
+    public String getHeaderFunctionHoverText(HeaderFunctionInfo headerInfo) {
+        if (headerInfo == null) {
+            return null;
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        
+        sb.append("```iapp\n");
+        sb.append(headerInfo.getSignature());
+        sb.append("\n```\n\n");
+        
+        sb.append("**").append(headerInfo.getName()).append("**\n\n");
+        
+        if (headerInfo.getCategory() != null && !headerInfo.getCategory().isEmpty()) {
+            sb.append("类别: ").append(headerInfo.getCategory()).append("\n\n");
+        }
+        
+        if (headerInfo.getDescription() != null && !headerInfo.getDescription().isEmpty()) {
+            sb.append(headerInfo.getDescription()).append("\n\n");
+        }
+        
+        if (headerInfo.getParams() != null && !headerInfo.getParams().isEmpty()) {
+            sb.append("**参数:**\n");
+            for (HeaderFunctionInfo.ParamInfo param : headerInfo.getParams()) {
+                sb.append("- `").append(param.getName()).append("`");
+                if (param.getType() != null && !param.getType().isEmpty()) {
+                    sb.append(" (").append(param.getType()).append(")");
+                }
+                if (param.getDescription() != null && !param.getDescription().isEmpty()) {
+                    sb.append(" - ").append(param.getDescription());
+                }
+                sb.append("\n");
+            }
+            sb.append("\n");
+        }
+        
+        if (headerInfo.getReturnType() != null && !headerInfo.getReturnType().isEmpty()) {
+            sb.append("**返回:** ").append(headerInfo.getReturnType()).append("\n\n");
+        }
+        
+        if (headerInfo.getExample() != null && !headerInfo.getExample().isEmpty()) {
+            sb.append("**示例:**\n```\n").append(headerInfo.getExample()).append("\n```\n");
+        }
+        
+        if (headerInfo.isYuWeb()) {
+            sb.append("\n*需要 YuWeb 模块支持*");
+        }
+        
+        return sb.toString();
+    }
 
     public String getFunctionHoverText(IFunction function) {
         if (function == null) {
             return null;
+        }
+        
+        HeaderFunctionInfo headerInfo = context.getHeaderFunctionInfo(function.getName());
+        if (headerInfo != null) {
+            return getHeaderFunctionHoverText(headerInfo);
         }
         
         StringBuilder sb = new StringBuilder();

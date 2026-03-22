@@ -1,0 +1,141 @@
+/**
+ * @function map
+ * @category Web工具函数
+ * @yuweb
+ * @param key1 String - 第一个键
+ * @param value1 Object - 第一个值
+ * @param ... - 更多键值对
+ * @returns Map - 创建的Map对象
+ * @description 创建Map对象
+ * @example
+ * s data = map("name", "张三", "age", 25, "city", "北京")
+ * syso(data)
+ */
+fn map(key1, value1)
+
+/**
+ * @function mget
+ * @category Web工具函数
+ * @yuweb
+ * @param map Map - Map对象
+ * @param key String - 键名
+ * @returns Object - Map中的值
+ * @description 获取Map中的值
+ * @example
+ * s name = mget(data, "name")
+ * syso(name)
+ */
+fn mget(map, key)
+
+/**
+ * @function mset
+ * @category Web工具函数
+ * @yuweb
+ * @param map Map - Map对象
+ * @param key String - 键名
+ * @param value Object - 值
+ * @returns null
+ * @description 设置Map中的值
+ * @example
+ * mset(data, "age", 26)
+ */
+fn mset(map, key, value)
+
+/**
+ * @function mkeys
+ * @category Web工具函数
+ * @yuweb
+ * @param map Map - Map对象
+ * @returns List - Map的所有键
+ * @description 获取Map的所有键
+ * @example
+ * s keys = mkeys(data)
+ * syso(keys)
+ */
+fn mkeys(map)
+
+/**
+ * @function mhas
+ * @category Web工具函数
+ * @yuweb
+ * @param map Map - Map对象
+ * @param key String - 键名
+ * @returns Boolean - 包含键返回true
+ * @description 检查Map是否包含键
+ * @example
+ * f(mhas(data, "name")) {
+ *     syso("包含name键")
+ * }
+ */
+fn mhas(map, key)
+
+/**
+ * @function arr
+ * @category Web工具函数
+ * @yuweb
+ * @param elem1 Object - 第一个元素
+ * @param ... - 更多元素
+ * @returns List - 创建的数组/列表
+ * @description 创建数组/列表
+ * @example
+ * s list = arr("a", "b", "c", 1, 2, 3)
+ * syso(gslistl(list))
+ */
+fn arr(elem1)
+
+/**
+ * @function arrpush
+ * @category Web工具函数
+ * @yuweb
+ * @param arr List - 数组/列表
+ * @param value Object - 要添加的元素
+ * @returns List - 添加后的列表
+ * @description 向数组添加元素
+ * @example
+ * s list = arr(1, 2, 3)
+ * arrpush(list, 4)
+ * syso(gslistl(list))  // 输出: 4
+ */
+fn arrpush(arr, value)
+
+/**
+ * @function length
+ * @category Web工具函数
+ * @yuweb
+ * @param obj Object - 对象（字符串/数组/Map）
+ * @returns Int - 长度
+ * @description 获取字符串/数组/Map长度
+ * @example
+ * s str = "Hello"
+ * syso(length(str))  // 输出: 5
+ * 
+ * s list = arr(1, 2, 3)
+ * syso(length(list))  // 输出: 3
+ */
+fn length(obj)
+
+/**
+ * @function jsonencode
+ * @category Web工具函数
+ * @yuweb
+ * @param obj Object - 要编码的对象
+ * @returns String - JSON字符串
+ * @description 对象转JSON字符串
+ * @example
+ * s json = jsonencode(map("name", "张三", "age", 25))
+ * syso(json)  // 输出: {"name":"张三","age":25}
+ */
+fn jsonencode(obj)
+
+/**
+ * @function jsondecode
+ * @category Web工具函数
+ * @yuweb
+ * @param json String - JSON字符串
+ * @returns Map - 解码后的对象
+ * @description JSON字符串转对象
+ * @example
+ * s obj = jsondecode("{\"name\":\"张三\",\"age\":25}")
+ * syso(mget(obj, "name"))
+ */
+fn jsondecode(json)

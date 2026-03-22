@@ -1,0 +1,162 @@
+/**
+ * @function db
+ * @category Web数据库函数
+ * @yuweb
+ * @param type String - 数据库类型 ("sqlite" 或 "mysql")
+ * @param path String - 数据库路径或连接字符串
+ * @returns Boolean - 连接成功返回true
+ * @description 连接数据库
+ * @example
+ * // SQLite
+ * db("sqlite", "/data/app.db")
+ * 
+ * // MySQL
+ * db("mysql", "jdbc:mysql://localhost:3306/mydb?user=root&password=123456")
+ */
+fn db(type, path)
+
+/**
+ * @function dbone
+ * @category Web数据库函数
+ * @yuweb
+ * @param table String - 表名
+ * @param condition Object - 查询条件
+ * @returns Map - 单条记录
+ * @description 查询单条记录
+ * @example
+ * s user = dbone("users", map("id", 1))
+ * syso(user)
+ */
+fn dbone(table, condition)
+
+/**
+ * @function dball
+ * @category Web数据库函数
+ * @yuweb
+ * @param table String - 表名
+ * @param condition Object - 查询条件
+ * @returns List - 所有匹配记录
+ * @description 查询所有匹配记录
+ * @example
+ * s users = dball("users", map("status", 1))
+ * syso(gslistl(users))
+ */
+fn dball(table, condition)
+
+/**
+ * @function dbinsert
+ * @category Web数据库函数
+ * @yuweb
+ * @param table String - 表名
+ * @param data Map - 插入数据
+ * @returns Long - 插入记录的ID
+ * @description 插入记录
+ * @example
+ * s id = dbinsert("users", map("name", "张三", "age", 25))
+ * syso(id)
+ */
+fn dbinsert(table, data)
+
+/**
+ * @function dbupdate
+ * @category Web数据库函数
+ * @yuweb
+ * @param table String - 表名
+ * @param data Map - 更新数据
+ * @param condition Object - 更新条件
+ * @returns Int - 影响行数
+ * @description 更新记录
+ * @example
+ * s rows = dbupdate("users", map("age", 26), map("id", 1))
+ * syso(rows)
+ */
+fn dbupdate(table, data, condition)
+
+/**
+ * @function dbdelete
+ * @category Web数据库函数
+ * @yuweb
+ * @param table String - 表名
+ * @param condition Object - 删除条件
+ * @returns Int - 影响行数
+ * @description 删除记录
+ * @example
+ * s rows = dbdelete("users", map("id", 1))
+ * syso(rows)
+ */
+fn dbdelete(table, condition)
+
+/**
+ * @function dbpage
+ * @category Web数据库函数
+ * @yuweb
+ * @param table String - 表名
+ * @param condition Object - 查询条件
+ * @param page Int - 页码（从1开始）
+ * @param size Int - 每页数量
+ * @returns Map - 分页结果，包含list、total、page、size等
+ * @description 分页查询
+ * @example
+ * s result = dbpage("users", map("status", 1), 1, 10)
+ * syso(result)
+ */
+fn dbpage(table, condition, page, size)
+
+/**
+ * @function dbcount
+ * @category Web数据库函数
+ * @yuweb
+ * @param table String - 表名
+ * @param condition Object - 查询条件
+ * @returns Long - 记录数量
+ * @description 统计记录数
+ * @example
+ * s count = dbcount("users", map("status", 1))
+ * syso(count)
+ */
+fn dbcount(table, condition)
+
+/**
+ * @function dbexec
+ * @category Web数据库函数
+ * @yuweb
+ * @param sql String - SQL语句
+ * @param params Object... - SQL参数 (可选)
+ * @returns Boolean - 执行成功返回true
+ * @description 执行SQL语句
+ * @example
+ * dbexec("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT)")
+ * dbexec("INSERT INTO users (name) VALUES (?)", "张三")
+ */
+fn dbexec(sql, params)
+
+/**
+ * @function dbquery
+ * @category Web数据库函数
+ * @yuweb
+ * @param sql String - SQL查询语句
+ * @param params Object... - SQL参数 (可选)
+ * @returns List - 查询结果列表
+ * @description 执行SQL查询
+ * @example
+ * s users = dbquery("SELECT * FROM users WHERE status = ?", 1)
+ * syso(gslistl(users))
+ */
+fn dbquery(sql, params)
+
+/**
+ * @function dbsearch
+ * @category Web数据库函数
+ * @yuweb
+ * @param table String - 表名
+ * @param fields Object - 搜索字段配置
+ * @param keyword String - 搜索关键词
+ * @param page Int - 页码
+ * @param size Int - 每页数量
+ * @returns Map - 搜索结果
+ * @description 搜索查询
+ * @example
+ * s result = dbsearch("articles", map("title", "like", "content", "like"), "关键词", 1, 10)
+ * syso(result)
+ */
+fn dbsearch(table, fields, keyword, page, size)

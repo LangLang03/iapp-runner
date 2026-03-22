@@ -1,0 +1,106 @@
+/**
+ * @function md5
+ * @category Web加密函数
+ * @yuweb
+ * @param data String - 要加密的数据
+ * @returns String - MD5哈希值
+ * @description 计算MD5哈希值
+ * @example
+ * s hash = md5("password123")
+ * syso(hash)
+ */
+fn md5(data)
+
+/**
+ * @function sha256
+ * @category Web加密函数
+ * @yuweb
+ * @param data String - 要加密的数据
+ * @returns String - SHA-256哈希值
+ * @description 计算SHA-256哈希值
+ * @example
+ * s hash = sha256("password123")
+ * syso(hash)
+ */
+fn sha256(data)
+
+/**
+ * @function sha1
+ * @category Web加密函数
+ * @yuweb
+ * @param data String - 要加密的数据
+ * @returns String - SHA-1哈希值
+ * @description 计算SHA-1哈希值（已弃用，建议使用sha256）
+ * @example
+ * s hash = sha1("password123")
+ * syso(hash)
+ */
+fn sha1(data)
+
+/**
+ * @function base64encode
+ * @category Web加密函数
+ * @yuweb
+ * @param data String - 要编码的数据
+ * @returns String - Base64编码字符串
+ * @description Base64编码
+ * @example
+ * s encoded = base64encode("Hello World")
+ * syso(encoded)
+ */
+fn base64encode(data)
+
+/**
+ * @function base64decode
+ * @category Web加密函数
+ * @yuweb
+ * @param data String - Base64编码字符串
+ * @returns String - 解码后的字符串
+ * @description Base64解码
+ * @example
+ * s decoded = base64decode("SGVsbG8gV29ybGQ=")
+ * syso(decoded)
+ */
+fn base64decode(data)
+
+/**
+ * @function aesencrypt
+ * @category Web加密函数
+ * @yuweb
+ * @param data String - 要加密的数据
+ * @param key String - 加密密钥
+ * @returns String - AES加密后的字符串
+ * @description AES加密（CBC模式）
+ * @example
+ * s encrypted = aesencrypt("敏感数据", "secret_key_12345")
+ * syso(encrypted)
+ */
+fn aesencrypt(data, key)
+
+/**
+ * @function aesdecrypt
+ * @category Web加密函数
+ * @yuweb
+ * @param data String - AES加密字符串
+ * @param key String - 解密密钥
+ * @returns String - 解密后的字符串
+ * @description AES解密（CBC模式）
+ * @example
+ * s decrypted = aesdecrypt(encrypted, "secret_key_12345")
+ * syso(decrypted)
+ */
+fn aesdecrypt(data, key)
+
+/**
+ * @function hmacsha256
+ * @category Web加密函数
+ * @yuweb
+ * @param data String - 要签名的数据
+ * @param key String - 签名密钥
+ * @returns String - HMAC-SHA256签名
+ * @description 计算HMAC-SHA256签名
+ * @example
+ * s signature = hmacsha256("data", "secret_key")
+ * syso(signature)
+ */
+fn hmacsha256(data, key)

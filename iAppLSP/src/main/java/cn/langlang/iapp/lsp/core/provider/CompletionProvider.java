@@ -209,13 +209,11 @@ public class CompletionProvider {
             sb.append(String.join(", ", paramNames));
         } else if (func.getParamTypes() != null && !func.getParamTypes().isEmpty()) {
             List<String> paramLabels = new ArrayList<>();
-            int inputIndex = 0;
             for (cn.langlang.iapp.runtime.ParamType type : func.getParamTypes()) {
                 if (type == cn.langlang.iapp.runtime.ParamType.OUTPUT) {
                     paramLabels.add("out");
                 } else {
                     paramLabels.add(type.name().toLowerCase());
-                    inputIndex++;
                 }
             }
             sb.append(String.join(", ", paramLabels));

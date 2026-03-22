@@ -1,0 +1,34 @@
+/**
+ * @function mailconfig
+ * @category Web邮件函数
+ * @yuweb
+ * @param host String - SMTP服务器地址
+ * @param port Int - SMTP端口
+ * @param username String - 用户名
+ * @param password String - 密码
+ * @param ssl Boolean - 是否启用SSL (可选)
+ * @returns Boolean - 配置成功返回true
+ * @description 配置邮件服务器
+ * @example
+ * mailconfig("smtp.example.com", 465, "user@example.com", "password", true)
+ */
+fn mailconfig(host, port, username, password, ssl)
+
+/**
+ * @function sendmail
+ * @category Web邮件函数
+ * @yuweb
+ * @param to String - 收件人邮箱
+ * @param subject String - 邮件主题
+ * @param body String - 邮件内容
+ * @param html Boolean - 是否HTML格式 (可选)
+ * @returns Boolean - 发送成功返回true
+ * @description 发送邮件
+ * @example
+ * // 发送纯文本邮件
+ * sendmail("user@example.com", "测试邮件", "这是一封测试邮件")
+ * 
+ * // 发送HTML邮件
+ * sendmail("user@example.com", "HTML邮件", "<h1>Hello</h1>", true)
+ */
+fn sendmail(to, subject, body, html)
