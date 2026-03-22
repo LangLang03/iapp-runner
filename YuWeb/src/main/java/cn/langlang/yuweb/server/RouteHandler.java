@@ -124,7 +124,7 @@ public class RouteHandler {
         }
     }
     
-    public void handle(String scriptPath, Context ctx) throws Exception {
+    public void handle(String scriptPath, Context ctx, Map<String, String> routeParams) throws Exception {
         long startTime = System.currentTimeMillis();
         perfMonitor.incrementCounter(METRIC_REQUEST_COUNT);
         
@@ -171,22 +171,22 @@ public class RouteHandler {
                 return;
             }
             
-            handlePreloadedScript(scriptPath, ctx, startTime);
+            handlePreloadedScript(scriptPath, ctx, routeParams, startTime);
             return;
         }
         
         if (config.isPreloadScripts() && scriptPreloader != null) {
             ScriptPreloader.PreloadedScript preloaded = scriptPreloader.getScript(scriptPath);
             if (preloaded != null) {
-                handlePreloadedScript(scriptPath, ctx, startTime);
+                handlePreloadedScript(scriptPath, ctx, routeParams, startTime);
                 return;
             }
         }
         
-        handleDynamicScript(scriptPath, absolutePath, ctx, startTime);
+        handleDynamicScript(scriptPath, absolutePath, ctx, routeParams, startTime);
     }
     
-    private void handlePreloadedScript(String scriptPath, Context ctx, long startTime) {
+    private void handlePreloadedScript(String scriptPath, Context ctx, Map<String, String> routeParams, long startTime) {
         ScriptPreloader.PreloadedScript preloaded = scriptPreloader.getScript(scriptPath);
         if (preloaded == null) {
             errorPageGenerator.sendNotFound(ctx, scriptPath);
@@ -194,6 +194,9 @@ public class RouteHandler {
         }
         
         RequestContext requestCtx = new RequestContext(ctx, server);
+        if (routeParams != null) {
+            requestCtx.setRouteParams(routeParams);
+        }
         server.setCurrentContext(requestCtx);
         
         RuntimeContext runtimeContext = null;
@@ -233,7 +236,7 @@ public class RouteHandler {
         }
     }
     
-    private void handleDynamicScript(String scriptPath, String absolutePath, Context ctx, long startTime) {
+    private void handleDynamicScript(String scriptPath, String absolutePath, Context ctx, Map<String, String> routeParams, long startTime) {
         String source = readFile(absolutePath);
         if (source == null) {
             errorPageGenerator.sendNotFound(ctx, scriptPath);
@@ -241,6 +244,9 @@ public class RouteHandler {
         }
         
         RequestContext requestCtx = new RequestContext(ctx, server);
+        if (routeParams != null) {
+            requestCtx.setRouteParams(routeParams);
+        }
         server.setCurrentContext(requestCtx);
         
         RuntimeContext runtimeContext = null;

@@ -1,0 +1,42 @@
+package cn.langlang.yuweb.functions.server.request;
+
+import cn.langlang.iapp.runtime.AbstractFunction;
+import cn.langlang.iapp.runtime.FunctionException;
+import cn.langlang.iapp.runtime.ParamType;
+import cn.langlang.iapp.runtime.RuntimeContext;
+import cn.langlang.yuweb.web.RequestContext;
+
+import java.util.List;
+
+public class ParamsFunction extends AbstractFunction {
+    
+    @Override
+    public String getName() {
+        return "params";
+    }
+    
+    @Override
+    public int getMinParameters() {
+        return 0;
+    }
+    
+    @Override
+    public int getMaxParameters() {
+        return 0;
+    }
+    
+    @Override
+    public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+        RequestContext requestContext = context.getRequestContext();
+        if (requestContext == null) {
+            return null;
+        }
+        
+        return requestContext.params();
+    }
+    
+    @Override
+    public List<ParamType> getParamTypes() {
+        return null;
+    }
+}

@@ -26,6 +26,8 @@ public class RequestContext {
     private YuWebServer server;
     private Map<String, Object> jsonData;
     private boolean jsonParsed = false;
+    private String sessionId;
+    private Map<String, String> routeParams;
     private static final Gson gson = new GsonBuilder()
         .registerTypeAdapter(Long.class, new JsonSerializer<Long>() {
             @Override
@@ -173,7 +175,37 @@ public class RequestContext {
     }
     
     public String param(String name) {
+        // First check route params
+        if (routeParams != null && routeParams.containsKey(name)) {
+            return routeParams.get(name);
+        }
         return ctx.pathParam(name);
+    }
+    
+    public Map<String, String> params() {
+        Map<String, String> allParams = new HashMap<>();
+        // Add Javalin path params
+        Map<String, String> pathParams = ctx.pathParamMap();
+        if (pathParams != null) {
+            allParams.putAll(pathParams);
+        }
+        // Add custom route params
+        if (routeParams != null) {
+            allParams.putAll(routeParams);
+        }
+        return allParams;
+    }
+    
+    public void setRouteParams(Map<String, String> params) {
+        this.routeParams = params;
+    }
+    
+    public String getSessionId() {
+        return sessionId;
+    }
+    
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
     }
     
     public String path() {

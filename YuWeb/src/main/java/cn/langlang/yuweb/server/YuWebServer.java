@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.CompletableFuture;
@@ -226,13 +227,14 @@ public class YuWebServer {
     private void handleRequest(Context ctx) {
         String path = ctx.path();
         
-        String scriptPath = findScriptPath(path);
+        RouteMatch routeMatch = findScriptPath(path);
         
-        if (scriptPath == null) {
+        if (routeMatch == null) {
             errorPageGenerator.sendNotFound(ctx, path);
             return;
         }
         
+        String scriptPath = routeMatch.getScriptPath();
         File scriptFile = new File(projectPath + "/webroot" + scriptPath);
         if (!scriptFile.exists()) {
             errorPageGenerator.sendNotFound(ctx, path);
@@ -241,16 +243,16 @@ public class YuWebServer {
         
         try {
             RouteHandler handler = new RouteHandler(this);
-            handler.handle(scriptPath, ctx);
+            handler.handle(scriptPath, ctx, routeMatch.getParams());
         } catch (Exception e) {
             logger.error("Error handling request: {}", e.getMessage(), e);
             errorPageGenerator.sendServerError(ctx, "Request handling error", e);
         }
     }
     
-    private String findScriptPath(String path) {
+    private RouteMatch findScriptPath(String path) {
         if (path.equals("/")) {
-            return "/index.iapp";
+            return new RouteMatch("/index.iapp");
         }
         
         String normalizedPath = normalizePath(path);
@@ -266,27 +268,116 @@ public class YuWebServer {
             return null;
         }
         
+        // Direct file match
         if (directFile.exists() && directFile.isFile()) {
-            return normalizedPath;
+            return new RouteMatch(normalizedPath);
         }
         
-        if (normalizedPath.endsWith(".iapp")) {
-            return normalizedPath;
+        // Try .iapp extension
+        if (!normalizedPath.endsWith(".iapp")) {
+            String iappPath = normalizedPath + ".iapp";
+            File iappFile = new File(webrootDir, iappPath);
+            if (iappFile.exists() && isWithinWebroot(iappFile, webrootDir)) {
+                return new RouteMatch(iappPath);
+            }
         }
         
-        String iappPath = normalizedPath + ".iapp";
-        File iappFile = new File(webrootDir, iappPath);
-        if (iappFile.exists() && isWithinWebroot(iappFile, webrootDir)) {
-            return iappPath;
-        }
-        
+        // Try index.iapp in directory
         String indexPath = normalizedPath + "/index.iapp";
         File indexFile = new File(webrootDir, indexPath);
         if (indexFile.exists() && isWithinWebroot(indexFile, webrootDir)) {
-            return indexPath;
+            return new RouteMatch(indexPath);
+        }
+        
+        // Try dynamic route matching (e.g., /user/:id -> /user/[id].iapp or /user/_/id.iapp)
+        RouteMatch dynamicMatch = findDynamicRoute(normalizedPath, webrootDir);
+        if (dynamicMatch != null) {
+            return dynamicMatch;
         }
         
         return null;
+    }
+    
+    private RouteMatch findDynamicRoute(String path, File webrootDir) {
+        String[] segments = path.split("/");
+        Map<String, String> params = new HashMap<>();
+        
+        // Try to find a matching dynamic route
+        // Pattern: /user/123 -> /user/:id.iapp or /user/[id].iapp
+        StringBuilder currentPath = new StringBuilder();
+        
+        for (int i = 0; i < segments.length; i++) {
+            String segment = segments[i];
+            if (segment.isEmpty()) continue;
+            
+            currentPath.append("/").append(segment);
+            
+            // Check if this segment could be a parameter
+            String remainingPath = buildRemainingPath(segments, i + 1);
+            
+            // Try :param pattern
+            RouteMatch match = tryParamPattern(currentPath.toString(), remainingPath, webrootDir, params);
+            if (match != null) {
+                return match;
+            }
+        }
+        
+        // Try pattern where last segment is a parameter
+        // /user/123 -> /user/:id.iapp
+        if (segments.length >= 2) {
+            String lastSegment = segments[segments.length - 1];
+            String parentPath = buildParentPath(segments);
+            
+            // Check for :param.iapp files in parent directory
+            File parentDir = new File(webrootDir, parentPath);
+            if (parentDir.exists() && parentDir.isDirectory()) {
+                File[] files = parentDir.listFiles((dir, name) -> name.startsWith(":") && name.endsWith(".iapp"));
+                if (files != null) {
+                    for (File file : files) {
+                        String paramName = file.getName().substring(1, file.getName().length() - 5);
+                        params.put(paramName, lastSegment);
+                        return new RouteMatch(parentPath + "/" + file.getName(), params);
+                    }
+                }
+                
+                // Check for [param].iapp pattern
+                files = parentDir.listFiles((dir, name) -> name.startsWith("[") && name.endsWith("].iapp"));
+                if (files != null) {
+                    for (File file : files) {
+                        String paramName = file.getName().substring(1, file.getName().length() - 6);
+                        params.put(paramName, lastSegment);
+                        return new RouteMatch(parentPath + "/" + file.getName(), params);
+                    }
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    private RouteMatch tryParamPattern(String currentPath, String remainingPath, File webrootDir, Map<String, String> params) {
+        // Not used in current implementation
+        return null;
+    }
+    
+    private String buildRemainingPath(String[] segments, int startIndex) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = startIndex; i < segments.length; i++) {
+            if (!segments[i].isEmpty()) {
+                sb.append("/").append(segments[i]);
+            }
+        }
+        return sb.toString();
+    }
+    
+    private String buildParentPath(String[] segments) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < segments.length - 1; i++) {
+            if (!segments[i].isEmpty()) {
+                sb.append("/").append(segments[i]);
+            }
+        }
+        return sb.toString();
     }
     
     private String normalizePath(String path) {
