@@ -13,6 +13,7 @@ public class LaunchServer {
         for (String arg : args) {
             if ("--yuweb".equals(arg) || "-y".equals(arg)) {
                 loadYuWeb = true;
+                break;
             }
         }
         

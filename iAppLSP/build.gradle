@@ -12,7 +12,7 @@ java {
     }
 }
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
@@ -41,6 +41,10 @@ jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     exclude 'module-info.class'
     exclude 'META-INF/versions/**/module-info.class'
+    exclude 'META-INF/INDEX.LIST'
+    exclude 'META-INF/*.SF'
+    exclude 'META-INF/*.DSA'
+    exclude 'META-INF/*.RSA'
 }
 application {
     mainClass = 'cn.langlang.iapp.lsp.server.LaunchServer'
