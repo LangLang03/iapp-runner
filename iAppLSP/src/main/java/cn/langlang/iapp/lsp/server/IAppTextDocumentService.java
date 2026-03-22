@@ -105,16 +105,20 @@ public class IAppTextDocumentService implements TextDocumentService {
             // 在变量声明后，可能需要赋值表达式
             if (hasPrefix) {
                 items.addAll(getVariableCompletionItems(uri, prefix, true));
+                items.addAll(getSnippetCompletionItems(prefix));
+                items.addAll(getKeywordCompletionItems(prefix));
+                items.addAll(getFunctionCompletionItems(prefix, false));
             }
         } else if (isInFunctionCall || isInExpression) {
             // 在函数参数或表达式中，优先变量补全
             if (hasPrefix) {
                 items.addAll(getVariableCompletionItems(uri, prefix, true));
+                items.addAll(getSnippetCompletionItems(prefix));
+                items.addAll(getKeywordCompletionItems(prefix));
                 items.addAll(getFunctionCompletionItems(prefix, false));
             }
         } else {
             // 默认情况：代码片段优先，然后关键字，然后函数，最后变量
-            // 只有有前缀时才提供补全
             if (hasPrefix) {
                 items.addAll(getSnippetCompletionItems(prefix));
                 items.addAll(getKeywordCompletionItems(prefix));
