@@ -16,6 +16,10 @@
           <h4>资源</h4>
           <router-link to="/examples">示例代码</router-link>
         </div>
+        <div class="footer-section">
+          <h4>社区</h4>
+          <a href="https://qm.qq.com/q/xxx" target="_blank" rel="noopener">QQ交流群：1067354882</a>
+        </div>
       </div>
     </div>
     <div class="footer-bottom">
@@ -97,6 +101,7 @@
   
   .footer-links {
     gap: 2rem;
+    flex-wrap: wrap;
   }
 }
 </style>

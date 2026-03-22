@@ -7,6 +7,30 @@
       </div>
     </section>
 
+    <section class="section bg-secondary">
+      <div class="container">
+        <h2 class="section-title">获取 YuWeb</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <h3>下载 YuWeb</h3>
+              <p>如果需要收费，请登录后免费不限速下载</p>
+              <a href="https://www.123865.com/s/gbWqjv-GmYa3" class="btn btn-primary">立即下载</a>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <h3>加入交流群</h3>
+              <p>QQ群：1067354882，获取帮助与交流</p>
+              <a href="https://qm.qq.com/q/xxx" target="_blank" class="btn btn-outline">加入群聊</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="section">
       <div class="container">
         <h2 class="section-title">项目结构</h2>
