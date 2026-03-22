@@ -15,6 +15,7 @@ import java.util.List;
 public class AesDecryptFunction extends AbstractFunction {
     private static final String ALGORITHM = "AES/CBC/PKCS5Padding";
     private static final String AES = "AES";
+    private static final int IV_LENGTH = 16;
     
     @Override
     public String getName() {
@@ -37,17 +38,26 @@ public class AesDecryptFunction extends AbstractFunction {
         String key = arguments.get(1) != null ? arguments.get(1).toString() : "";
         
         try {
-            // Ensure key is 16 bytes (128-bit AES)
             byte[] keyBytes = padKey(key.getBytes(StandardCharsets.UTF_8));
             SecretKeySpec secretKey = new SecretKeySpec(keyBytes, AES);
             
-            // Use zero IV for simplicity (in production, use random IV)
-            IvParameterSpec iv = new IvParameterSpec(new byte[16]);
+            byte[] combined = Base64.getDecoder().decode(data);
+            
+            if (combined.length < IV_LENGTH) {
+                throw new FunctionException("AES decryption failed: invalid encrypted data length");
+            }
+            
+            byte[] ivBytes = new byte[IV_LENGTH];
+            System.arraycopy(combined, 0, ivBytes, 0, IV_LENGTH);
+            IvParameterSpec iv = new IvParameterSpec(ivBytes);
+            
+            byte[] encrypted = new byte[combined.length - IV_LENGTH];
+            System.arraycopy(combined, IV_LENGTH, encrypted, 0, encrypted.length);
             
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.DECRYPT_MODE, secretKey, iv);
             
-            byte[] decrypted = cipher.doFinal(Base64.getDecoder().decode(data));
+            byte[] decrypted = cipher.doFinal(encrypted);
             return new String(decrypted, StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new FunctionException("AES decryption failed: " + e.getMessage());

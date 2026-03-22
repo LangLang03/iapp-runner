@@ -33,6 +33,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'org.mindrot:jbcrypt:0.4'
     implementation 'org.slf4j:slf4j-simple:2.0.9'
+    implementation 'com.sun.mail:jakarta.mail:2.0.1'
 }
 
 application {

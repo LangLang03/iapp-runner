@@ -176,6 +176,42 @@ public class SharedFunctionRegistry {
         registry.registerFunction(new LengthFunction());
         registry.registerFunction(new JsonEncodeFunction());
         registry.registerFunction(new JsonDecodeFunction());
+        
+        // Session functions
+        registry.registerFunction(new cn.langlang.yuweb.functions.session.SessionFunction());
+        registry.registerFunction(new cn.langlang.yuweb.functions.session.SetSessionFunction());
+        registry.registerFunction(new cn.langlang.yuweb.functions.session.DelSessionFunction());
+        registry.registerFunction(new cn.langlang.yuweb.functions.session.HasSessionFunction());
+        
+        // Route param functions
+        registry.registerFunction(new cn.langlang.yuweb.functions.server.request.ParamFunction());
+        registry.registerFunction(new cn.langlang.yuweb.functions.server.request.ParamsFunction());
+        
+        // CORS function
+        registry.registerFunction(new cn.langlang.yuweb.functions.cors.CorsFunction());
+        
+        // Crypto functions
+        registry.registerFunction(new cn.langlang.yuweb.functions.crypto.Md5Function());
+        registry.registerFunction(new cn.langlang.yuweb.functions.crypto.Sha256Function());
+        registry.registerFunction(new cn.langlang.yuweb.functions.crypto.Sha1Function());
+        registry.registerFunction(new cn.langlang.yuweb.functions.crypto.Base64EncodeFunction());
+        registry.registerFunction(new cn.langlang.yuweb.functions.crypto.Base64DecodeFunction());
+        registry.registerFunction(new cn.langlang.yuweb.functions.crypto.AesEncryptFunction());
+        registry.registerFunction(new cn.langlang.yuweb.functions.crypto.AesDecryptFunction());
+        registry.registerFunction(new cn.langlang.yuweb.functions.crypto.HmacSha256Function());
+        
+        // JWT functions
+        registry.registerFunction(new cn.langlang.yuweb.functions.jwt.JwtEncodeFunction());
+        registry.registerFunction(new cn.langlang.yuweb.functions.jwt.JwtDecodeFunction());
+        registry.registerFunction(new cn.langlang.yuweb.functions.jwt.JwtVerifyFunction());
+        
+        // Env functions
+        registry.registerFunction(new cn.langlang.yuweb.functions.env.EnvFunction());
+        registry.registerFunction(new cn.langlang.yuweb.functions.env.LoadEnvFunction());
+        
+        // Mail functions
+        registry.registerFunction(new cn.langlang.yuweb.functions.mail.MailConfigFunction());
+        registry.registerFunction(new cn.langlang.yuweb.functions.mail.SendMailFunction());
     }
     
     private static void registerDatabaseFunctions(FunctionRegistry registry, DatabaseManager dbManager) {

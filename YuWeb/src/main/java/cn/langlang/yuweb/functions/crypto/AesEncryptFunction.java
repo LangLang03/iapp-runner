@@ -9,12 +9,15 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.List;
 
 public class AesEncryptFunction extends AbstractFunction {
     private static final String ALGORITHM = "AES/CBC/PKCS5Padding";
     private static final String AES = "AES";
+    private static final int IV_LENGTH = 16;
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     
     @Override
     public String getName() {
@@ -37,18 +40,23 @@ public class AesEncryptFunction extends AbstractFunction {
         String key = arguments.get(1) != null ? arguments.get(1).toString() : "";
         
         try {
-            // Ensure key is 16 bytes (128-bit AES)
             byte[] keyBytes = padKey(key.getBytes(StandardCharsets.UTF_8));
             SecretKeySpec secretKey = new SecretKeySpec(keyBytes, AES);
             
-            // Use zero IV for simplicity (in production, use random IV)
-            IvParameterSpec iv = new IvParameterSpec(new byte[16]);
+            byte[] ivBytes = new byte[IV_LENGTH];
+            SECURE_RANDOM.nextBytes(ivBytes);
+            IvParameterSpec iv = new IvParameterSpec(ivBytes);
             
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, secretKey, iv);
             
             byte[] encrypted = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
-            return Base64.getEncoder().encodeToString(encrypted);
+            
+            byte[] combined = new byte[IV_LENGTH + encrypted.length];
+            System.arraycopy(ivBytes, 0, combined, 0, IV_LENGTH);
+            System.arraycopy(encrypted, 0, combined, IV_LENGTH, encrypted.length);
+            
+            return Base64.getEncoder().encodeToString(combined);
         } catch (Exception e) {
             throw new FunctionException("AES encryption failed: " + e.getMessage());
         }

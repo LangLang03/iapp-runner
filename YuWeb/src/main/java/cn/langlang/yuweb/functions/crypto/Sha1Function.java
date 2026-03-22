@@ -9,8 +9,18 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * @deprecated SHA-1 has been proven vulnerable to collision attacks (SHAttered, 2017).
+ *             Use SHA-256 (sha256 function) for security-sensitive applications.
+ *             This function is kept for backward compatibility only.
+ */
+@Deprecated
 public class Sha1Function extends AbstractFunction {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Sha1Function.class);
+    private static volatile boolean warningLogged = false;
     
     @Override
     public String getName() {
@@ -29,6 +39,16 @@ public class Sha1Function extends AbstractFunction {
     
     @Override
     public Object call(RuntimeContext context, List<Object> arguments) throws FunctionException {
+        if (!warningLogged) {
+            synchronized (Sha1Function.class) {
+                if (!warningLogged) {
+                    LOGGER.warn("SECURITY WARNING: SHA-1 is deprecated and vulnerable to collision attacks. " +
+                                "Use sha256() instead for security-sensitive applications.");
+                    warningLogged = true;
+                }
+            }
+        }
+        
         String data = arguments.get(0) != null ? arguments.get(0).toString() : "";
         
         try {
