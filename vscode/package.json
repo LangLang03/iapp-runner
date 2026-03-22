@@ -54,39 +54,39 @@
       }
     ],
     "configuration": {
-      "title": "iApp Language Server",
+      "title": "iApp 语言服务器",
       "properties": {
         "iapp.java.path": {
           "type": "string",
           "default": "java",
-          "description": "Path to Java executable"
+          "description": "Java 可执行文件路径"
         },
         "iapp.lsp.jarPath": {
           "type": "string",
           "default": "",
-          "description": "Path to iAppLSP JAR file. Leave empty to use bundled JAR."
+          "description": "iAppLSP JAR 文件路径，留空则使用内置 JAR"
         },
         "iapp.lsp.enableYuWeb": {
           "type": "boolean",
           "default": false,
-          "description": "Enable YuWeb module support in LSP"
+          "description": "启用 YuWeb 模块支持"
         },
         "iapp.lsp.debug": {
           "type": "boolean",
           "default": false,
-          "description": "Enable LSP debug mode"
+          "description": "启用 LSP 调试模式"
         }
       }
     },
     "commands": [
       {
         "command": "iapp.restartServer",
-        "title": "Restart iApp Language Server",
+        "title": "重启 iApp 语言服务器",
         "category": "iApp"
       },
       {
         "command": "iapp.showOutput",
-        "title": "Show iApp Output",
+        "title": "显示 iApp 输出",
         "category": "iApp"
       }
     ],
