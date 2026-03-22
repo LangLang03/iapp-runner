@@ -113,37 +113,34 @@ public class HeaderFunctionInfo {
     public String getFullDocumentation() {
         StringBuilder sb = new StringBuilder();
         
-        sb.append("**").append(name).append("**\n\n");
-        
         if (category != null && !category.isEmpty()) {
-            sb.append("类别: ").append(category).append("\n\n");
+            sb.append("**类别:** ").append(category).append("\n");
         }
         
         if (description != null && !description.isEmpty()) {
-            sb.append(description).append("\n\n");
+            sb.append("\n").append(description).append("\n");
         }
         
         if (params != null && !params.isEmpty()) {
-            sb.append("**参数:**\n");
+            sb.append("\n**参数:**\n");
             for (ParamInfo param : params) {
                 sb.append("- `").append(param.getName()).append("`");
                 if (param.getType() != null && !param.getType().isEmpty()) {
-                    sb.append(" (").append(param.getType()).append(")");
+                    sb.append(" `").append(param.getType()).append("`");
                 }
                 if (param.getDescription() != null && !param.getDescription().isEmpty()) {
-                    sb.append(" - ").append(param.getDescription());
+                    sb.append(" — ").append(param.getDescription());
                 }
                 sb.append("\n");
             }
-            sb.append("\n");
         }
         
         if (returnType != null && !returnType.isEmpty()) {
-            sb.append("**返回:** ").append(returnType).append("\n\n");
+            sb.append("\n**返回:** ").append(returnType).append("\n");
         }
         
         if (example != null && !example.isEmpty()) {
-            sb.append("**示例:**\n```\n").append(example).append("\n```\n");
+            sb.append("\n**示例:**\n```iapp\n").append(example).append("\n```\n");
         }
         
         if (yuWeb) {

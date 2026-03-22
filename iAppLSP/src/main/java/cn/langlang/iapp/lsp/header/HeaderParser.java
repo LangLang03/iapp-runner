@@ -174,6 +174,8 @@ public class HeaderParser {
             if (inExampleBlock) {
                 if (trimmedLine.startsWith("@") && !trimmedLine.startsWith("@example")) {
                     inExampleBlock = false;
+                } else if (trimmedLine.equals("*/")) {
+                    inExampleBlock = false;
                 } else {
                     if (exampleBuilder.length() > 0) {
                         exampleBuilder.append("\n");

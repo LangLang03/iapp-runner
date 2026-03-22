@@ -67,7 +67,6 @@ public class SemanticAnalyzer {
                 analyzeStatement(stmt);
             }
             
-            popScope();
         } catch (Exception e) {
             // Lexer/Parser errors handled elsewhere
         }

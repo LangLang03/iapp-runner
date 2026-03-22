@@ -56,39 +56,36 @@ public class HoverProvider {
         
         sb.append("```iapp\n");
         sb.append(headerInfo.getSignature());
-        sb.append("\n```\n\n");
-        
-        sb.append("**").append(headerInfo.getName()).append("**\n\n");
+        sb.append("\n```\n");
         
         if (headerInfo.getCategory() != null && !headerInfo.getCategory().isEmpty()) {
-            sb.append("类别: ").append(headerInfo.getCategory()).append("\n\n");
+            sb.append("\n**类别:** ").append(headerInfo.getCategory()).append("\n");
         }
         
         if (headerInfo.getDescription() != null && !headerInfo.getDescription().isEmpty()) {
-            sb.append(headerInfo.getDescription()).append("\n\n");
+            sb.append("\n").append(headerInfo.getDescription()).append("\n");
         }
         
         if (headerInfo.getParams() != null && !headerInfo.getParams().isEmpty()) {
-            sb.append("**参数:**\n");
+            sb.append("\n**参数:**\n");
             for (HeaderFunctionInfo.ParamInfo param : headerInfo.getParams()) {
                 sb.append("- `").append(param.getName()).append("`");
                 if (param.getType() != null && !param.getType().isEmpty()) {
-                    sb.append(" (").append(param.getType()).append(")");
+                    sb.append(" `").append(param.getType()).append("`");
                 }
                 if (param.getDescription() != null && !param.getDescription().isEmpty()) {
-                    sb.append(" - ").append(param.getDescription());
+                    sb.append(" — ").append(param.getDescription());
                 }
                 sb.append("\n");
             }
-            sb.append("\n");
         }
         
         if (headerInfo.getReturnType() != null && !headerInfo.getReturnType().isEmpty()) {
-            sb.append("**返回:** ").append(headerInfo.getReturnType()).append("\n\n");
+            sb.append("\n**返回:** ").append(headerInfo.getReturnType()).append("\n");
         }
         
         if (headerInfo.getExample() != null && !headerInfo.getExample().isEmpty()) {
-            sb.append("**示例:**\n```\n").append(headerInfo.getExample()).append("\n```\n");
+            sb.append("\n**示例:**\n```iapp\n").append(headerInfo.getExample()).append("\n```\n");
         }
         
         if (headerInfo.isYuWeb()) {
@@ -111,16 +108,14 @@ public class HoverProvider {
         StringBuilder sb = new StringBuilder();
         sb.append("```iapp\n");
         sb.append(functionProvider.generateSignature(function));
-        sb.append("\n```\n\n");
-        
-        sb.append("**").append(function.getName()).append("**\n\n");
+        sb.append("\n```\n");
         
         FunctionInfo info = functionProvider.getFunction(function.getName());
         if (info != null && info.getCategory() != null) {
-            sb.append("类别: ").append(info.getCategory().getDisplayName()).append("\n\n");
+            sb.append("\n**类别:** ").append(info.getCategory().getDisplayName()).append("\n");
         }
         
-        sb.append("参数数量: ");
+        sb.append("\n**参数数量:** ");
         if (function.getMinParameters() == function.getMaxParameters()) {
             sb.append(function.getMinParameters());
         } else if (function.getMaxParameters() == Integer.MAX_VALUE) {
@@ -145,16 +140,16 @@ public class HoverProvider {
         StringBuilder sb = new StringBuilder();
         sb.append("```iapp\n");
         sb.append(variable.getDisplayName());
-        sb.append("\n```\n\n");
+        sb.append("\n```\n");
         
-        sb.append("**变量**\n\n");
-        sb.append("作用域: ").append(ScopeUtils.getScopeDisplayName(variable.getScope())).append("\n");
+        sb.append("\n**变量**\n");
+        sb.append("\n- **作用域:** ").append(ScopeUtils.getScopeDisplayName(variable.getScope())).append("\n");
         
         if (variable.getInferredType() != null) {
-            sb.append("类型: ").append(variable.getInferredType()).append("\n");
+            sb.append("- **类型:** ").append(variable.getInferredType()).append("\n");
         }
         
-        sb.append("定义位置: 第 ").append(variable.getLine()).append(" 行\n");
+        sb.append("- **定义位置:** 第 ").append(variable.getLine()).append(" 行\n");
         
         return sb.toString();
     }

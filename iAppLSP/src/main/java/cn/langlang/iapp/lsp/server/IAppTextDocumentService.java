@@ -84,16 +84,75 @@ public class IAppTextDocumentService implements TextDocumentService {
         
         Position position = params.getPosition();
         String lineText = getLineText(text, position.getLine());
-        String prefix = getPrefix(lineText, position.getCharacter());
+        int column = position.getCharacter();
+        String prefix = getPrefix(lineText, column);
         
         List<CompletionItem> items = new ArrayList<>();
         
-        items.addAll(getFunctionCompletionItems(prefix));
-        items.addAll(getKeywordCompletionItems(prefix));
-        items.addAll(getVariableCompletionItems(uri, prefix));
+        String trimmedLine = lineText.trim();
+        String beforeCursor = column > 0 ? lineText.substring(0, column) : "";
+        String trimmedBefore = beforeCursor.trim();
+        
+        boolean isVariableDeclaration = trimmedBefore.matches("^(s|ss|sss)\\s*$");
+        boolean isAfterVarDecl = trimmedBefore.matches("^(s|ss|sss)\\s+\\w+$");
+        boolean isInExpression = isInExpressionContext(trimmedBefore);
+        boolean isInFunctionCall = isInFunctionCallContext(trimmedBefore);
+        boolean hasPrefix = prefix != null && !prefix.isEmpty();
+        
+        if (isVariableDeclaration) {
+            // 在变量声明关键字后，不需要补全
+        } else if (isAfterVarDecl) {
+            // 在变量声明后，可能需要赋值表达式
+            if (hasPrefix) {
+                items.addAll(getVariableCompletionItems(uri, prefix, true));
+            }
+        } else if (isInFunctionCall || isInExpression) {
+            // 在函数参数或表达式中，优先变量补全
+            if (hasPrefix) {
+                items.addAll(getVariableCompletionItems(uri, prefix, true));
+                items.addAll(getFunctionCompletionItems(prefix, false));
+            }
+        } else {
+            // 默认情况：代码片段优先，然后关键字，然后函数，最后变量
+            // 只有有前缀时才提供补全
+            if (hasPrefix) {
+                items.addAll(getSnippetCompletionItems(prefix));
+                items.addAll(getKeywordCompletionItems(prefix));
+                items.addAll(getFunctionCompletionItems(prefix, false));
+                items.addAll(getVariableCompletionItems(uri, prefix, false));
+            }
+        }
         
         CompletionList completionList = new CompletionList(items);
         return CompletableFuture.completedFuture(Either.forRight(completionList));
+    }
+    
+    private boolean isInExpressionContext(String beforeCursor) {
+        if (beforeCursor.isEmpty()) return false;
+        
+        // 在运算符后面
+        if (beforeCursor.matches(".*[=+\\-*/<>!&|,]\\s*$")) {
+            return true;
+        }
+        
+        // 在控制语句后面 - 确保完整匹配关键字后跟括号
+        // f(, w(, for(, t( 后面需要表达式
+        if (beforeCursor.matches("^f\\s*\\(.*") || 
+            beforeCursor.matches("^w\\s*\\(.*") ||
+            beforeCursor.matches("^for\\s*\\(.*") ||
+            beforeCursor.matches("^t\\s*\\(.*")) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    private boolean isInFunctionCallContext(String beforeCursor) {
+        int parenOpen = beforeCursor.lastIndexOf('(');
+        if (parenOpen < 0) return false;
+        
+        int closeParen = beforeCursor.indexOf(')', parenOpen);
+        return closeParen < 0;
     }
 
     @Override
@@ -208,6 +267,92 @@ public class IAppTextDocumentService implements TextDocumentService {
         return CompletableFuture.completedFuture(edits);
     }
 
+    @Override
+    public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(DefinitionParams params) {
+        String uri = params.getTextDocument().getUri();
+        String text = documentContents.get(uri);
+        
+        if (text == null) {
+            return CompletableFuture.completedFuture(Either.forLeft(Collections.emptyList()));
+        }
+        
+        Position position = params.getPosition();
+        String word = getWordAtPosition(text, position);
+        
+        if (word == null || word.isEmpty()) {
+            return CompletableFuture.completedFuture(Either.forLeft(Collections.emptyList()));
+        }
+        
+        SemanticAnalyzer.AnalysisResult result = semanticAnalyzer.analyze(text);
+        VariableInfo variable = result.getVariableProvider().getVariable(word);
+        
+        if (variable != null && variable.getLine() > 0) {
+            Location location = new Location();
+            location.setUri(uri);
+            location.setRange(new Range(
+                new Position(variable.getLine() - 1, variable.getColumn()),
+                new Position(variable.getLine() - 1, variable.getColumn() + word.length())
+            ));
+            return CompletableFuture.completedFuture(Either.forLeft(Collections.singletonList(location)));
+        }
+        
+        SymbolInfo symbol = result.getSymbolTable().get(word);
+        if (symbol != null && symbol.getLine() > 0) {
+            Location location = new Location();
+            location.setUri(uri);
+            location.setRange(new Range(
+                new Position(symbol.getLine() - 1, symbol.getColumn()),
+                new Position(symbol.getLine() - 1, symbol.getColumn() + word.length())
+            ));
+            return CompletableFuture.completedFuture(Either.forLeft(Collections.singletonList(location)));
+        }
+        
+        return CompletableFuture.completedFuture(Either.forLeft(Collections.emptyList()));
+    }
+
+    @Override
+    public CompletableFuture<List<? extends Location>> references(ReferenceParams params) {
+        String uri = params.getTextDocument().getUri();
+        String text = documentContents.get(uri);
+        
+        if (text == null) {
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+        
+        Position position = params.getPosition();
+        String word = getWordAtPosition(text, position);
+        
+        if (word == null || word.isEmpty()) {
+            return CompletableFuture.completedFuture(Collections.emptyList());
+        }
+        
+        List<Location> locations = new ArrayList<>();
+        String[] lines = text.split("\n");
+        
+        for (int lineNum = 0; lineNum < lines.length; lineNum++) {
+            String line = lines[lineNum];
+            int col = 0;
+            int idx;
+            while ((idx = line.indexOf(word, col)) != -1) {
+                boolean validStart = (idx == 0 || !Character.isLetterOrDigit(line.charAt(idx - 1)));
+                boolean validEnd = (idx + word.length() >= line.length() || !Character.isLetterOrDigit(line.charAt(idx + word.length())));
+                
+                if (validStart && validEnd) {
+                    Location location = new Location();
+                    location.setUri(uri);
+                    location.setRange(new Range(
+                        new Position(lineNum, idx),
+                        new Position(lineNum, idx + word.length())
+                    ));
+                    locations.add(location);
+                }
+                col = idx + 1;
+            }
+        }
+        
+        return CompletableFuture.completedFuture(locations);
+    }
+
     private void publishDiagnostics(String uri, String text) {
         List<DiagnosticInfo> diagnostics = diagnosticProvider.getDiagnostics(text);
         
@@ -295,6 +440,10 @@ public class IAppTextDocumentService implements TextDocumentService {
     }
 
     private List<CompletionItem> getFunctionCompletionItems(String prefix) {
+        return getFunctionCompletionItems(prefix, false);
+    }
+    
+    private List<CompletionItem> getFunctionCompletionItems(String prefix, boolean lowPriority) {
         List<CompletionItem> items = new ArrayList<>();
         List<cn.langlang.iapp.lsp.core.provider.CompletionProvider.CompletionItem> completions = 
             completionProvider.getFunctionCompletions(prefix);
@@ -312,7 +461,7 @@ public class IAppTextDocumentService implements TextDocumentService {
             
             item.setInsertText(comp.getInsertText());
             item.setInsertTextFormat(InsertTextFormat.Snippet);
-            item.setSortText(comp.getSortText());
+            item.setSortText(lowPriority ? "2" + comp.getLabel() : comp.getSortText());
             
             items.add(item);
         }
@@ -337,8 +486,37 @@ public class IAppTextDocumentService implements TextDocumentService {
         
         return items;
     }
+    
+    private List<CompletionItem> getSnippetCompletionItems(String prefix) {
+        List<CompletionItem> items = new ArrayList<>();
+        List<cn.langlang.iapp.lsp.core.provider.CompletionProvider.CompletionItem> snippets = 
+            completionProvider.getSnippetCompletions(prefix);
+        
+        for (cn.langlang.iapp.lsp.core.provider.CompletionProvider.CompletionItem snippet : snippets) {
+            CompletionItem item = new CompletionItem();
+            item.setLabel(snippet.getLabel());
+            item.setKind(CompletionItemKind.Snippet);
+            item.setDetail(snippet.getDetail());
+            
+            MarkupContent doc = new MarkupContent();
+            doc.setKind("markdown");
+            doc.setValue("```iapp\n" + snippet.getInsertText() + "\n```");
+            item.setDocumentation(doc);
+            
+            item.setInsertText(snippet.getInsertText());
+            item.setInsertTextFormat(InsertTextFormat.Snippet);
+            item.setSortText(snippet.getSortText());
+            items.add(item);
+        }
+        
+        return items;
+    }
 
     private List<CompletionItem> getVariableCompletionItems(String uri, String prefix) {
+        return getVariableCompletionItems(uri, prefix, false);
+    }
+    
+    private List<CompletionItem> getVariableCompletionItems(String uri, String prefix, boolean highPriority) {
         List<CompletionItem> items = new ArrayList<>();
         String text = documentContents.get(uri);
         
@@ -352,7 +530,7 @@ public class IAppTextDocumentService implements TextDocumentService {
                 item.setKind(CompletionItemKind.Variable);
                 item.setDetail(getScopeDisplayName(var.getScope()));
                 item.setInsertText(var.getName());
-                item.setSortText("2" + var.getName());
+                item.setSortText(highPriority ? "0" + var.getName() : "2" + var.getName());
                 items.add(item);
             }
         }
@@ -390,7 +568,13 @@ public class IAppTextDocumentService implements TextDocumentService {
             start--;
         }
         
-        return beforeCursor.substring(start + 1);
+        String prefix = beforeCursor.substring(start + 1);
+        
+        return prefix;
+    }
+    
+    private boolean shouldProvideCompletions(String prefix) {
+        return prefix != null && !prefix.isEmpty();
     }
 
     private String getWordAtPosition(String text, Position position) {
