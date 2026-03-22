@@ -54,6 +54,67 @@ public enum FunctionCategory {
         return CORE;
     }
 
+    public static FunctionCategory fromString(String name) {
+        if (name == null || name.isEmpty()) return CORE;
+        
+        switch (name.toLowerCase()) {
+            case "string":
+                return STRING;
+            case "math":
+                return MATH;
+            case "file":
+                return FILE;
+            case "net":
+                return NET;
+            case "array":
+                return ARRAY;
+            case "list":
+                return LIST;
+            case "clipboard":
+                return CLIPBOARD;
+            case "time":
+                return TIME;
+            case "java":
+                return JAVA;
+            case "output":
+                return OUTPUT;
+            case "other":
+                return OTHER;
+            case "request":
+            case "web_request":
+                return WEB_REQUEST;
+            case "response":
+            case "web_response":
+                return WEB_RESPONSE;
+            case "config":
+            case "web_config":
+                return WEB_CONFIG;
+            case "database":
+                return DATABASE;
+            case "condition":
+            case "database_condition":
+                return DATABASE_CONDITION;
+            case "crypto":
+                return CRYPTO;
+            case "jwt":
+                return JWT;
+            case "session":
+                return SESSION;
+            case "auth":
+                return AUTH;
+            case "mail":
+                return MAIL;
+            case "env":
+                return ENV;
+            case "util":
+                return UTIL;
+            case "server":
+                return SERVER;
+            default:
+                return CORE;
+        }
+    }
+
     public boolean isYuWebCategory() {
         return this.ordinal() >= WEB_REQUEST.ordinal();
     }

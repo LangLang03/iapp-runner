@@ -1,7 +1,8 @@
-package cn.langlang.iapp.lsp.registry;
+package cn.langlang.iapp.lsp.registry.loaders;
 
 import cn.langlang.iapp.lsp.core.LSContext;
-import cn.langlang.iapp.runtime.IFunction;
+import cn.langlang.iapp.lsp.registry.FunctionCategory;
+import cn.langlang.iapp.lsp.registry.ModuleLoader;
 
 import java.util.HashMap;
 import java.util.Map;

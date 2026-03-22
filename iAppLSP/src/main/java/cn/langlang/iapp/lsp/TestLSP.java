@@ -18,7 +18,6 @@ public class TestLSP {
         LSContext context = new LSContext();
         ModuleRegistry registry = new ModuleRegistry(context);
         registry.autoDiscover();
-        
         System.out.println("1. 已加载模块: " + context.getLoadedModules());
         System.out.println("2. YuWeb 可用: " + context.isYuWebAvailable());
         System.out.println("3. 已注册函数数量: " + context.getFunctionNames().size());

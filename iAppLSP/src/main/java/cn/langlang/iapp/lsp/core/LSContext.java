@@ -1,5 +1,6 @@
 package cn.langlang.iapp.lsp.core;
 
+import cn.langlang.iapp.api.FunctionRegistryProvider;
 import cn.langlang.iapp.lsp.core.provider.*;
 import cn.langlang.iapp.lsp.registry.FunctionCategory;
 import cn.langlang.iapp.lsp.registry.ModuleLoader;
@@ -124,17 +125,25 @@ public class LSContext {
             return;
         }
         try {
-            Class<?> sharedRegistryClass = Class.forName("cn.langlang.yuweb.functions.SharedFunctionRegistry");
-            java.lang.reflect.Method method = sharedRegistryClass.getMethod("registerBuiltinFunctions", FunctionRegistry.class);
-            method.invoke(null, functionRegistry);
-            
-            categorizeYuWebFunctions();
+            ServiceLoader<FunctionRegistryProvider> providers = ServiceLoader.load(FunctionRegistryProvider.class);
+            for (FunctionRegistryProvider provider : providers) {
+                if (provider.isAvailable()) {
+                    provider.registerFunctions(functionRegistry);
+                    Map<String, String> categories = provider.getFunctionCategories();
+                    if (categories != null) {
+                        for (Map.Entry<String, String> entry : categories.entrySet()) {
+                            FunctionCategory category = FunctionCategory.fromString(entry.getValue());
+                            if (category != null) {
+                                functionCategoryMap.put(entry.getKey().toLowerCase(), category);
+                            }
+                        }
+                    }
+                    logger.info("Functions registered from provider: {}", provider.getProviderName());
+                }
+            }
             yuWebAvailable = true;
             loadedModules.add("yuweb");
-            logger.info("YuWeb functions registered successfully");
-        } catch (ClassNotFoundException e) {
-            logger.info("YuWeb module not available, skipping YuWeb functions");
-            yuWebAvailable = false;
+            logger.info("YuWeb functions registered successfully via SPI");
         } catch (Exception e) {
             logger.warn("Failed to load YuWeb functions: {}", e.getMessage());
             yuWebAvailable = false;
