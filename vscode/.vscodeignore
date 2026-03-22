@@ -1,0 +1,13 @@
+.vscode/**
+.vscode-test/**
+src/**
+**/*.ts
+**/*.map
+**/*.ts.map
+.gitignore
+**/node_modules/**
+**/.git/**
+**/*.vsix
+**/.DS_Store
+**/Thumbs.db
+pnpm-lock.yaml

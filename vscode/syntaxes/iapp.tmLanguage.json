@@ -1,0 +1,232 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "iApp",
+  "scopeName": "source.iapp",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#keywords" },
+    { "include": "#variables" },
+    { "include": "#functions" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#operators" },
+    { "include": "#punctuation" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.iapp",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.iapp",
+          "begin": "/\\.",
+          "end": "\\./",
+          "beginCaptures": {
+            "0": { "name": "punctuation.definition.comment.begin.iapp" }
+          },
+          "endCaptures": {
+            "0": { "name": "punctuation.definition.comment.end.iapp" }
+          }
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.declaration.variable.local.iapp",
+          "match": "\\bs(?=\\s+[a-zA-Z_\\u4e00-\\u9fa5])"
+        },
+        {
+          "name": "keyword.declaration.variable.interface.iapp",
+          "match": "\\bss(?=\\s+[a-zA-Z_\\u4e00-\\u9fa5])"
+        },
+        {
+          "name": "keyword.declaration.variable.global.iapp",
+          "match": "\\bsss(?=\\s+[a-zA-Z_\\u4e00-\\u9fa5])"
+        },
+        {
+          "name": "keyword.control.conditional.iapp",
+          "match": "\\bf\\b"
+        },
+        {
+          "name": "keyword.control.conditional.iapp",
+          "match": "\\belse\\b"
+        },
+        {
+          "name": "keyword.control.loop.iapp",
+          "match": "\\bw\\b"
+        },
+        {
+          "name": "keyword.control.loop.iapp",
+          "match": "\\bfor\\b"
+        },
+        {
+          "name": "keyword.control.flow.iapp",
+          "match": "\\bbreak\\b"
+        },
+        {
+          "name": "keyword.control.flow.iapp",
+          "match": "\\bendcode\\b"
+        },
+        {
+          "name": "keyword.declaration.function.iapp",
+          "match": "\\bfn\\b"
+        },
+        {
+          "name": "keyword.declaration.function.iapp",
+          "match": "\\bend\\s+fn\\b"
+        },
+        {
+          "name": "keyword.declaration.thread.iapp",
+          "match": "\\bt\\b"
+        },
+        {
+          "name": "constant.language.boolean.true.iapp",
+          "match": "\\btrue\\b"
+        },
+        {
+          "name": "constant.language.boolean.false.iapp",
+          "match": "\\bfalse\\b"
+        },
+        {
+          "name": "constant.language.null.iapp",
+          "match": "\\bnull\\b"
+        }
+      ]
+    },
+    "variables": {
+      "patterns": [
+        {
+          "name": "variable.other.global.iapp",
+          "match": "\\bsss\\.[a-zA-Z_\\u4e00-\\u9fa5][a-zA-Z0-9_\\u4e00-\\u9fa5]*"
+        },
+        {
+          "name": "variable.other.interface.iapp",
+          "match": "\\bss\\.[a-zA-Z_\\u4e00-\\u9fa5][a-zA-Z0-9_\\u4e00-\\u9fa5]*"
+        }
+      ]
+    },
+    "functions": {
+      "patterns": [
+        {
+          "name": "entity.name.function.call.iapp",
+          "match": "\\b([a-zA-Z_\\u4e00-\\u9fa5][a-zA-Z0-9_\\u4e00-\\u9fa5]*)\\s*(?=\\()",
+          "captures": {
+            "1": { "name": "entity.name.function.iapp" }
+          }
+        },
+        {
+          "name": "entity.name.function.member.iapp",
+          "match": "\\b([a-zA-Z_\\u4e00-\\u9fa5][a-zA-Z0-9_\\u4e00-\\u9fa5]*)\\.([a-zA-Z_\\u4e00-\\u9fa5][a-zA-Z0-9_\\u4e00-\\u9fa5]*)\\s*(?=\\()",
+          "captures": {
+            "1": { "name": "variable.other.module.iapp" },
+            "2": { "name": "entity.name.function.iapp" }
+          }
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.iapp",
+          "begin": "\"",
+          "end": "\"",
+          "beginCaptures": {
+            "0": { "name": "punctuation.definition.string.begin.iapp" }
+          },
+          "endCaptures": {
+            "0": { "name": "punctuation.definition.string.end.iapp" }
+          },
+          "patterns": [
+            {
+              "name": "constant.character.escape.iapp",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.float.iapp",
+          "match": "\\b[0-9]+\\.[0-9]+\\b"
+        },
+        {
+          "name": "constant.numeric.integer.iapp",
+          "match": "\\b[0-9]+\\b"
+        },
+        {
+          "name": "constant.numeric.hex.iapp",
+          "match": "\\b0[xX][0-9a-fA-F]+\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.comparison.iapp",
+          "match": "==|!=|<=|>=|<|>"
+        },
+        {
+          "name": "keyword.operator.string.match.iapp",
+          "match": "\\?\\*|\\*\\?|\\?(?!\\s*\\))"
+        },
+        {
+          "name": "keyword.operator.logical.iapp",
+          "match": "&&|\\|\\||!"
+        },
+        {
+          "name": "keyword.operator.arithmetic.iapp",
+          "match": "\\+|-(?!>)|\\*|/|%"
+        },
+        {
+          "name": "keyword.operator.assignment.iapp",
+          "match": "=|\\+=|-=|\\*=|/="
+        },
+        {
+          "name": "keyword.operator.increment.iapp",
+          "match": "\\+\\+|--"
+        }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.section.block.begin.iapp",
+          "match": "\\{"
+        },
+        {
+          "name": "punctuation.section.block.end.iapp",
+          "match": "\\}"
+        },
+        {
+          "name": "punctuation.section.parens.begin.iapp",
+          "match": "\\("
+        },
+        {
+          "name": "punctuation.section.parens.end.iapp",
+          "match": "\\)"
+        },
+        {
+          "name": "punctuation.section.brackets.begin.iapp",
+          "match": "\\["
+        },
+        {
+          "name": "punctuation.section.brackets.end.iapp",
+          "match": "\\]"
+        },
+        {
+          "name": "punctuation.separator.comma.iapp",
+          "match": ","
+        },
+        {
+          "name": "punctuation.accessor.dot.iapp",
+          "match": "\\."
+        }
+      ]
+    }
+  }
+}

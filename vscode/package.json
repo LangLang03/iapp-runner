@@ -1,0 +1,125 @@
+{
+  "name": "iapp-language-support",
+  "displayName": "iApp Language Support",
+  "description": "Language support for iApp (裕语言) - Syntax highlighting, LSP integration, and more",
+  "version": "1.0.0",
+  "publisher": "langlang",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Language Packs"
+  ],
+  "keywords": [
+    "iapp",
+    "裕语言",
+    "yulang",
+    "language server"
+  ],
+  "activationEvents": [
+    "onLanguage:iapp",
+    "workspaceContains:**/*.iyu",
+    "workspaceContains:**/*.myu",
+    "workspaceContains:**/*.mjava"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "iapp",
+        "aliases": [
+          "iApp",
+          "裕语言",
+          "Yulang"
+        ],
+        "extensions": [
+          ".iyu",
+          ".myu",
+          ".mjava",
+          ".iapp"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/iapp-light.svg",
+          "dark": "./icons/iapp-dark.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "iapp",
+        "scopeName": "source.iapp",
+        "path": "./syntaxes/iapp.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "title": "iApp Language Server",
+      "properties": {
+        "iapp.java.path": {
+          "type": "string",
+          "default": "java",
+          "description": "Path to Java executable"
+        },
+        "iapp.lsp.jarPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to iAppLSP JAR file. Leave empty to use bundled JAR."
+        },
+        "iapp.lsp.enableYuWeb": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable YuWeb module support in LSP"
+        },
+        "iapp.lsp.debug": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable LSP debug mode"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "iapp.restartServer",
+        "title": "Restart iApp Language Server",
+        "category": "iApp"
+      },
+      {
+        "command": "iapp.showOutput",
+        "title": "Show iApp Output",
+        "category": "iApp"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "iapp.restartServer",
+          "when": "editorLangId == iapp"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package --no-dependencies",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/test-electron": "^2.3.8",
+    "@vscode/vsce": "^2.22.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://gitee.com/TieScript/iapp-runner.git"
+  },
+  "license": "GPL-3.0"
+}
