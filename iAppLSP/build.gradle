@@ -22,7 +22,7 @@ repositories {
 
 dependencies {
     implementation project(':')
-    compileOnly project(':YuWeb')
+    implementation project(':YuWeb')
     implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.21.0'
     implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.21.0'
     implementation 'org.slf4j:slf4j-api:2.0.9'
@@ -32,7 +32,6 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 jar {
-
     manifest {
         attributes 'Main-Class': 'cn.langlang.iapp.lsp.server.LaunchServer'
     }
@@ -40,6 +39,8 @@ jar {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    exclude 'module-info.class'
+    exclude 'META-INF/versions/**/module-info.class'
 }
 application {
     mainClass = 'cn.langlang.iapp.lsp.server.LaunchServer'

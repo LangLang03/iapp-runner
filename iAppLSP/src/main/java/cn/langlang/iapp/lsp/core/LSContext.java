@@ -249,6 +249,13 @@ public class LSContext {
         return functionCategoryMap.get(name.toLowerCase());
     }
 
+    public void setFunctionCategory(String name, FunctionCategory category) {
+        if (name == null || name.isEmpty() || category == null) {
+            return;
+        }
+        functionCategoryMap.put(name.toLowerCase(), category);
+    }
+
     public Collection<IFunction> getAllFunctions() {
         return functionRegistry.getFunctionNames().stream()
                 .map(functionRegistry::getFunction)

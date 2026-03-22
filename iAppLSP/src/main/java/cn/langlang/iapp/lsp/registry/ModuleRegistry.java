@@ -62,7 +62,7 @@ public class ModuleRegistry {
                 Map<String, FunctionCategory> categories = loader.getFunctionCategories();
                 if (categories != null) {
                     for (Map.Entry<String, FunctionCategory> entry : categories.entrySet()) {
-                        context.getFunctionRegistry().getFunctionNames().add(entry.getKey());
+                        context.setFunctionCategory(entry.getKey(), entry.getValue());
                     }
                 }
                 logger.info("Module '{}' loaded via ModuleLoader", moduleName);
