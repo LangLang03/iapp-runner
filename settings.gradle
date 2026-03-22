@@ -1,2 +1,3 @@
 rootProject.name = 'iAppPC'
 include 'YuWeb'
+include 'iAppLSP'
