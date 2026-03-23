@@ -21,10 +21,14 @@
     "onLanguage:iapp",
     "onCommand:iapp.restartServer",
     "onCommand:iapp.showOutput",
+    "onCommand:iapp.run",
+    "onCommand:iapp.stop",
+    "onCommand:iapp.createConfig",
     "workspaceContains:**/*.iyu",
     "workspaceContains:**/*.myu",
     "workspaceContains:**/*.mjava",
-    "workspaceContains:**/*.iapp"
+    "workspaceContains:**/*.iapp",
+    "workspaceContains:**/.iapprc.json"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -47,6 +51,15 @@
           "light": "./icons/iapp-light.svg",
           "dark": "./icons/iapp-dark.svg"
         }
+      },
+      {
+        "id": "json",
+        "extensions": [
+          ".iapprc.json"
+        ],
+        "filenames": [
+          ".iapprc.json"
+        ]
       }
     ],
     "grammars": [
@@ -69,11 +82,6 @@
           "default": "",
           "description": "iAppLSP JAR 文件路径，留空则使用内置 JAR"
         },
-        "iapp.lsp.enableYuWeb": {
-          "type": "boolean",
-          "default": false,
-          "description": "启用 YuWeb 模块支持"
-        },
         "iapp.lsp.debug": {
           "type": "boolean",
           "default": false,
@@ -85,11 +93,29 @@
       {
         "command": "iapp.restartServer",
         "title": "重启 iApp 语言服务器",
-        "category": "iApp"
+        "category": "iApp",
+        "icon": "$(refresh)"
       },
       {
         "command": "iapp.showOutput",
         "title": "显示 iApp 输出",
+        "category": "iApp"
+      },
+      {
+        "command": "iapp.run",
+        "title": "运行 iApp 项目",
+        "category": "iApp",
+        "icon": "$(play)"
+      },
+      {
+        "command": "iapp.stop",
+        "title": "停止运行",
+        "category": "iApp",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "iapp.createConfig",
+        "title": "创建 iApp 配置文件",
         "category": "iApp"
       }
     ],
@@ -98,9 +124,41 @@
         {
           "command": "iapp.restartServer",
           "when": "editorLangId == iapp"
+        },
+        {
+          "command": "iapp.run",
+          "when": "editorLangId == iapp || workspaceFolderCount > 0"
+        },
+        {
+          "command": "iapp.stop",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "iapp.createConfig",
+          "when": "workspaceFolderCount > 0"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "iapp.run",
+          "when": "editorLangId == iapp",
+          "group": "navigation@1"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "iapp.createConfig",
+          "when": "workspaceFolderCount > 0 && !explorerResourceIsFolder",
+          "group": "iApp@1"
         }
       ]
-    }
+    },
+    "jsonValidation": [
+      {
+        "fileMatch": ".iapprc.json",
+        "url": "./schemas/iapprc.schema.json"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "webpack --mode production",

@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "iApp Project Configuration",
+  "description": "Configuration file for iApp projects",
+  "type": "object",
+  "required": ["version", "runDirectory", "enableYuWeb"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Configuration file version",
+      "default": "1.0",
+      "enum": ["1.0"]
+    },
+    "runDirectory": {
+      "type": "string",
+      "description": "The directory to run the project from, relative to the project root",
+      "default": "."
+    },
+    "enableYuWeb": {
+      "type": "boolean",
+      "description": "Enable YuWeb web framework support",
+      "default": false
+    },
+    "yuweb": {
+      "type": "object",
+      "description": "YuWeb server configuration",
+      "properties": {
+        "port": {
+          "type": "integer",
+          "description": "Server port number",
+          "default": 8080,
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "debugMode": {
+          "type": "boolean",
+          "description": "Enable debug mode with detailed error messages",
+          "default": false
+        },
+        "safeMode": {
+          "type": "boolean",
+          "description": "Enable safe mode (only execute preloaded scripts)",
+          "default": false
+        },
+        "preloadScripts": {
+          "type": "boolean",
+          "description": "Preload all .iapp scripts on startup",
+          "default": false
+        },
+        "serveStaticFiles": {
+          "type": "boolean",
+          "description": "Enable static file serving",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "javaArgs": {
+      "type": "array",
+      "description": "Additional arguments to pass to the Java application",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "jvmArgs": {
+      "type": "array",
+      "description": "JVM arguments (e.g., -Xmx, -D properties)",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "version": "1.0",
+      "runDirectory": ".",
+      "enableYuWeb": false
+    },
+    {
+      "version": "1.0",
+      "runDirectory": ".",
+      "enableYuWeb": true,
+      "yuweb": {
+        "port": 8080,
+        "debugMode": true,
+        "safeMode": false,
+        "preloadScripts": true,
+        "serveStaticFiles": true
+      }
+    }
+  ]
+}

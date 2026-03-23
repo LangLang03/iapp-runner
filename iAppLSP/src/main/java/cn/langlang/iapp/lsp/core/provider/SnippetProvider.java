@@ -28,7 +28,7 @@ public class SnippetProvider {
     
     private void initBuiltInSnippets() {
         addBuiltInSnippet("fn", "fn", 
-            "fn ${1:functionName}(${2:params}) {\n\t${3:// code}\n}",
+            "fn ${1:functionName}(${2:params})\n\n\t${3:// code}\n\nend fn",
             "函数定义");
         
         addBuiltInSnippet("f", "f",

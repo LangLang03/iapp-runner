@@ -193,6 +193,7 @@ public class CompletionProvider {
         item.setDocumentation(func.getDocumentation());
         item.setInsertText(func.getInsertText());
         item.setSortText("1" + func.getName());
+        item.setFilterText(func.getName());
         return item;
     }
     
@@ -308,6 +309,7 @@ public class CompletionProvider {
         private String documentation;
         private String insertText;
         private String sortText;
+        private String filterText;
 
         public String getLabel() {
             return label;
@@ -355,6 +357,14 @@ public class CompletionProvider {
 
         public void setSortText(String sortText) {
             this.sortText = sortText;
+        }
+
+        public String getFilterText() {
+            return filterText;
+        }
+
+        public void setFilterText(String filterText) {
+            this.filterText = filterText;
         }
     }
 

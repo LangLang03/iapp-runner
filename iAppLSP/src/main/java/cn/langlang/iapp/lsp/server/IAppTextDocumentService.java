@@ -466,6 +466,9 @@ public class IAppTextDocumentService implements TextDocumentService {
             item.setInsertText(comp.getInsertText());
             item.setInsertTextFormat(InsertTextFormat.Snippet);
             item.setSortText(lowPriority ? "2" + comp.getLabel() : comp.getSortText());
+            if (comp.getFilterText() != null) {
+                item.setFilterText(comp.getFilterText());
+            }
             
             items.add(item);
         }
