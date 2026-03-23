@@ -8,7 +8,6 @@ import org.eclipse.lsp4j.services.LanguageClientAware;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
-import org.eclipse.lsp4j.trace.TraceValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -135,8 +134,8 @@ public class IAppLanguageServer implements LanguageServer, LanguageClientAware {
     }
 
     @Override
-    public void setTrace(TraceValue value) {
-        logger.debug("Set trace: {}", value);
+    public void setTrace(SetTraceParams params) {
+        logger.debug("Set trace: {}", params.getValue());
     }
 
     @Override
