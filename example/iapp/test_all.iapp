@@ -1,0 +1,1619 @@
+/.
+============================================
+  iApp Runner 兼容性测试脚本
+  测试所有支持的语法和内置函数
+  生成时间: 2026-03-05
+============================================
+./
+
+s test_total = 0
+s test_pass = 0
+s test_fail = 0
+
+fn test_report(name, passed)
+    s(test_total + 1, test_total)
+    f(passed == true)
+    {
+        s(test_pass + 1, test_pass)
+        syso("[PASS] " + name)
+    }
+    else
+    {
+        s(test_fail + 1, test_fail)
+        syso("[FAIL] " + name)
+    }
+end fn
+
+syso("============================================")
+syso("  iApp Runner 兼容性测试脚本")
+syso("============================================")
+syso("")
+
+/.
+============================================
+  第一部分：基础语法测试
+============================================
+./
+
+syso("")
+syso("=== 第一部分：基础语法测试 ===")
+syso("")
+
+// 测试1：局部变量声明
+s var1 = 123
+f(var1 == 123)
+{
+    test_report("局部变量声明", true)
+}
+else
+{
+    test_report("局部变量声明", false)
+}
+
+// 测试2：界面变量声明
+ss var2 = "hello"
+f(var2 == "hello")
+{
+    test_report("界面变量声明", true)
+}
+else
+{
+    test_report("界面变量声明", false)
+}
+
+// 测试3：全局变量声明
+sss var3 = true
+f(var3 == true)
+{
+    test_report("全局变量声明", true)
+}
+else
+{
+    test_report("全局变量声明", false)
+}
+
+// 测试4：变量不赋值默认为null
+s var4
+f(var4 == null)
+{
+    test_report("变量默认null", true)
+}
+else
+{
+    test_report("变量默认null", false)
+}
+
+// 测试5：数字字面量
+s num1 = 123
+s num2 = 3.14
+f(num1 == 123 && num2 == 3.14)
+{
+    test_report("数字字面量", true)
+}
+else
+{
+    test_report("数字字面量", false)
+}
+
+// 测试6：字符串字面量
+s str1 = "hello world"
+f(str1 == "hello world")
+{
+    test_report("字符串字面量", true)
+}
+else
+{
+    test_report("字符串字面量", false)
+}
+
+// 测试7：布尔字面量
+s bool1 = true
+s bool2 = false
+f(bool1 == true && bool2 == false)
+{
+    test_report("布尔字面量", true)
+}
+else
+{
+    test_report("布尔字面量", false)
+}
+
+// 测试8：null字面量
+s null1 = null
+f(null1 == null)
+{
+    test_report("null字面量", true)
+}
+else
+{
+    test_report("null字面量", false)
+}
+
+// 测试9：算术运算符
+s arith1 = 10 + 5
+s arith2 = 10 - 5
+s arith3 = 10 * 5
+s arith4 = 10 / 5
+s arith5 = 10 % 3
+f(arith1 == 15 && arith2 == 5 && arith3 == 50 && arith4 == 2 && arith5 == 1)
+{
+    test_report("算术运算符", true)
+}
+else
+{
+    test_report("算术运算符", false)
+}
+
+// 测试10：比较运算符
+s cmp1 = 5 == 5
+s cmp2 = 5 != 3
+s cmp3 = 5 > 3
+s cmp4 = 5 < 10
+s cmp5 = 5 >= 5
+s cmp6 = 5 <= 5
+f(cmp1 && cmp2 && cmp3 && cmp4 && cmp5 && cmp6)
+{
+    test_report("比较运算符", true)
+}
+else
+{
+    test_report("比较运算符", false)
+}
+
+// 测试11：逻辑运算符
+s log1 = true && true
+s log2 = true || false
+s log3 = !false
+f(log1 && log2 && log3)
+{
+    test_report("逻辑运算符", true)
+}
+else
+{
+    test_report("逻辑运算符", false)
+}
+
+// 测试12：字符串开头匹配 ?*
+s str_match1 = "hello world"
+s match1 = str_match1 ?* "hello"
+f(match1 == true)
+{
+    test_report("字符串开头匹配 ?*", true)
+}
+else
+{
+    test_report("字符串开头匹配 ?*", false)
+}
+
+// 测试13：字符串结尾匹配 *?
+s str_match2 = "hello world"
+s match2 = str_match2 *? "world"
+f(match2 == true)
+{
+    test_report("字符串结尾匹配 *?", true)
+}
+else
+{
+    test_report("字符串结尾匹配 *?", false)
+}
+
+// 测试14：字符串包含匹配 ?
+s str_match3 = "hello world"
+s match3 = str_match3 ? "lo wo"
+f(match3 == true)
+{
+    test_report("字符串包含匹配 ?", true)
+}
+else
+{
+    test_report("字符串包含匹配 ?", false)
+}
+
+// 测试15：字符串拼接
+s concat1 = "hello" + " " + "world"
+f(concat1 == "hello world")
+{
+    test_report("字符串拼接", true)
+}
+else
+{
+    test_report("字符串拼接", false)
+}
+
+// 测试16：表达式计算
+s expr1 = (10 + 5) * 2 - 5
+f(expr1 == 25)
+{
+    test_report("表达式计算", true)
+}
+else
+{
+    test_report("表达式计算", false)
+}
+
+// 测试17：复合表达式
+s a = 10
+s b = 20
+s expr2 = a + b * 2
+f(expr2 == 50)
+{
+    test_report("复合表达式", true)
+}
+else
+{
+    test_report("复合表达式", false)
+}
+
+// 测试18：括号改变优先级
+s expr3 = (10 + 5) * (2 + 3)
+f(expr3 == 75)
+{
+    test_report("括号改变优先级", true)
+}
+else
+{
+    test_report("括号改变优先级", false)
+}
+
+// 测试19：数组创建和访问
+nsz(3, arr1)
+sssz(arr1, 0, "a")
+sssz(arr1, 1, "b")
+sssz(arr1, 2, "c")
+sgsz(arr1, 0, arr_val1)
+sgsz(arr1, 1, arr_val2)
+sgsz(arr1, 2, arr_val3)
+f(arr_val1 == "a" && arr_val2 == "b" && arr_val3 == "c")
+{
+    test_report("数组创建和访问", true)
+}
+else
+{
+    test_report("数组创建和访问", false)
+}
+
+// 测试20：数组长度
+sgszl(arr1, arr_len1)
+f(arr_len1 == 3)
+{
+    test_report("数组长度", true)
+}
+else
+{
+    test_report("数组长度", false)
+}
+
+// 测试21：数组索引访问表达式
+s idx = 1
+sgsz(arr1, idx, arr_val4)
+f(arr_val4 == "b")
+{
+    test_report("数组索引访问表达式", true)
+}
+else
+{
+    test_report("数组索引访问表达式", false)
+}
+
+/.
+============================================
+  第二部分：控制流测试
+============================================
+./
+
+syso("")
+syso("=== 第二部分：控制流测试 ===")
+syso("")
+
+// 测试22：if条件成立
+s if_test1 = 0
+f(1 == 1)
+{
+    s(if_test1 + 1, if_test1)
+}
+f(if_test1 == 1)
+{
+    test_report("if条件成立", true)
+}
+else
+{
+    test_report("if条件成立", false)
+}
+
+// 测试23：if条件不成立
+s if_test2 = 0
+f(1 == 2)
+{
+    s(if_test2 + 1, if_test2)
+}
+f(if_test2 == 0)
+{
+    test_report("if条件不成立", true)
+}
+else
+{
+    test_report("if条件不成立", false)
+}
+
+// 测试24：if-else
+s if_test3 = 0
+f(1 == 2)
+{
+    s(if_test3 + 1, if_test3)
+}
+else
+{
+    s(if_test3 + 2, if_test3)
+}
+f(if_test3 == 2)
+{
+    test_report("if-else", true)
+}
+else
+{
+    test_report("if-else", false)
+}
+
+// 测试25：if-else if-else
+s if_test4 = 0
+s cond_val = 2
+f(cond_val == 1)
+{
+    s(if_test4 + 1, if_test4)
+}
+else f(cond_val == 2)
+{
+    s(if_test4 + 2, if_test4)
+}
+else
+{
+    s(if_test4 + 3, if_test4)
+}
+f(if_test4 == 2)
+{
+    test_report("if-else if-else", true)
+}
+else
+{
+    test_report("if-else if-else", false)
+}
+
+// 测试26：嵌套if
+s if_test5 = 0
+f(1 == 1)
+{
+    f(2 == 2)
+    {
+        s(if_test5 + 1, if_test5)
+    }
+}
+f(if_test5 == 1)
+{
+    test_report("嵌套if", true)
+}
+else
+{
+    test_report("嵌套if", false)
+}
+
+// 测试27：while循环
+s w_count = 0
+s w_i = 0
+w(w_i < 5)
+{
+    s(w_count + 1, w_count)
+    s(w_i + 1, w_i)
+}
+f(w_count == 5)
+{
+    test_report("while循环", true)
+}
+else
+{
+    test_report("while循环", false)
+}
+
+// 测试28：while嵌套
+s w_nest = 0
+s w_i2 = 0
+w(w_i2 < 3)
+{
+    s w_j = 0
+    w(w_j < 2)
+    {
+        s(w_nest + 1, w_nest)
+        s(w_j + 1, w_j)
+    }
+    s(w_i2 + 1, w_i2)
+}
+f(w_nest == 6)
+{
+    test_report("while嵌套", true)
+}
+else
+{
+    test_report("while嵌套", false)
+}
+
+// 测试29：for范围循环
+s for_count1 = 0
+for(1; 5)
+{
+    s(for_count1 + 1, for_count1)
+}
+f(for_count1 == 5)
+{
+    test_report("for范围循环", true)
+}
+else
+{
+    test_report("for范围循环", false)
+}
+
+// 测试30：for变量范围循环
+s for_start = 3
+s for_end = 7
+s for_count2 = 0
+for(for_start; for_end)
+{
+    s(for_count2 + 1, for_count2)
+}
+f(for_count2 == 5)
+{
+    test_report("for变量范围循环", true)
+}
+else
+{
+    test_report("for变量范围循环", false)
+}
+
+// 测试31：for数组遍历
+s for_arr_sum = 0
+nsz(5, for_arr)
+sssz(for_arr, 0, 1)
+sssz(for_arr, 1, 2)
+sssz(for_arr, 2, 3)
+sssz(for_arr, 3, 4)
+sssz(for_arr, 4, 5)
+for(item; for_arr)
+{
+    s(for_arr_sum + item, for_arr_sum)
+}
+f(for_arr_sum == 15)
+{
+    test_report("for数组遍历", true)
+}
+else
+{
+    test_report("for数组遍历", false)
+}
+
+// 测试32：for C风格循环
+s for_c_sum = 0
+for(s i=1; i<=5; i++)
+{
+    s(for_c_sum + i, for_c_sum)
+}
+f(for_c_sum == 15)
+{
+    test_report("for C风格循环", true)
+}
+else
+{
+    test_report("for C风格循环", false)
+}
+
+// 测试33：for C风格递减
+s for_c_dec = 0
+for(s i=5; i>0; i--)
+{
+    s(for_c_dec + 1, for_c_dec)
+}
+f(for_c_dec == 5)
+{
+    test_report("for C风格递减", true)
+}
+else
+{
+    test_report("for C风格递减", false)
+}
+
+// 测试34：break跳出while
+s break_test1 = 0
+s break_i = 0
+w(break_i < 100)
+{
+    s(break_test1 + 1, break_test1)
+    f(break_test1 == 5)
+    {
+        break
+    }
+    s(break_i + 1, break_i)
+}
+f(break_test1 == 5)
+{
+    test_report("break跳出while", true)
+}
+else
+{
+    test_report("break跳出while", false)
+}
+
+// 测试35：break跳出for
+s break_test2 = 0
+for(1; 100)
+{
+    s(break_test2 + 1, break_test2)
+    f(break_test2 == 10)
+    {
+        break
+    }
+}
+f(break_test2 == 10)
+{
+    test_report("break跳出for", true)
+}
+else
+{
+    test_report("break跳出for", false)
+}
+
+// 测试36：单变量判断-非零数字
+s single_var1 = 123
+s single_result1 = false
+f(single_var1)
+{
+    s(true, single_result1)
+}
+f(single_result1 == true)
+{
+    test_report("单变量判断-非零数字", true)
+}
+else
+{
+    test_report("单变量判断-非零数字", false)
+}
+
+// 测试37：单变量判断-零
+s single_var2 = 0
+s single_result2 = true
+f(single_var2)
+{
+    s(false, single_result2)
+}
+f(single_result2 == true)
+{
+    test_report("单变量判断-零", true)
+}
+else
+{
+    test_report("单变量判断-零", false)
+}
+
+// 测试38：单变量判断-非空字符串
+s single_var3 = "hello"
+s single_result3 = false
+f(single_var3)
+{
+    s(true, single_result3)
+}
+f(single_result3 == true)
+{
+    test_report("单变量判断-非空字符串", true)
+}
+else
+{
+    test_report("单变量判断-非空字符串", false)
+}
+
+// 测试39：单变量判断-空字符串
+s single_var4 = ""
+s single_result4 = true
+f(single_var4)
+{
+    s(false, single_result4)
+}
+f(single_result4 == true)
+{
+    test_report("单变量判断-空字符串", true)
+}
+else
+{
+    test_report("单变量判断-空字符串", false)
+}
+
+// 测试40：单变量判断-null
+s single_var5 = null
+s single_result5 = true
+f(single_var5)
+{
+    s(false, single_result5)
+}
+f(single_result5 == true)
+{
+    test_report("单变量判断-null", true)
+}
+else
+{
+    test_report("单变量判断-null", false)
+}
+
+/.
+============================================
+  第三部分：函数与线程测试
+============================================
+./
+
+syso("")
+syso("=== 第三部分：函数与线程测试 ===")
+syso("")
+
+// 定义测试函数
+fn add_func(a, b)
+    sss result = a + b
+    syso("add_func result: " + result)
+end fn
+
+fn multiply_func(a, b)
+    sss result = a * b
+end fn
+
+fn no_param_func()
+    syso("no_param_func called")
+end fn
+
+fn nested_func(a)
+    sss nested_b = a + 10
+    multiply_func(nested_b, 2)
+end fn
+
+// 测试41：有参函数调用
+add_func(3, 5)
+f(result == 8)
+{
+    test_report("有参函数调用", true)
+}
+else
+{
+    test_report("有参函数调用", false)
+}
+
+// 测试42：无参函数调用
+no_param_func()
+test_report("无参函数调用", true)
+
+// 测试43：函数返回值
+multiply_func(4, 5)
+f(result == 20)
+{
+    test_report("函数返回值", true)
+}
+else
+{
+    test_report("函数返回值", false)
+}
+
+// 测试44：函数嵌套调用
+nested_func(5)
+syso("nested_func result: " + result)
+f(result == 30)
+{
+    test_report("函数嵌套调用", true)
+}
+else
+{
+    test_report("函数嵌套调用", false)
+}
+
+// 测试45：线程执行
+s thread_test = 0
+t()
+{
+    s(thread_test + 1, thread_test)
+    syso("thread executed")
+}
+stop(100)
+f(thread_test == 1)
+{
+    test_report("线程执行", true)
+}
+else
+{
+    test_report("线程执行", false)
+}
+
+/.
+============================================
+  第四部分：内置函数测试
+============================================
+./
+
+syso("")
+syso("=== 第四部分：内置函数测试 ===")
+syso("")
+
+// === 输出函数测试 ===
+syso("")
+syso("--- 输出函数测试 ---")
+
+// 测试46：syso函数
+syso("syso test: hello")
+test_report("syso函数", true)
+
+// 测试47：tw函数
+tw("tw test: 提示信息")
+test_report("tw函数", true)
+
+// === 字符串函数测试 ===
+syso("")
+syso("--- 字符串函数测试 ---")
+
+// 测试48：ss字符串拼接
+s ss_a = "hello"
+s ss_b = "world"
+ss(ss_a + " " + ss_b, ss_result)
+f(ss_result == "hello world")
+{
+    test_report("ss字符串拼接", true)
+}
+else
+{
+    test_report("ss字符串拼接", false)
+}
+
+// 测试49：sr字符串替换
+s sr_str = "hello world"
+sr(sr_str, "world", "iapp", sr_result)
+f(sr_result == "hello iapp")
+{
+    test_report("sr字符串替换", true)
+}
+else
+{
+    test_report("sr字符串替换", false)
+}
+
+// 测试50：sj字符串截取
+s sj_str = "abcdefg"
+sj(sj_str, "b", "f", sj_result)
+f(sj_result == "cde")
+{
+    test_report("sj字符串截取", true)
+}
+else
+{
+    test_report("sj字符串截取", false)
+}
+
+// 测试51：sl字符串分割
+s sl_str = "a,b,c,d"
+sl(sl_str, ",", sl_result)
+sgszl(sl_result, sl_len)
+f(sl_len == 4)
+{
+    test_report("sl字符串分割", true)
+}
+else
+{
+    test_report("sl字符串分割", false)
+}
+
+// 测试52：ssg按位置截取
+s ssg_str = "hello world"
+ssg(ssg_str, 0, 5, ssg_result)
+f(ssg_result == "hello")
+{
+    test_report("ssg按位置截取", true)
+}
+else
+{
+    test_report("ssg按位置截取", false)
+}
+
+// 测试53：slg获取字符长度
+s slg_str = "hello"
+slg(slg_str, slg_result)
+f(slg_result == 5)
+{
+    test_report("slg获取字符长度", true)
+}
+else
+{
+    test_report("slg获取字符长度", false)
+}
+
+// 测试54：strim去除头尾空格
+s strim_str = "  hello  "
+strim(strim_str, strim_result)
+f(strim_result == "hello")
+{
+    test_report("strim去除头尾空格", true)
+}
+else
+{
+    test_report("strim去除头尾空格", false)
+}
+
+// 测试55：slower转小写
+s slower_str = "HELLO"
+slower(slower_str, slower_result)
+f(slower_result == "hello")
+{
+    test_report("slower转小写", true)
+}
+else
+{
+    test_report("slower转小写", false)
+}
+
+// 测试56：supper转大写
+s supper_str = "hello"
+supper(supper_str, supper_result)
+f(supper_result == "HELLO")
+{
+    test_report("supper转大写", true)
+}
+else
+{
+    test_report("supper转大写", false)
+}
+
+// 测试57：siof获取字符位置从前
+s siof_str = "hello world"
+siof(siof_str, "o", 0, siof_result)
+f(siof_result == 4)
+{
+    test_report("siof获取字符位置从前", true)
+}
+else
+{
+    test_report("siof获取字符位置从前", false)
+}
+
+// 测试58：slof获取字符位置从后
+s slof_str = "hello world"
+slof(slof_str, "o", slof_result)
+f(slof_result == 7)
+{
+    test_report("slof获取字符位置从后", true)
+}
+else
+{
+    test_report("slof获取字符位置从后", false)
+}
+
+// 测试59：stobm汉字转换编码
+stobm("你", "utf-8", stobm_result)
+f(stobm_result == "%E4%BD%A0")
+{
+    test_report("stobm汉字转换编码", true)
+}
+else
+{
+    test_report("stobm汉字转换编码", false)
+}
+
+// 测试60：sutf8to UTF-8编码转中文
+sutf8to("%E4%BD%A0", sutf8to_result)
+f(sutf8to_result == "你")
+{
+    test_report("sutf8to UTF-8编码转中文", true)
+}
+else
+{
+    test_report("sutf8to UTF-8编码转中文", false)
+}
+
+// === 数学函数测试 ===
+syso("")
+syso("--- 数学函数测试 ---")
+
+// 测试61：s+加法
+s+(10, 5, sadd_result)
+f(sadd_result == 15)
+{
+    test_report("s+加法", true)
+}
+else
+{
+    test_report("s+加法", false)
+}
+
+// 测试62：s-减法
+s-(10, 5, ssub_result)
+f(ssub_result == 5)
+{
+    test_report("s-减法", true)
+}
+else
+{
+    test_report("s-减法", false)
+}
+
+// 测试63：s*乘法
+s*(10, 5, smul_result)
+f(smul_result == 50)
+{
+    test_report("s*乘法", true)
+}
+else
+{
+    test_report("s*乘法", false)
+}
+
+// 测试64：s/除法
+s/(10, 5, sdiv_result)
+f(sdiv_result == 2)
+{
+    test_report("s/除法", true)
+}
+else
+{
+    test_report("s/除法", false)
+}
+
+// 测试65：s%取余
+s%(10, 3, smod_result)
+f(smod_result == 1)
+{
+    test_report("s%取余", true)
+}
+else
+{
+    test_report("s%取余", false)
+}
+
+// 测试66：s计算表达式取整
+s(10 + 5, s_result)
+f(s_result == 15)
+{
+    test_report("s计算表达式取整", true)
+}
+else
+{
+    test_report("s计算表达式取整", false)
+}
+
+// 测试67：s2计算表达式保留2位小数
+s2(10.0 / 3, s2_result)
+f(s2_result == 3.33)
+{
+    test_report("s2计算表达式保留2位小数", true)
+}
+else
+{
+    test_report("s2计算表达式保留2位小数", false)
+}
+
+// 测试68：sn计算表达式保留所有小数
+sn(10.0 / 3, sn_result)
+f(sn_result > 3.33 && sn_result < 3.34)
+{
+    test_report("sn计算表达式保留所有小数", true)
+}
+else
+{
+    test_report("sn计算表达式保留所有小数", false)
+}
+
+// 测试69：sran生成随机数
+sran(1, 100, sran_result)
+f(sran_result >= 1 && sran_result <= 100)
+{
+    test_report("sran生成随机数", true)
+}
+else
+{
+    test_report("sran生成随机数", false)
+}
+
+// === 数组函数测试 ===
+syso("")
+syso("--- 数组函数测试 ---")
+
+// 测试70：nsz创建数组
+nsz(5, nsz_arr)
+sgszl(nsz_arr, nsz_len)
+f(nsz_len == 5)
+{
+    test_report("nsz创建数组", true)
+}
+else
+{
+    test_report("nsz创建数组", false)
+}
+
+// 测试71：sssz设置数组元素
+sssz(nsz_arr, 0, "test")
+sgsz(nsz_arr, 0, sssz_val)
+f(sssz_val == "test")
+{
+    test_report("sssz设置数组元素", true)
+}
+else
+{
+    test_report("sssz设置数组元素", false)
+}
+
+// 测试72：sgsz获取数组元素
+sgsz(nsz_arr, 0, sgsz_val)
+f(sgsz_val == "test")
+{
+    test_report("sgsz获取数组元素", true)
+}
+else
+{
+    test_report("sgsz获取数组元素", false)
+}
+
+// 测试73：sgszl获取数组长度
+sgszl(nsz_arr, sgszl_val)
+f(sgszl_val == 5)
+{
+    test_report("sgszl获取数组长度", true)
+}
+else
+{
+    test_report("sgszl获取数组长度", false)
+}
+
+// === 文件函数测试 ===
+syso("")
+syso("--- 文件函数测试 ---")
+
+// 测试74：fw写入文件
+fw("%test_file.txt", "hello iapp")
+test_report("fw写入文件", true)
+
+// 测试75：fe文件是否存在
+fe("%test_file.txt", fe_result)
+f(fe_result == true)
+{
+    test_report("fe文件是否存在", true)
+}
+else
+{
+    test_report("fe文件是否存在", false)
+}
+
+// 测试76：fr读取文件
+fr("%test_file.txt", fr_result)
+f(fr_result == "hello iapp")
+{
+    test_report("fr读取文件", true)
+}
+else
+{
+    test_report("fr读取文件", false)
+}
+
+// 测试77：fs获取文件大小
+fs("%test_file.txt", fs_result)
+f(fs_result > 0)
+{
+    test_report("fs获取文件大小", true)
+}
+else
+{
+    test_report("fs获取文件大小", false)
+}
+
+// 测试78：fc复制文件
+fc("%test_file.txt", "%test_file_copy.txt", fc_result)
+f(fc_result == true)
+{
+    test_report("fc复制文件", true)
+}
+else
+{
+    test_report("fc复制文件", false)
+}
+
+// 测试79：ft转移文件
+ft("%test_file_copy.txt", "%test_file_moved.txt", ft_result)
+f(ft_result == true)
+{
+    test_report("ft转移文件", true)
+}
+else
+{
+    test_report("ft转移文件", false)
+}
+
+// 测试80：fdir获取根目录
+fdir(fdir_result)
+f(fdir_result != null)
+{
+    test_report("fdir获取根目录", true)
+}
+else
+{
+    test_report("fdir获取根目录", false)
+}
+
+// 测试81：fi判断是否文件夹
+fi("%", fi_result)
+f(fi_result == true)
+{
+    test_report("fi判断是否文件夹", true)
+}
+else
+{
+    test_report("fi判断是否文件夹", false)
+}
+
+// 测试82：fd删除文件
+fd("%test_file.txt", fd_result1)
+fd("%test_file_moved.txt", fd_result2)
+f(fd_result1 == true && fd_result2 == true)
+{
+    test_report("fd删除文件", true)
+}
+else
+{
+    test_report("fd删除文件", false)
+}
+
+// === 时间函数测试 ===
+syso("")
+syso("--- 时间函数测试 ---")
+
+// 测试83：time获取当前时间
+time(0, time_result)
+f(time_result != null)
+{
+    test_report("time获取当前时间", true)
+}
+else
+{
+    test_report("time获取当前时间", false)
+}
+
+// 测试84：time格式1
+time(1, time_result1)
+f(time_result1 != null)
+{
+    test_report("time格式1", true)
+}
+else
+{
+    test_report("time格式1", false)
+}
+
+// 测试85：time格式4时间戳
+time(4, time_timestamp)
+f(time_timestamp > 0)
+{
+    test_report("time格式4时间戳", true)
+}
+else
+{
+    test_report("time格式4时间戳", false)
+}
+
+// === 列表函数测试 ===
+syso("")
+syso("--- 列表函数测试 ---")
+
+// 测试86：aslist数组转列表
+nsz(3, aslist_arr)
+sssz(aslist_arr, 0, "a")
+sssz(aslist_arr, 1, "b")
+sssz(aslist_arr, 2, "c")
+aslist(aslist_arr, aslist_result)
+gslistl(aslist_result, aslist_len)
+f(aslist_len == 3)
+{
+    test_report("aslist数组转列表", true)
+}
+else
+{
+    test_report("aslist数组转列表", false)
+}
+
+// 测试87：gslist获取列表元素
+gslist(aslist_result, 0, gslist_val)
+f(gslist_val == "a")
+{
+    test_report("gslist获取列表元素", true)
+}
+else
+{
+    test_report("gslist获取列表元素", false)
+}
+
+// 测试88：gslistl获取列表长度
+gslistl(aslist_result, gslistl_val)
+f(gslistl_val == 3)
+{
+    test_report("gslistl获取列表长度", true)
+}
+else
+{
+    test_report("gslistl获取列表长度", false)
+}
+
+// 测试89：sslist设置列表元素
+sslist(aslist_result, 0, "x")
+gslist(aslist_result, 0, sslist_val)
+f(sslist_val == "x")
+{
+    test_report("sslist设置列表元素", true)
+}
+else
+{
+    test_report("sslist设置列表元素", false)
+}
+
+// 测试90：gslistis判断列表包含
+gslistis(aslist_result, "b", gslistis_result)
+f(gslistis_result == true)
+{
+    test_report("gslistis判断列表包含", true)
+}
+else
+{
+    test_report("gslistis判断列表包含", false)
+}
+
+// 测试91：gslistiof获取元素位置从前
+gslistiof(aslist_result, "b", gslistiof_result)
+f(gslistiof_result == 1)
+{
+    test_report("gslistiof获取元素位置从前", true)
+}
+else
+{
+    test_report("gslistiof获取元素位置从前", false)
+}
+
+// 测试92：dslist删除列表元素
+dslist(aslist_result, 0)
+gslistl(aslist_result, dslist_len)
+f(dslist_len == 2)
+{
+    test_report("dslist删除列表元素", true)
+}
+else
+{
+    test_report("dslist删除列表元素", false)
+}
+
+// === 剪贴板函数测试 ===
+syso("")
+syso("--- 剪贴板函数测试 ---")
+
+// 测试93：sxb写入剪切板
+sxb("test clipboard content")
+test_report("sxb写入剪切板", true)
+
+// 测试94：shb获取剪切板
+shb(shb_result)
+f(shb_result == "test clipboard content")
+{
+    test_report("shb获取剪切板", true)
+}
+else
+{
+    test_report("shb获取剪切板", false)
+}
+
+// === stop函数测试 ===
+syso("")
+syso("--- stop函数测试 ---")
+
+// 测试95：stop暂停执行
+time(4, stop_start)
+stop(500)
+time(4, stop_end)
+s(stop_end - stop_start, stop_diff)
+f(stop_diff >= 500)
+{
+    test_report("stop暂停执行", true)
+}
+else
+{
+    test_report("stop暂停执行", false)
+}
+
+/.
+============================================
+  第五部分：Java互操作测试
+============================================
+./
+
+syso("")
+syso("=== 第五部分：Java互操作测试 ===")
+syso("")
+
+// 测试96：cls获取类
+cls("java.lang.String", cls_result)
+f(cls_result != null)
+{
+    test_report("cls获取类", true)
+}
+else
+{
+    test_report("cls获取类", false)
+}
+
+// 测试97：javanew创建对象
+javanew(javanew_result, "java.util.ArrayList")
+f(javanew_result != null)
+{
+    test_report("javanew创建对象", true)
+}
+else
+{
+    test_report("javanew创建对象", false)
+}
+
+// 测试98：javax调用方法
+cls("java.util.ArrayList", arraylist_cls)
+javanew(arraylist_obj, "java.util.ArrayList")
+javax(javax_result, arraylist_obj, arraylist_cls, "add", "Object", "test_item")
+javax(javax_size, arraylist_obj, arraylist_cls, "size")
+f(javax_size == 1)
+{
+    test_report("javax调用方法", true)
+}
+else
+{
+    test_report("javax调用方法", false)
+}
+
+// 测试99：javags获取字段
+cls("java.lang.Math", math_cls)
+javags(pi_value, null, math_cls, "PI")
+f(pi_value > 3.14 && pi_value < 3.15)
+{
+    test_report("javags获取字段", true)
+}
+else
+{
+    test_report("javags获取字段", false)
+}
+
+// 测试100：javax调用静态方法
+cls("java.lang.Math", math_cls2)
+javax(abs_result, null, math_cls2, "abs", "int", -10)
+f(abs_result == 10)
+{
+    test_report("javax调用静态方法", true)
+}
+else
+{
+    test_report("javax调用静态方法", false)
+}
+
+/.
+============================================
+  第六部分：综合测试
+============================================
+./
+
+syso("")
+syso("=== 第六部分：综合测试 ===")
+syso("")
+
+// 测试101：复杂表达式
+s complex1 = (10 + 5) * 2 - 3 / 1 + 4 % 2
+f(complex1 == 27)
+{
+    test_report("复杂表达式", true)
+}
+else
+{
+    test_report("复杂表达式", false)
+}
+
+// 测试102：嵌套控制流
+s nest_result = 0
+for(s i=1; i<=3; i++)
+{
+    f(i == 2)
+    {
+        s(nest_result + 10, nest_result)
+    }
+    else
+    {
+        s(nest_result + 1, nest_result)
+    }
+}
+f(nest_result == 12)
+{
+    test_report("嵌套控制流", true)
+}
+else
+{
+    test_report("嵌套控制流", false)
+}
+
+// 测试103：函数递归计算阶乘
+sss fact_result = 1
+fn factorial(n)
+    sss fact_result = 1
+    s i = 1
+    w(i <= n)
+    {
+        sss fact_result = fact_result * i
+        s(i + 1, i)
+    }
+end fn
+
+factorial(5)
+f(fact_result == 120)
+{
+    test_report("函数递归计算阶乘", true)
+}
+else
+{
+    test_report("函数递归计算阶乘", false)
+}
+
+// 测试104：字符串处理综合
+s str_test = "  Hello World  "
+strim(str_test, str_trimmed)
+slower(str_trimmed, str_lower)
+sr(str_lower, "world", "iapp", str_replaced)
+slg(str_replaced, str_final_len)
+f(str_final_len == 10)
+{
+    test_report("字符串处理综合", true)
+}
+else
+{
+    test_report("字符串处理综合", false)
+}
+
+// 测试105：数组操作综合
+nsz(5, arr_test)
+for(s i=0; i<5; i++)
+{
+    sssz(arr_test, i, i * 2)
+}
+s arr_sum = 0
+for(item; arr_test)
+{
+    s(arr_sum + item, arr_sum)
+}
+f(arr_sum == 20)
+{
+    test_report("数组操作综合", true)
+}
+else
+{
+    test_report("数组操作综合", false)
+}
+
+// 测试106：列表操作综合
+nsz(3, list_src)
+sssz(list_src, 0, "apple")
+sssz(list_src, 1, "banana")
+sssz(list_src, 2, "cherry")
+aslist(list_src, list_test)
+gslistl(list_test, list_len1)
+sslist(list_test, 0, "apricot")
+gslist(list_test, 0, list_first)
+dslist(list_test, 1)
+gslistl(list_test, list_len2)
+f(list_len1 == 3 && list_first == "apricot" && list_len2 == 2)
+{
+    test_report("列表操作综合", true)
+}
+else
+{
+    test_report("列表操作综合", false)
+}
+
+// 测试107：数学运算综合
+s+(10, 5, math1)
+s-(math1, 3, math2)
+s*(math2, 2, math3)
+s/(math3, 4, math4)
+s%(math4, 3, math5)
+f(math5 == 0)
+{
+    test_report("数学运算综合", true)
+}
+else
+{
+    test_report("数学运算综合", false)
+}
+
+// 测试108：文件操作综合
+fw("%test_comprehensive.txt", "line1\nline2\nline3")
+fr("%test_comprehensive.txt", file_content)
+sl(file_content, "\n", file_lines)
+sgszl(file_lines, line_count)
+fd("%test_comprehensive.txt", del_result)
+f(line_count == 3)
+{
+    test_report("文件操作综合", true)
+}
+else
+{
+    test_report("文件操作综合", false)
+}
+
+// 测试109：逻辑运算综合
+s logic_a = 10
+s logic_b = 20
+s logic_c = 30
+s logic_result = false
+f(logic_a < logic_b && logic_b < logic_c)
+{
+    f(logic_a + logic_b == logic_c || logic_a * 2 == logic_b)
+    {
+        s(true, logic_result)
+    }
+}
+f(logic_result == true)
+{
+    test_report("逻辑运算综合", true)
+}
+else
+{
+    test_report("逻辑运算综合", false)
+}
+
+// 测试110：变量作用域综合
+s scope_local = 1
+ss scope_interface = 2
+sss scope_global = 3
+fn scope_test()
+    s scope_local = 100
+    ss scope_interface = 200
+    sss scope_global = 300
+end fn
+scope_test()
+f(scope_local == 1 && scope_interface == 200 && scope_global == 300)
+{
+    test_report("变量作用域综合", true)
+}
+else
+{
+    test_report("变量作用域综合", false)
+}
+
+/.
+============================================
+  测试结果汇总
+============================================
+./
+
+syso("")
+syso("============================================")
+syso("  测试结果汇总")
+syso("============================================")
+syso("")
+ss("总测试数: " + test_total, summary1)
+ss("通过: " + test_pass, summary2)
+ss("失败: " + test_fail, summary3)
+syso(summary1)
+syso(summary2)
+syso(summary3)
+syso("")
+
+s pass_rate = 0
+f(test_total > 0)
+{
+    s(test_pass * 100 / test_total, pass_rate)
+}
+ss("通过率: " + pass_rate + "%", summary4)
+syso(summary4)
+syso("")
+
+f(test_fail == 0)
+{
+    syso("所有测试通过！")
+}
+else
+{
+    syso("存在失败的测试，请检查！")
+}
+
+syso("")
+syso("============================================")
+syso("  测试完成")
+syso("============================================")
