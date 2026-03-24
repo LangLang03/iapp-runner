@@ -4,7 +4,6 @@
 
 ![Java](https://img.shields.io/badge/Java-25+-orange?style=for-the-badge&logo=openjdk)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-blue?style=for-the-badge)
-![License](https://img.shields.io/badge/License-GPL%203.0-blue?style=for-the-badge)
 
 **基于裕语言 V3 语法的 跨平台解释器**
 
