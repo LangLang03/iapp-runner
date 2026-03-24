@@ -26,13 +26,13 @@ public class LSContext {
     private final HeaderLoader headerLoader;
     private boolean showYuWebCompletions;
     
-    private FunctionProvider functionProvider;
-    private VariableProvider variableProvider;
-    private CompletionProvider completionProvider;
-    private HoverProvider hoverProvider;
-    private SignatureProvider signatureProvider;
-    private DiagnosticProvider diagnosticProvider;
-    private SnippetProvider snippetProvider;
+    private volatile FunctionProvider functionProvider;
+    private volatile VariableProvider variableProvider;
+    private volatile CompletionProvider completionProvider;
+    private volatile HoverProvider hoverProvider;
+    private volatile SignatureProvider signatureProvider;
+    private volatile DiagnosticProvider diagnosticProvider;
+    private volatile SnippetProvider snippetProvider;
 
     public LSContext() {
         this.functionRegistry = new FunctionRegistry();
@@ -155,18 +155,6 @@ public class LSContext {
         } catch (Exception e) {
             logger.warn("Failed to load YuWeb functions: {}", e.getMessage());
             yuWebAvailable = false;
-        }
-    }
-
-    private void categorizeYuWebFunctions() {
-        for (String funcName : functionRegistry.getFunctionNames()) {
-            if (!functionCategoryMap.containsKey(funcName)) {
-                IFunction func = functionRegistry.getFunction(funcName);
-                if (func != null) {
-                    FunctionCategory category = FunctionCategory.fromClassName(func.getClass().getName());
-                    functionCategoryMap.put(funcName, category);
-                }
-            }
         }
     }
 

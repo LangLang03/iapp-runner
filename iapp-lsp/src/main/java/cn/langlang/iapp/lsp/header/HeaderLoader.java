@@ -21,7 +21,7 @@ public class HeaderLoader {
         this.parser = new HeaderParser();
         this.headerFiles = new ConcurrentHashMap<>();
         this.functionCache = new ConcurrentHashMap<>();
-        this.snippetCache = new ArrayList<>();
+        this.snippetCache = Collections.synchronizedList(new ArrayList<>());
     }
     
     public void loadDirectory(String directoryPath) {

@@ -11,10 +11,14 @@ import cn.langlang.iapp.lsp.core.model.SymbolInfo;
 import cn.langlang.iapp.lsp.core.model.VariableInfo;
 import cn.langlang.iapp.lsp.core.provider.VariableProvider;
 import cn.langlang.iapp.parser.Parser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public class SemanticAnalyzer {
+    private static final Logger logger = LoggerFactory.getLogger(SemanticAnalyzer.class);
+    
     private final LSContext context;
     private final VariableProvider variableProvider;
     private final List<DiagnosticInfo> diagnostics;
@@ -68,7 +72,7 @@ public class SemanticAnalyzer {
             }
             
         } catch (Exception e) {
-            // Lexer/Parser errors handled elsewhere
+            logger.debug("Error during semantic analysis: {}", e.getMessage());
         }
         
         return new AnalysisResult(diagnostics, symbolTable, variableProvider);

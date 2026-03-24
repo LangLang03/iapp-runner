@@ -18,6 +18,7 @@ import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.TextDocumentService;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -34,7 +35,7 @@ public class IAppTextDocumentService implements TextDocumentService {
 
     public IAppTextDocumentService(LSContext context) {
         this.context = context;
-        this.documentContents = new HashMap<>();
+        this.documentContents = new ConcurrentHashMap<>();
         this.completionProvider = new CompletionProvider(context);
         this.hoverProvider = new HoverProvider(context);
         this.signatureProvider = new SignatureProvider(context);
@@ -371,9 +372,15 @@ public class IAppTextDocumentService implements TextDocumentService {
 
     private Diagnostic convertDiagnostic(DiagnosticInfo info) {
         Diagnostic diagnostic = new Diagnostic();
+        
+        int startLine = Math.max(0, info.getLine() - 1);
+        int startColumn = Math.max(0, info.getColumn() - 1);
+        int endLine = Math.max(startLine, info.getEndLine() - 1);
+        int endColumn = Math.max(startColumn, info.getEndColumn() - 1);
+        
         diagnostic.setRange(new Range(
-            new Position(info.getLine() - 1, info.getColumn() - 1),
-            new Position(info.getEndLine() - 1, info.getEndColumn() - 1)
+            new Position(startLine, startColumn),
+            new Position(endLine, endColumn)
         ));
         diagnostic.setSeverity(convertSeverity(info.getSeverity()));
         diagnostic.setMessage(info.getMessage());

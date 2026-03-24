@@ -36,7 +36,6 @@ public class HeaderParser {
             headerFile.setYuWeb(true);
         }
         
-        BufferedReader br = new BufferedReader(reader);
         String line;
         StringBuilder currentDocBlock = null;
         boolean inDocBlock = false;
@@ -44,79 +43,80 @@ public class HeaderParser {
         boolean inSnippetBody = false;
         HeaderFile.SnippetInfo currentSnippet = null;
         
-        while ((line = br.readLine()) != null) {
-            if (inSnippetBody) {
-                if (line.trim().equals("*/")) {
-                    inSnippetBody = false;
-                    if (currentSnippet != null) {
-                        headerFile.addSnippet(currentSnippet);
-                        currentSnippet = null;
+        try (BufferedReader br = new BufferedReader(reader)) {
+            while ((line = br.readLine()) != null) {
+                if (inSnippetBody) {
+                    if (line.trim().equals("*/")) {
+                        inSnippetBody = false;
+                        if (currentSnippet != null) {
+                            headerFile.addSnippet(currentSnippet);
+                            currentSnippet = null;
+                        }
+                    } else if (currentSnippet != null) {
+                        String currentBody = currentSnippet.getBody();
+                        if (currentBody == null) {
+                            currentSnippet.setBody(line);
+                        } else {
+                            currentSnippet.setBody(currentBody + "\n" + line);
+                        }
                     }
-                } else if (currentSnippet != null) {
-                    String currentBody = currentSnippet.getBody();
-                    if (currentBody == null) {
-                        currentSnippet.setBody(line);
-                    } else {
-                        currentSnippet.setBody(currentBody + "\n" + line);
-                    }
+                    continue;
                 }
-                continue;
-            }
-            
-            if (!inDocBlock && DOC_BLOCK_START.matcher(line).find()) {
-                inDocBlock = true;
-                currentDocBlock = new StringBuilder();
-                int endIndex = line.indexOf("*/");
-                if (endIndex != -1) {
-                    String content = line.substring(0, endIndex);
-                    currentDocBlock.append(content).append("\n");
-                    inDocBlock = false;
-                } else {
+                
+                if (!inDocBlock && DOC_BLOCK_START.matcher(line).find()) {
+                    inDocBlock = true;
+                    currentDocBlock = new StringBuilder();
+                    int endIndex = line.indexOf("*/");
+                    if (endIndex != -1) {
+                        String content = line.substring(0, endIndex);
+                        currentDocBlock.append(content).append("\n");
+                        inDocBlock = false;
+                    } else {
+                        currentDocBlock.append(line).append("\n");
+                    }
+                    continue;
+                }
+                
+                if (inDocBlock) {
                     currentDocBlock.append(line).append("\n");
-                }
-                continue;
-            }
-            
-            if (inDocBlock) {
-                currentDocBlock.append(line).append("\n");
-                
-                if (DOC_BLOCK_END.matcher(line).find()) {
-                    inDocBlock = false;
-                    inExample = false;
-                }
-                continue;
-            }
-            
-            Matcher fnMatcher = FN_DECLARATION.matcher(line);
-            if (fnMatcher.find() && currentDocBlock != null) {
-                String funcName = fnMatcher.group(1);
-                String params = fnMatcher.group(2);
-                
-                HeaderFunctionInfo funcInfo = parseDocBlock(currentDocBlock.toString(), funcName, params);
-                if (funcInfo != null) {
-                    funcInfo.setYuWeb(headerFile.isYuWeb());
-                    headerFile.addFunction(funcInfo);
-                }
-                
-                currentDocBlock = null;
-                continue;
-            }
-            
-            if (currentDocBlock != null) {
-                HeaderFile.SnippetInfo snippet = parseSnippetBlock(currentDocBlock.toString());
-                if (snippet != null) {
-                    if (snippet.getBody() != null) {
-                        headerFile.addSnippet(snippet);
-                    } else {
-                        currentSnippet = snippet;
-                        inSnippetBody = true;
+                    
+                    if (DOC_BLOCK_END.matcher(line).find()) {
+                        inDocBlock = false;
+                        inExample = false;
                     }
+                    continue;
                 }
-                currentDocBlock = null;
+                
+                Matcher fnMatcher = FN_DECLARATION.matcher(line);
+                if (fnMatcher.find() && currentDocBlock != null) {
+                    String funcName = fnMatcher.group(1);
+                    String params = fnMatcher.group(2);
+                    
+                    HeaderFunctionInfo funcInfo = parseDocBlock(currentDocBlock.toString(), funcName, params);
+                    if (funcInfo != null) {
+                        funcInfo.setYuWeb(headerFile.isYuWeb());
+                        headerFile.addFunction(funcInfo);
+                    }
+                    
+                    currentDocBlock = null;
+                    continue;
+                }
+                
+                if (currentDocBlock != null) {
+                    HeaderFile.SnippetInfo snippet = parseSnippetBlock(currentDocBlock.toString());
+                    if (snippet != null) {
+                        if (snippet.getBody() != null) {
+                            headerFile.addSnippet(snippet);
+                        } else {
+                            currentSnippet = snippet;
+                            inSnippetBody = true;
+                        }
+                    }
+                    currentDocBlock = null;
+                }
             }
         }
         
-        br.close();
         logger.debug("Parsed header file: {} with {} functions and {} snippets", 
             filePath, headerFile.getFunctionCount(), headerFile.getSnippetCount());
         
