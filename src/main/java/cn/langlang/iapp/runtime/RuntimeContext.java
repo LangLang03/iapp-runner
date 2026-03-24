@@ -6,9 +6,12 @@ import cn.langlang.iapp.lexer.TokenType;
 import cn.langlang.iapp.module.MjavaModuleLoader;
 
 import java.io.File;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Stack;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class RuntimeContext {
     private final VariableManager variableManager;
@@ -16,14 +19,16 @@ public class RuntimeContext {
     private final FunctionRegistry localFunctionRegistry;
     private final Interpreter beanShellInterpreter;
     private final MjavaModuleLoader mjavaModuleLoader;
-    private final Stack<BreakContext> breakContextStack;
+    private final Deque<BreakContext> breakContextStack;
+    private final ReentrantLock breakContextLock;
     private final Map<String, Object> javaObjects;
     private final Map<String, FunctionDefinitionStatement> userFunctions;
+    private final ReentrantLock userFunctionsLock;
     private String currentDirectory;
-    private boolean endCodeRequested;
+    private volatile boolean endCodeRequested;
     private Thread currentThread;
     private final boolean useSharedRegistry;
-    private Object requestContext;
+    private volatile Object requestContext;
     
     public RuntimeContext() {
         this.variableManager = new VariableManager();
@@ -31,9 +36,11 @@ public class RuntimeContext {
         this.localFunctionRegistry = null;
         this.beanShellInterpreter = new Interpreter();
         this.mjavaModuleLoader = new MjavaModuleLoader();
-        this.breakContextStack = new Stack<>();
-        this.javaObjects = new HashMap<>();
-        this.userFunctions = new HashMap<>();
+        this.breakContextStack = new ConcurrentLinkedDeque<>();
+        this.breakContextLock = new ReentrantLock();
+        this.javaObjects = new ConcurrentHashMap<>();
+        this.userFunctions = new ConcurrentHashMap<>();
+        this.userFunctionsLock = new ReentrantLock();
         this.currentDirectory = System.getProperty("user.dir");
         this.endCodeRequested = false;
         this.useSharedRegistry = false;
@@ -47,9 +54,11 @@ public class RuntimeContext {
         this.localFunctionRegistry = new FunctionRegistry();
         this.beanShellInterpreter = new Interpreter();
         this.mjavaModuleLoader = new MjavaModuleLoader();
-        this.breakContextStack = new Stack<>();
-        this.javaObjects = new HashMap<>();
-        this.userFunctions = new HashMap<>();
+        this.breakContextStack = new ConcurrentLinkedDeque<>();
+        this.breakContextLock = new ReentrantLock();
+        this.javaObjects = new ConcurrentHashMap<>();
+        this.userFunctions = new ConcurrentHashMap<>();
+        this.userFunctionsLock = new ReentrantLock();
         this.currentDirectory = System.getProperty("user.dir");
         this.endCodeRequested = false;
         this.useSharedRegistry = true;
@@ -195,17 +204,11 @@ public class RuntimeContext {
     }
     
     public BreakContext popBreakContext() {
-        if (!breakContextStack.isEmpty()) {
-            return breakContextStack.pop();
-        }
-        return null;
+        return breakContextStack.pollFirst();
     }
     
     public BreakContext getCurrentBreakContext() {
-        if (!breakContextStack.isEmpty()) {
-            return breakContextStack.peek();
-        }
-        return null;
+        return breakContextStack.peekFirst();
     }
     
     public void registerJavaObject(String name, Object object) {
@@ -278,7 +281,7 @@ public class RuntimeContext {
     }
     
     public Map<String, FunctionDefinitionStatement> getUserFunctions() {
-        return userFunctions;
+        return new HashMap<>(userFunctions);
     }
     
     public void reset() {
@@ -317,7 +320,7 @@ public class RuntimeContext {
 
     public static class BreakContext {
         private final String type;
-        private boolean shouldBreak;
+        private volatile boolean shouldBreak;
         
         public BreakContext(String type) {
             this.type = type;

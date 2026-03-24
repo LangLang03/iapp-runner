@@ -13,11 +13,13 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class ScriptCache {
     private static final Logger logger = LoggerFactory.getLogger(ScriptCache.class);
@@ -28,10 +30,11 @@ public class ScriptCache {
     private final Map<String, Long> fileLastModified;
     private final FunctionRegistry sharedFunctionRegistry;
     private final int maxSize;
+    private final ReadWriteLock lock;
     
-    private int hitCount = 0;
-    private int missCount = 0;
-    private int evictionCount = 0;
+    private volatile int hitCount = 0;
+    private volatile int missCount = 0;
+    private volatile int evictionCount = 0;
     
     public ScriptCache(FunctionRegistry sharedFunctionRegistry) {
         this(sharedFunctionRegistry, DEFAULT_MAX_SIZE);
@@ -40,8 +43,9 @@ public class ScriptCache {
     public ScriptCache(FunctionRegistry sharedFunctionRegistry, int maxSize) {
         this.sharedFunctionRegistry = sharedFunctionRegistry;
         this.maxSize = maxSize > 0 ? maxSize : DEFAULT_MAX_SIZE;
+        this.lock = new ReentrantReadWriteLock();
         
-        this.cache = Collections.synchronizedMap(new LinkedHashMap<String, CachedScript>(16, 0.75f, true) {
+        this.cache = new LinkedHashMap<>(16, 0.75f, true) {
             @Override
             protected boolean removeEldestEntry(Map.Entry<String, CachedScript> eldest) {
                 if (size() > ScriptCache.this.maxSize) {
@@ -52,7 +56,7 @@ public class ScriptCache {
                 }
                 return false;
             }
-        });
+        };
         
         this.fileLastModified = new ConcurrentHashMap<>();
     }
@@ -63,7 +67,8 @@ public class ScriptCache {
         
         String cacheKey = generateCacheKey(filePath);
         
-        synchronized (cache) {
+        lock.readLock().lock();
+        try {
             CachedScript cached = cache.get(cacheKey);
             Long cachedLastModified = fileLastModified.get(cacheKey);
             
@@ -72,6 +77,8 @@ public class ScriptCache {
                 logger.debug("Cache hit for script: {}", filePath);
                 return cached;
             }
+        } finally {
+            lock.readLock().unlock();
         }
         
         missCount++;
@@ -79,9 +86,12 @@ public class ScriptCache {
         
         CachedScript newCached = compile(source);
         
-        synchronized (cache) {
+        lock.writeLock().lock();
+        try {
             cache.put(cacheKey, newCached);
             fileLastModified.put(cacheKey, lastModified);
+        } finally {
+            lock.writeLock().unlock();
         }
         
         return newCached;
@@ -108,17 +118,23 @@ public class ScriptCache {
     
     public void invalidate(String filePath) {
         String cacheKey = generateCacheKey(filePath);
-        synchronized (cache) {
+        lock.writeLock().lock();
+        try {
             cache.remove(cacheKey);
             fileLastModified.remove(cacheKey);
+        } finally {
+            lock.writeLock().unlock();
         }
         logger.debug("Invalidated cache for: {}", filePath);
     }
     
     public void clear() {
-        synchronized (cache) {
+        lock.writeLock().lock();
+        try {
             cache.clear();
             fileLastModified.clear();
+        } finally {
+            lock.writeLock().unlock();
         }
         hitCount = 0;
         missCount = 0;
@@ -127,8 +143,11 @@ public class ScriptCache {
     }
     
     public int size() {
-        synchronized (cache) {
+        lock.readLock().lock();
+        try {
             return cache.size();
+        } finally {
+            lock.readLock().unlock();
         }
     }
     
@@ -137,8 +156,11 @@ public class ScriptCache {
     }
     
     public CacheStats getStats() {
-        synchronized (cache) {
+        lock.readLock().lock();
+        try {
             return new CacheStats(hitCount, missCount, cache.size(), evictionCount, maxSize);
+        } finally {
+            lock.readLock().unlock();
         }
     }
     

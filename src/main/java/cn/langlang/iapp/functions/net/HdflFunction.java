@@ -13,6 +13,10 @@ import java.net.URL;
 import java.util.List;
 
 public class HdflFunction extends AbstractFunction {
+    
+    private static final int DEFAULT_CONNECT_TIMEOUT = 30000;
+    private static final int DEFAULT_READ_TIMEOUT = 30000;
+    
     @Override
     public String getName() {
         return "hdfl";
@@ -34,31 +38,49 @@ public class HdflFunction extends AbstractFunction {
         String filePath = arguments.get(1) != null ? arguments.get(1).toString() : "";
         filePath = context.resolvePath(filePath);
         
+        HttpURLConnection conn = null;
+        InputStream in = null;
+        FileOutputStream out = null;
         try {
             URL url = new URL(urlStr);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
-            conn.setConnectTimeout(30000);
-            conn.setReadTimeout(30000);
+            conn.setConnectTimeout(DEFAULT_CONNECT_TIMEOUT);
+            conn.setReadTimeout(DEFAULT_READ_TIMEOUT);
             
             int responseCode = conn.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 File file = new File(filePath);
                 file.getParentFile().mkdirs();
                 
-                try (InputStream in = conn.getInputStream();
-                     FileOutputStream out = new FileOutputStream(file)) {
-                    byte[] buffer = new byte[4096];
-                    int bytesRead;
-                    while ((bytesRead = in.read(buffer)) != -1) {
-                        out.write(buffer, 0, bytesRead);
-                    }
+                in = conn.getInputStream();
+                out = new FileOutputStream(file);
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, bytesRead);
                 }
                 return true;
             }
             return false;
         } catch (Exception e) {
             throw new FunctionException("下载失败: " + e.getMessage(), e);
+        } finally {
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (Exception ignored) {
+                }
+            }
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (Exception ignored) {
+                }
+            }
+            if (conn != null) {
+                conn.disconnect();
+            }
         }
     }
     

@@ -13,6 +13,10 @@ import java.net.URL;
 import java.util.List;
 
 public class HsFunction extends AbstractFunction {
+    
+    private static final int DEFAULT_CONNECT_TIMEOUT = 10000;
+    private static final int DEFAULT_READ_TIMEOUT = 10000;
+    
     @Override
     public String getName() {
         return "hs";
@@ -53,9 +57,11 @@ public class HsFunction extends AbstractFunction {
             autoCookie = (Boolean) arguments.get(4);
         }
         
+        HttpURLConnection conn = null;
+        BufferedReader reader = null;
         try {
             URL url = new URL(urlStr);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn = (HttpURLConnection) url.openConnection();
             
             if (postData != null && !postData.isEmpty()) {
                 conn.setRequestMethod("POST");
@@ -65,8 +71,8 @@ public class HsFunction extends AbstractFunction {
                 conn.setRequestMethod("GET");
             }
             
-            conn.setConnectTimeout(10000);
-            conn.setReadTimeout(10000);
+            conn.setConnectTimeout(DEFAULT_CONNECT_TIMEOUT);
+            conn.setReadTimeout(DEFAULT_READ_TIMEOUT);
             
             if (cookie != null) {
                 conn.setRequestProperty("Cookie", cookie);
@@ -81,18 +87,27 @@ public class HsFunction extends AbstractFunction {
             
             int responseCode = conn.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), charset));
+                reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), charset));
                 StringBuilder response = new StringBuilder();
                 String line;
                 while ((line = reader.readLine()) != null) {
                     response.append(line);
                 }
-                reader.close();
                 return response.toString();
             }
             return "";
         } catch (Exception e) {
             throw new FunctionException("HTTP 请求失败: " + e.getMessage(), e);
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (Exception ignored) {
+                }
+            }
+            if (conn != null) {
+                conn.disconnect();
+            }
         }
     }
     

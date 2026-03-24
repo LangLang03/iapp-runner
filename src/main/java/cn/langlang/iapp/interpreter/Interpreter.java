@@ -10,33 +10,61 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Interpreter implements IInterpreter {
 
-    private static final ExecutorService threadPool = Executors.newCachedThreadPool(new ThreadFactory() {
-        private final AtomicInteger counter = new AtomicInteger(0);
-        @Override
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(r, "iapp-thread-" + counter.incrementAndGet());
-            t.setDaemon(true);
-            return t;
-        }
-    });
-
-    private final StatementVisitorImpl statementVisitor = new StatementVisitorImpl();
-    private final ExpressionVisitorImpl expressionVisitor = new ExpressionVisitorImpl();
-    
-    private RuntimeContext currentContext;
+    private static volatile ExecutorService threadPool;
+    private static final AtomicInteger threadCounter = new AtomicInteger(0);
+    private static final Object poolLock = new Object();
     
     public Interpreter() {
-        statementVisitor.setInterpreter(this);
-        expressionVisitor.setInterpreter(this);
+        ensureThreadPoolInitialized();
+    }
+    
+    private static void ensureThreadPoolInitialized() {
+        if (threadPool == null) {
+            synchronized (poolLock) {
+                if (threadPool == null) {
+                    threadPool = Executors.newCachedThreadPool(new ThreadFactory() {
+                        @Override
+                        public Thread newThread(Runnable r) {
+                            Thread t = new Thread(r, "iapp-thread-" + threadCounter.incrementAndGet());
+                            t.setDaemon(true);
+                            return t;
+                        }
+                    });
+                }
+            }
+        }
+    }
+    
+    public static void shutdown() {
+        synchronized (poolLock) {
+            if (threadPool != null && !threadPool.isShutdown()) {
+                threadPool.shutdown();
+                try {
+                    if (!threadPool.awaitTermination(10, TimeUnit.SECONDS)) {
+                        threadPool.shutdownNow();
+                    }
+                } catch (InterruptedException e) {
+                    threadPool.shutdownNow();
+                    Thread.currentThread().interrupt();
+                }
+                threadPool = null;
+            }
+        }
+    }
+    
+    public static boolean isShutdown() {
+        synchronized (poolLock) {
+            return threadPool == null || threadPool.isShutdown();
+        }
     }
 
     @Override
     public Object execute(Program program, RuntimeContext context) throws InterpreterException {
-        this.currentContext = context;
         Object result = null;
         for (Statement statement : program.getStatements()) {
             if (context.isEndCodeRequested()) {
@@ -49,24 +77,33 @@ public class Interpreter implements IInterpreter {
     
     @Override
     public Object executeStatement(Statement statement, RuntimeContext context) throws InterpreterException {
-        this.currentContext = context;
-        return statement.accept(statementVisitor);
+        return statement.accept(new StatementVisitorImpl(context, this));
     }
     
     @Override
     public Object evaluateExpression(Expression expression, RuntimeContext context) throws InterpreterException {
-        this.currentContext = context;
-        return expression.accept(expressionVisitor);
+        return expression.accept(new ExpressionVisitorImpl(context, this));
     }
     
-    RuntimeContext getCurrentContext() {
-        return currentContext;
+    ExecutorService getThreadPool() {
+        ensureThreadPoolInitialized();
+        return threadPool;
+    }
+    
+    Object executeStatementInternal(Statement statement, RuntimeContext context) throws InterpreterException {
+        return statement.accept(new StatementVisitorImpl(context, this));
+    }
+    
+    Object evaluateExpressionInternal(Expression expression, RuntimeContext context) throws InterpreterException {
+        return expression.accept(new ExpressionVisitorImpl(context, this));
     }
     
     private static class StatementVisitorImpl implements Statement.StatementVisitor<Object> {
-        private Interpreter interpreter;
+        private final RuntimeContext context;
+        private final Interpreter interpreter;
         
-        void setInterpreter(Interpreter interpreter) {
+        StatementVisitorImpl(RuntimeContext context, Interpreter interpreter) {
+            this.context = context;
             this.interpreter = interpreter;
         }
         
@@ -74,33 +111,33 @@ public class Interpreter implements IInterpreter {
         public Object visitVariableDeclaration(VariableDeclarationStatement stmt) throws InterpreterException {
             Object value = null;
             if (stmt.getInitialValue() != null) {
-                value = interpreter.evaluateExpression(stmt.getInitialValue(), interpreter.currentContext);
+                value = interpreter.evaluateExpressionInternal(stmt.getInitialValue(), context);
             }
-            interpreter.currentContext.setVariable(stmt.getVariableName(), value, stmt.getScope());
+            context.setVariable(stmt.getVariableName(), value, stmt.getScope());
             return null;
         }
 
         @Override
         public Object visitAssignment(AssignmentStatement stmt) throws InterpreterException {
-            Object value = interpreter.evaluateExpression(stmt.getValue(), interpreter.currentContext);
-            interpreter.currentContext.setVariable(stmt.getVariableName(), value, stmt.getScope());
+            Object value = interpreter.evaluateExpressionInternal(stmt.getValue(), context);
+            context.setVariable(stmt.getVariableName(), value, stmt.getScope());
             return null;
         }
 
         @Override
         public Object visitIf(IfStatement stmt) throws InterpreterException {
-            Object conditionValue = interpreter.evaluateExpression(stmt.getCondition(), interpreter.currentContext);
+            Object conditionValue = interpreter.evaluateExpressionInternal(stmt.getCondition(), context);
             if (isTruthy(conditionValue)) {
                 for (Statement s : stmt.getThenStatements()) {
-                    interpreter.executeStatement(s, interpreter.currentContext);
+                    interpreter.executeStatementInternal(s, context);
                 }
             } else {
                 boolean executed = false;
                 for (IfStatement.ElseIfClause clause : stmt.getElseIfClauses()) {
-                    Object elseIfCondition = interpreter.evaluateExpression(clause.condition(), interpreter.currentContext);
+                    Object elseIfCondition = interpreter.evaluateExpressionInternal(clause.condition(), context);
                     if (isTruthy(elseIfCondition)) {
                         for (Statement s : clause.statements()) {
-                            interpreter.executeStatement(s, interpreter.currentContext);
+                            interpreter.executeStatementInternal(s, context);
                         }
                         executed = true;
                         break;
@@ -108,7 +145,7 @@ public class Interpreter implements IInterpreter {
                 }
                 if (!executed && !stmt.getElseStatements().isEmpty()) {
                     for (Statement s : stmt.getElseStatements()) {
-                        interpreter.executeStatement(s, interpreter.currentContext);
+                        interpreter.executeStatementInternal(s, context);
                     }
                 }
             }
@@ -117,163 +154,178 @@ public class Interpreter implements IInterpreter {
 
         @Override
         public Object visitWhile(WhileStatement stmt) throws InterpreterException {
-            RuntimeContext ctx = interpreter.currentContext;
-            ctx.pushBreakContext(new RuntimeContext.BreakContext("while"));
-            while (isTruthy(interpreter.evaluateExpression(stmt.getCondition(), ctx))) {
-                if (ctx.isEndCodeRequested()) break;
+            context.pushBreakContext(new RuntimeContext.BreakContext("while"));
+            try {
+                while (isTruthy(interpreter.evaluateExpressionInternal(stmt.getCondition(), context))) {
+                    if (context.isEndCodeRequested()) break;
 
-                RuntimeContext.BreakContext breakCtx = ctx.getCurrentBreakContext();
-                if (breakCtx != null && breakCtx.shouldBreak()) {
-                    breakCtx.setShouldBreak(false);
-                    break;
-                }
-
-                for (Statement s : stmt.getBody()) {
-                    interpreter.executeStatement(s, ctx);
-                }
-            }
-            ctx.popBreakContext();
-            return null;
-        }
-
-        @Override
-        public Object visitFor(ForStatement stmt) throws InterpreterException {
-            RuntimeContext ctx = interpreter.currentContext;
-            ctx.pushBreakContext(new RuntimeContext.BreakContext("for"));
-
-            if (stmt.getForType() == ForStatement.ForType.C_STYLE) {
-                if (stmt.getInitStatement() != null) {
-                    interpreter.executeStatement(stmt.getInitStatement(), ctx);
-                }
-                
-                while (stmt.getCondition() == null || isTruthy(interpreter.evaluateExpression(stmt.getCondition(), ctx))) {
-                    if (ctx.isEndCodeRequested()) break;
-
-                    RuntimeContext.BreakContext breakCtx = ctx.getCurrentBreakContext();
+                    RuntimeContext.BreakContext breakCtx = context.getCurrentBreakContext();
                     if (breakCtx != null && breakCtx.shouldBreak()) {
                         breakCtx.setShouldBreak(false);
                         break;
                     }
 
                     for (Statement s : stmt.getBody()) {
-                        interpreter.executeStatement(s, ctx);
-                    }
-
-                    if (stmt.getUpdateStatement() != null) {
-                        interpreter.executeStatement(stmt.getUpdateStatement(), ctx);
+                        interpreter.executeStatementInternal(s, context);
                     }
                 }
-            } else if (stmt.getForType() == ForStatement.ForType.RANGE) {
-                Object startValue = interpreter.evaluateExpression(stmt.getStart(), ctx);
-                Object endValue = interpreter.evaluateExpression(stmt.getEnd(), ctx);
+            } finally {
+                context.popBreakContext();
+            }
+            return null;
+        }
 
-                if (endValue instanceof Object[] array) {
-                    String varName = null;
-                    if (stmt.getStart() instanceof VariableExpression varExpr) {
-                        varName = varExpr.getName();
-                    }
-                    if (varName != null) {
-                        for (Object item : array) {
-                            if (ctx.isEndCodeRequested()) break;
+        @Override
+        public Object visitFor(ForStatement stmt) throws InterpreterException {
+            context.pushBreakContext(new RuntimeContext.BreakContext("for"));
 
-                            RuntimeContext.BreakContext breakCtx = ctx.getCurrentBreakContext();
-                            if (breakCtx != null && breakCtx.shouldBreak()) {
-                                breakCtx.setShouldBreak(false);
-                                break;
-                            }
-
-                            ctx.setVariable(varName, item, TokenType.KEYWORD_S);
-
-                            for (Statement s : stmt.getBody()) {
-                                interpreter.executeStatement(s, ctx);
-                            }
-                        }
-                    }
-                } else if (endValue instanceof List<?> list) {
-                    String varName = null;
-                    if (stmt.getStart() instanceof VariableExpression varExpr) {
-                        varName = varExpr.getName();
-                    }
-                    if (varName != null) {
-                        for (Object item : list) {
-                            if (ctx.isEndCodeRequested()) break;
-
-                            RuntimeContext.BreakContext breakCtx = ctx.getCurrentBreakContext();
-                            if (breakCtx != null && breakCtx.shouldBreak()) {
-                                breakCtx.setShouldBreak(false);
-                                break;
-                            }
-
-                            ctx.setVariable(varName, item, TokenType.KEYWORD_S);
-
-                            for (Statement s : stmt.getBody()) {
-                                interpreter.executeStatement(s, ctx);
-                            }
-                        }
-                    }
-                } else {
-                    long start = toLong(startValue);
-                    long end = toLong(endValue);
-                    long step = 1;
-
-                    if (stmt.getStep() != null) {
-                        Object stepValue = interpreter.evaluateExpression(stmt.getStep(), ctx);
-                        step = toLong(stepValue);
-                    }
-
-                    for (long i = start; i <= end; i += step) {
-                        if (ctx.isEndCodeRequested()) break;
-
-                        RuntimeContext.BreakContext breakCtx = ctx.getCurrentBreakContext();
-                        if (breakCtx != null && breakCtx.shouldBreak()) {
-                            breakCtx.setShouldBreak(false);
-                            break;
-                        }
-
-                        for (Statement s : stmt.getBody()) {
-                            interpreter.executeStatement(s, ctx);
-                        }
-                    }
+            try {
+                if (stmt.getForType() == ForStatement.ForType.C_STYLE) {
+                    executeCStyleFor(stmt);
+                } else if (stmt.getForType() == ForStatement.ForType.RANGE) {
+                    executeRangeFor(stmt);
+                } else if (stmt.getForType() == ForStatement.ForType.ARRAY_ITERATION) {
+                    executeArrayIterationFor(stmt);
                 }
-            } else if (stmt.getForType() == ForStatement.ForType.ARRAY_ITERATION) {
-                Object arrayValue = interpreter.evaluateExpression(stmt.getEnd(), ctx);
-                if (arrayValue instanceof Object[] array) {
+            } finally {
+                context.popBreakContext();
+            }
+            return null;
+        }
+        
+        private void executeCStyleFor(ForStatement stmt) throws InterpreterException {
+            if (stmt.getInitStatement() != null) {
+                interpreter.executeStatementInternal(stmt.getInitStatement(), context);
+            }
+            
+            while (stmt.getCondition() == null || isTruthy(interpreter.evaluateExpressionInternal(stmt.getCondition(), context))) {
+                if (context.isEndCodeRequested()) break;
+
+                RuntimeContext.BreakContext breakCtx = context.getCurrentBreakContext();
+                if (breakCtx != null && breakCtx.shouldBreak()) {
+                    breakCtx.setShouldBreak(false);
+                    break;
+                }
+
+                for (Statement s : stmt.getBody()) {
+                    interpreter.executeStatementInternal(s, context);
+                }
+
+                if (stmt.getUpdateStatement() != null) {
+                    interpreter.executeStatementInternal(stmt.getUpdateStatement(), context);
+                }
+            }
+        }
+        
+        private void executeRangeFor(ForStatement stmt) throws InterpreterException {
+            Object startValue = interpreter.evaluateExpressionInternal(stmt.getStart(), context);
+            Object endValue = interpreter.evaluateExpressionInternal(stmt.getEnd(), context);
+
+            if (endValue instanceof Object[] array) {
+                String varName = null;
+                if (stmt.getStart() instanceof VariableExpression varExpr) {
+                    varName = varExpr.getName();
+                }
+                if (varName != null) {
                     for (Object item : array) {
-                        if (ctx.isEndCodeRequested()) break;
+                        if (context.isEndCodeRequested()) break;
 
-                        RuntimeContext.BreakContext breakCtx = ctx.getCurrentBreakContext();
+                        RuntimeContext.BreakContext breakCtx = context.getCurrentBreakContext();
                         if (breakCtx != null && breakCtx.shouldBreak()) {
                             breakCtx.setShouldBreak(false);
                             break;
                         }
 
-                        ctx.setVariable(stmt.getVariableName(), item, TokenType.KEYWORD_S);
+                        context.setVariable(varName, item, TokenType.KEYWORD_S);
 
                         for (Statement s : stmt.getBody()) {
-                            interpreter.executeStatement(s, ctx);
+                            interpreter.executeStatementInternal(s, context);
                         }
                     }
-                } else if (arrayValue instanceof List<?> list) {
+                }
+            } else if (endValue instanceof List<?> list) {
+                String varName = null;
+                if (stmt.getStart() instanceof VariableExpression varExpr) {
+                    varName = varExpr.getName();
+                }
+                if (varName != null) {
                     for (Object item : list) {
-                        if (ctx.isEndCodeRequested()) break;
+                        if (context.isEndCodeRequested()) break;
 
-                        RuntimeContext.BreakContext breakCtx = ctx.getCurrentBreakContext();
+                        RuntimeContext.BreakContext breakCtx = context.getCurrentBreakContext();
                         if (breakCtx != null && breakCtx.shouldBreak()) {
                             breakCtx.setShouldBreak(false);
                             break;
                         }
 
-                        ctx.setVariable(stmt.getVariableName(), item, TokenType.KEYWORD_S);
+                        context.setVariable(varName, item, TokenType.KEYWORD_S);
 
                         for (Statement s : stmt.getBody()) {
-                            interpreter.executeStatement(s, ctx);
+                            interpreter.executeStatementInternal(s, context);
                         }
+                    }
+                }
+            } else {
+                long start = toLong(startValue);
+                long end = toLong(endValue);
+                long step = 1;
+
+                if (stmt.getStep() != null) {
+                    Object stepValue = interpreter.evaluateExpressionInternal(stmt.getStep(), context);
+                    step = toLong(stepValue);
+                }
+
+                for (long i = start; i <= end; i += step) {
+                    if (context.isEndCodeRequested()) break;
+
+                    RuntimeContext.BreakContext breakCtx = context.getCurrentBreakContext();
+                    if (breakCtx != null && breakCtx.shouldBreak()) {
+                        breakCtx.setShouldBreak(false);
+                        break;
+                    }
+
+                    for (Statement s : stmt.getBody()) {
+                        interpreter.executeStatementInternal(s, context);
                     }
                 }
             }
+        }
+        
+        private void executeArrayIterationFor(ForStatement stmt) throws InterpreterException {
+            Object arrayValue = interpreter.evaluateExpressionInternal(stmt.getEnd(), context);
+            if (arrayValue instanceof Object[] array) {
+                for (Object item : array) {
+                    if (context.isEndCodeRequested()) break;
 
-            ctx.popBreakContext();
-            return null;
+                    RuntimeContext.BreakContext breakCtx = context.getCurrentBreakContext();
+                    if (breakCtx != null && breakCtx.shouldBreak()) {
+                        breakCtx.setShouldBreak(false);
+                        break;
+                    }
+
+                    context.setVariable(stmt.getVariableName(), item, TokenType.KEYWORD_S);
+
+                    for (Statement s : stmt.getBody()) {
+                        interpreter.executeStatementInternal(s, context);
+                    }
+                }
+            } else if (arrayValue instanceof List<?> list) {
+                for (Object item : list) {
+                    if (context.isEndCodeRequested()) break;
+
+                    RuntimeContext.BreakContext breakCtx = context.getCurrentBreakContext();
+                    if (breakCtx != null && breakCtx.shouldBreak()) {
+                        breakCtx.setShouldBreak(false);
+                        break;
+                    }
+
+                    context.setVariable(stmt.getVariableName(), item, TokenType.KEYWORD_S);
+
+                    for (Statement s : stmt.getBody()) {
+                        interpreter.executeStatementInternal(s, context);
+                    }
+                }
+            }
         }
 
         @Override
@@ -283,40 +335,41 @@ public class Interpreter implements IInterpreter {
                 List<Object> args = new ArrayList<>();
 
                 for (Expression arg : stmt.getArguments()) {
-                    args.add(interpreter.evaluateExpression(arg, interpreter.currentContext));
+                    args.add(interpreter.evaluateExpressionInternal(arg, context));
                 }
 
                 Object result;
-                RuntimeContext ctx = interpreter.currentContext;
                 
-                if (ctx.hasUserFunction(functionName)) {
-                    FunctionDefinitionStatement funcDef = ctx.getUserFunction(functionName);
-                    result = executeUserFunction(funcDef, args, ctx, stmt.getOutputVariables(), interpreter);
+                if (context.hasUserFunction(functionName)) {
+                    FunctionDefinitionStatement funcDef = context.getUserFunction(functionName);
+                    result = executeUserFunction(funcDef, args, stmt.getOutputVariables());
                 } else {
-                    IFunction function = ctx.getFunction(functionName);
+                    IFunction function = context.getFunction(functionName);
                     if (function != null) {
-                        result = function.call(ctx, args);
+                        result = function.call(context, args);
                     } else {
-                        result = ctx.executeMjavaMethod("", functionName, args.toArray());
+                        result = context.executeMjavaMethod("", functionName, args.toArray());
                     }
                 }
 
                 if (stmt.hasOutputVariables()) {
                     List<String> outputVars = stmt.getOutputVariables();
                     for (String varName : outputVars) {
-                        ctx.setVariable(varName, result, stmt.getResultScope());
+                        context.setVariable(varName, result, stmt.getResultScope());
                     }
                 }
 
                 return result;
+            } catch (InterpreterException e) {
+                throw e;
             } catch (Exception e) {
-                throw new InterpreterException("函数调用错误: " + e.getMessage());
+                throw new InterpreterException("函数调用错误: " + e.getMessage(), e);
             }
         }
 
         @Override
         public Object visitBreak(BreakStatement stmt) {
-            RuntimeContext.BreakContext breakCtx = interpreter.currentContext.getCurrentBreakContext();
+            RuntimeContext.BreakContext breakCtx = context.getCurrentBreakContext();
             if (breakCtx != null) {
                 breakCtx.setShouldBreak(true);
             }
@@ -325,45 +378,78 @@ public class Interpreter implements IInterpreter {
 
         @Override
         public Object visitEndCode(EndCodeStatement stmt) {
-            interpreter.currentContext.requestEndCode();
+            context.requestEndCode();
             return null;
         }
 
         @Override
         public Object visitFunctionDefinition(FunctionDefinitionStatement stmt) {
             String fullName = stmt.getFullName();
-            interpreter.currentContext.registerUserFunction(fullName, stmt);
+            context.registerUserFunction(fullName, stmt);
             return null;
         }
 
         @Override
         public Object visitThread(ThreadStatement stmt) {
-            final RuntimeContext ctx = interpreter.currentContext;
-            threadPool.submit(() -> {
-                try {
-                    for (Statement s : stmt.getBody()) {
-                        interpreter.executeStatement(s, ctx);
+            ExecutorService pool = interpreter.getThreadPool();
+            if (pool != null && !pool.isShutdown()) {
+                final RuntimeContext ctx = context;
+                final Interpreter interp = interpreter;
+                pool.submit(() -> {
+                    try {
+                        for (Statement s : stmt.getBody()) {
+                            interp.executeStatementInternal(s, ctx);
+                        }
+                    } catch (InterpreterException e) {
+                        System.err.println("Thread execution error: " + e.getMessage());
                     }
-                } catch (InterpreterException e) {
-                    System.err.println("Thread execution error: " + e.getMessage());
-                }
-            });
+                });
+            }
             return null;
         }
 
         @Override
         public Object visitBlock(BlockStatement stmt) throws InterpreterException {
             for (Statement s : stmt.getStatements()) {
-                interpreter.executeStatement(s, interpreter.currentContext);
+                interpreter.executeStatementInternal(s, context);
             }
             return null;
+        }
+        
+        private Object executeUserFunction(FunctionDefinitionStatement funcDef, List<Object> args, List<String> outputVariables) throws InterpreterException {
+            context.getVariableManager().pushScope();
+            
+            try {
+                List<String> parameters = funcDef.getParameters();
+                for (int i = 0; i < parameters.size(); i++) {
+                    String paramName = parameters.get(i);
+                    Object argValue = i < args.size() ? args.get(i) : null;
+                    context.setVariable(paramName, argValue, TokenType.KEYWORD_S);
+                }
+                
+                for (Statement stmt : funcDef.getBody()) {
+                    if (context.isEndCodeRequested()) break;
+                    interpreter.executeStatementInternal(stmt, context);
+                }
+                
+                Object result = null;
+                if (outputVariables != null && !outputVariables.isEmpty()) {
+                    result = context.getVariable(outputVariables.get(0));
+                }
+                
+                return result;
+            } finally {
+                context.getVariableManager().popScope();
+            }
         }
     }
     
     private static class ExpressionVisitorImpl implements Expression.ExpressionVisitor<Object> {
-        private Interpreter interpreter;
+        private final RuntimeContext context;
+        private final Interpreter interpreter;
         
-        void setInterpreter(Interpreter interpreter) {
+        ExpressionVisitorImpl(RuntimeContext context, Interpreter interpreter) {
+            this.context = context;
             this.interpreter = interpreter;
         }
         
@@ -393,18 +479,18 @@ public class Interpreter implements IInterpreter {
             String name = expr.getName();
             
             if (scope == TokenType.KEYWORD_SSS) {
-                return interpreter.currentContext.getVariableManager().getGlobalVariables().get(name);
+                return context.getVariableManager().getGlobalVariables().get(name);
             } else if (scope == TokenType.KEYWORD_SS) {
-                return interpreter.currentContext.getVariableManager().getInterfaceVariables().get(name);
+                return context.getVariableManager().getInterfaceVariables().get(name);
             } else {
-                return interpreter.currentContext.getVariable(name);
+                return context.getVariable(name);
             }
         }
 
         @Override
         public Object visitBinary(BinaryExpression expr) throws InterpreterException {
-            Object left = interpreter.evaluateExpression(expr.getLeft(), interpreter.currentContext);
-            Object right = interpreter.evaluateExpression(expr.getRight(), interpreter.currentContext);
+            Object left = interpreter.evaluateExpressionInternal(expr.getLeft(), context);
+            Object right = interpreter.evaluateExpressionInternal(expr.getRight(), context);
 
             switch (expr.getOperator()) {
                 case PLUS:
@@ -467,7 +553,7 @@ public class Interpreter implements IInterpreter {
 
         @Override
         public Object visitUnary(UnaryExpression expr) throws InterpreterException {
-            Object operand = interpreter.evaluateExpression(expr.getOperand(), interpreter.currentContext);
+            Object operand = interpreter.evaluateExpressionInternal(expr.getOperand(), context);
 
             return switch (expr.getOperator()) {
                 case NOT -> !isTruthy(operand);
@@ -489,15 +575,17 @@ public class Interpreter implements IInterpreter {
             
             try {
                 for (Expression arg : expr.getArguments()) {
-                    args.add(interpreter.evaluateExpression(arg, interpreter.currentContext));
+                    args.add(interpreter.evaluateExpressionInternal(arg, context));
                 }
 
-                IFunction function = interpreter.currentContext.getFunction(functionName);
+                IFunction function = context.getFunction(functionName);
                 if (function != null) {
-                    return function.call(interpreter.currentContext, args);
+                    return function.call(context, args);
                 } else {
-                    return interpreter.currentContext.executeMjavaMethod("", functionName, args.toArray());
+                    return context.executeMjavaMethod("", functionName, args.toArray());
                 }
+            } catch (InterpreterException e) {
+                throw e;
             } catch (Exception e) {
                 throw new InterpreterException("函数 '" + functionName + "' 调用错误 (参数数量: " + args.size() + "): " + e.getMessage(), e);
             }
@@ -505,8 +593,8 @@ public class Interpreter implements IInterpreter {
 
         @Override
         public Object visitArrayAccess(ArrayAccessExpression expr) throws InterpreterException {
-            Object array = interpreter.evaluateExpression(expr.getArray(), interpreter.currentContext);
-            Object index = interpreter.evaluateExpression(expr.getIndex(), interpreter.currentContext);
+            Object array = interpreter.evaluateExpressionInternal(expr.getArray(), context);
+            Object index = interpreter.evaluateExpressionInternal(expr.getIndex(), context);
 
             if (array instanceof Object[]) {
                 int idx = toInt(index);
@@ -520,7 +608,7 @@ public class Interpreter implements IInterpreter {
 
         @Override
         public Object visitMemberAccess(MemberAccessExpression expr) throws InterpreterException {
-            Object obj = interpreter.evaluateExpression(expr.getObject(), interpreter.currentContext);
+            Object obj = interpreter.evaluateExpressionInternal(expr.getObject(), context);
             String member = expr.getMemberName();
 
             try {
@@ -650,32 +738,5 @@ public class Interpreter implements IInterpreter {
             return -n.longValue();
         }
         return -n.doubleValue();
-    }
-    
-    private static Object executeUserFunction(FunctionDefinitionStatement funcDef, List<Object> args, RuntimeContext context, List<String> outputVariables, Interpreter interpreter) throws InterpreterException {
-        context.getVariableManager().pushScope();
-        
-        try {
-            List<String> parameters = funcDef.getParameters();
-            for (int i = 0; i < parameters.size(); i++) {
-                String paramName = parameters.get(i);
-                Object argValue = i < args.size() ? args.get(i) : null;
-                context.setVariable(paramName, argValue, TokenType.KEYWORD_S);
-            }
-            
-            for (Statement stmt : funcDef.getBody()) {
-                if (context.isEndCodeRequested()) break;
-                interpreter.executeStatement(stmt, context);
-            }
-            
-            Object result = null;
-            if (outputVariables != null && !outputVariables.isEmpty()) {
-                result = context.getVariable(outputVariables.get(0));
-            }
-            
-            return result;
-        } finally {
-            context.getVariableManager().popScope();
-        }
     }
 }

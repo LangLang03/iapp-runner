@@ -10,18 +10,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 public class YuWebServer {
     private static final Logger logger = LoggerFactory.getLogger(YuWebServer.class);
     
     public static final String VERSION = "1.0.0";
     public static final String SERVER_NAME = "YuWeb";
+    
+    private static final Pattern PATH_TRAVERSAL_PATTERN = Pattern.compile(
+        "(\\.\\.)|(%2e%2e)|(%2e\\.)|(\\.%2e)|(%252e%252e)|(%252e\\.)|(\\.%252e)",
+        Pattern.CASE_INSENSITIVE
+    );
     
     private int port = 8080;
     private String projectPath;
@@ -106,8 +116,7 @@ public class YuWebServer {
             javalinConfig.http.defaultContentType = "text/html; charset=utf-8";
             
             if (config.isHttp2Enabled()) {
-                javalinConfig.http.generateEtags = true;
-                logger.info("HTTP/2 optimizations enabled (ETags)");
+                logger.info("HTTP/2 optimizations enabled");
             }
             
             String webrootPath = projectPath + "/webroot";
@@ -258,6 +267,7 @@ public class YuWebServer {
         
         String normalizedPath = normalizePath(path);
         if (normalizedPath == null) {
+            logger.warn("Path normalization failed, possible attack: {}", path);
             return null;
         }
         
@@ -269,12 +279,10 @@ public class YuWebServer {
             return null;
         }
         
-        // Direct file match
         if (directFile.exists() && directFile.isFile()) {
             return new RouteMatch(normalizedPath);
         }
         
-        // Try .iapp extension
         if (!normalizedPath.endsWith(".iapp")) {
             String iappPath = normalizedPath + ".iapp";
             File iappFile = new File(webrootDir, iappPath);
@@ -283,14 +291,12 @@ public class YuWebServer {
             }
         }
         
-        // Try index.iapp in directory
         String indexPath = normalizedPath + "/index.iapp";
         File indexFile = new File(webrootDir, indexPath);
         if (indexFile.exists() && isWithinWebroot(indexFile, webrootDir)) {
             return new RouteMatch(indexPath);
         }
         
-        // Try dynamic route matching (e.g., /user/:id -> /user/[id].iapp or /user/_/id.iapp)
         RouteMatch dynamicMatch = findDynamicRoute(normalizedPath, webrootDir);
         if (dynamicMatch != null) {
             return dynamicMatch;
@@ -303,8 +309,6 @@ public class YuWebServer {
         String[] segments = path.split("/");
         Map<String, String> params = new HashMap<>();
         
-        // Try to find a matching dynamic route
-        // Pattern: /user/123 -> /user/:id.iapp or /user/[id].iapp
         StringBuilder currentPath = new StringBuilder();
         
         for (int i = 0; i < segments.length; i++) {
@@ -313,23 +317,18 @@ public class YuWebServer {
             
             currentPath.append("/").append(segment);
             
-            // Check if this segment could be a parameter
             String remainingPath = buildRemainingPath(segments, i + 1);
             
-            // Try :param pattern
             RouteMatch match = tryParamPattern(currentPath.toString(), remainingPath, webrootDir, params);
             if (match != null) {
                 return match;
             }
         }
         
-        // Try pattern where last segment is a parameter
-        // /user/123 -> /user/:id.iapp
         if (segments.length >= 2) {
             String lastSegment = segments[segments.length - 1];
             String parentPath = buildParentPath(segments);
             
-            // Check for :param.iapp files in parent directory
             File parentDir = new File(webrootDir, parentPath);
             if (parentDir.exists() && parentDir.isDirectory()) {
                 File[] files = parentDir.listFiles((dir, name) -> name.startsWith(":") && name.endsWith(".iapp"));
@@ -341,7 +340,6 @@ public class YuWebServer {
                     }
                 }
                 
-                // Check for [param].iapp pattern
                 files = parentDir.listFiles((dir, name) -> name.startsWith("[") && name.endsWith("].iapp"));
                 if (files != null) {
                     for (File file : files) {
@@ -357,7 +355,6 @@ public class YuWebServer {
     }
     
     private RouteMatch tryParamPattern(String currentPath, String remainingPath, File webrootDir, Map<String, String> params) {
-        // Not used in current implementation
         return null;
     }
     
@@ -385,25 +382,42 @@ public class YuWebServer {
         if (path == null || path.isEmpty()) {
             return null;
         }
-        path = path.replace('\\', '/');
-        while (path.contains("//")) {
-            path = path.replace("//", "/");
-        }
-        if (path.contains("..") || path.contains("~") || path.contains("\0")) {
+        
+        try {
+            String decodedPath = URLDecoder.decode(path, StandardCharsets.UTF_8);
+            decodedPath = URLDecoder.decode(decodedPath, StandardCharsets.UTF_8);
+            
+            if (PATH_TRAVERSAL_PATTERN.matcher(decodedPath).find()) {
+                return null;
+            }
+            
+            if (decodedPath.contains("\0") || decodedPath.contains("~")) {
+                return null;
+            }
+            
+            decodedPath = decodedPath.replace('\\', '/');
+            while (decodedPath.contains("//")) {
+                decodedPath = decodedPath.replace("//", "/");
+            }
+            
+            if (!decodedPath.startsWith("/")) {
+                decodedPath = "/" + decodedPath;
+            }
+            
+            return decodedPath;
+            
+        } catch (Exception e) {
+            logger.warn("Failed to decode path: {}", path);
             return null;
         }
-        if (!path.startsWith("/")) {
-            path = "/" + path;
-        }
-        return path;
     }
     
     private boolean isWithinWebroot(File file, File webrootDir) {
         try {
-            String canonicalPath = file.getCanonicalPath();
-            String canonicalWebroot = webrootDir.getCanonicalPath();
-            return canonicalPath.startsWith(canonicalWebroot + File.separator) || 
-                   canonicalPath.equals(canonicalWebroot);
+            Path canonicalFile = file.getCanonicalFile().toPath();
+            Path canonicalWebroot = webrootDir.getCanonicalFile().toPath();
+            
+            return canonicalFile.startsWith(canonicalWebroot);
         } catch (Exception e) {
             return false;
         }
