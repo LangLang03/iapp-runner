@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "runDirectory": ".",
+  "enableYuWeb": true,
+  "yuweb": {
+    "port": 8080,
+    "debugMode": true,
+    "safeMode": false,
+    "preloadScripts": true,
+    "serveStaticFiles": true
+  }
+}

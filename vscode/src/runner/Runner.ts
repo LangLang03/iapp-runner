@@ -1,11 +1,12 @@
 import * as cp from 'child_process';
-import { Event, EventEmitter } from 'vscode';
+import { Event, EventEmitter, window, Terminal, TerminalOptions, Disposable } from 'vscode';
 
 export interface BaseRunnerOptions {
     javaPath: string;
     classpath: string;
     cwd: string;
     env?: NodeJS.ProcessEnv;
+    useNewTerminal?: boolean;
 }
 
 export interface OutputEvent {
@@ -13,8 +14,9 @@ export interface OutputEvent {
     data: string;
 }
 
-export abstract class Runner {
+export abstract class Runner implements Disposable {
     protected process: cp.ChildProcess | null = null;
+    protected terminal: Terminal | null = null;
     protected _isRunning: boolean = false;
     protected readonly _onOutput = new EventEmitter<OutputEvent>();
     protected readonly _onExit = new EventEmitter<number | null>();
@@ -31,16 +33,45 @@ export abstract class Runner {
     }
 
     async start(options: BaseRunnerOptions): Promise<void> {
-        return new Promise((resolve, reject) => {
-            if (this._isRunning) {
-                reject(new Error('Runner is already running'));
-                return;
+        if (this._isRunning && this.process) {
+            throw new Error('Runner is already running');
+        }
+
+        const { command, args } = this.buildCommand(options);
+        const fullCommand = `${command} ${args.map(a => a.includes(' ') ? `"${a}"` : a).join(' ')}`;
+
+        this._onOutput.fire({ type: 'stdout', data: `启动命令: ${fullCommand}\n` });
+
+        if (options.useNewTerminal !== false) {
+            return this.startInTerminal(options, fullCommand);
+        } else {
+            return this.startInProcess(options, command, args);
+        }
+    }
+
+    private async startInTerminal(options: BaseRunnerOptions, fullCommand: string): Promise<void> {
+        const terminalOptions: TerminalOptions = {
+            name: 'iApp 运行',
+            cwd: options.cwd,
+            env: options.env,
+            shellArgs: [],
+            hideFromUser: false
+        };
+
+        this.terminal = window.createTerminal(terminalOptions);
+        this.terminal.show(true);
+        this.terminal.sendText(fullCommand);
+        this._isRunning = false;
+
+        window.onDidCloseTerminal((closedTerminal) => {
+            if (closedTerminal === this.terminal) {
+                this.terminal = null;
             }
+        });
+    }
 
-            const { command, args } = this.buildCommand(options);
-
-            this._onOutput.fire({ type: 'stdout', data: `启动命令: ${command} ${args.join(' ')}\n` });
-
+    private async startInProcess(options: BaseRunnerOptions, command: string, args: string[]): Promise<void> {
+        return new Promise((resolve, reject) => {
             try {
                 this.process = cp.spawn(command, args, {
                     cwd: options.cwd,
@@ -82,6 +113,13 @@ export abstract class Runner {
 
     stop(): Promise<void> {
         return new Promise((resolve) => {
+            if (this.terminal) {
+                this.terminal.dispose();
+                this.terminal = null;
+                resolve();
+                return;
+            }
+
             if (!this.process || !this._isRunning) {
                 resolve();
                 return;
