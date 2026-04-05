@@ -96,6 +96,55 @@ s username = mget(data, "username")
 
 # 返回 JSON 响应
 json(map("code", 0, "msg", "成功"))`
+      },
+      {
+        name: 'header',
+        description: '获取请求头',
+        returnType: 'String - 请求头值',
+        params: [
+          { name: 'name', type: 'String', required: true, desc: '请求头名称' }
+        ],
+        example: `s auth = header("Authorization")
+s contentType = header("Content-Type")`
+      },
+      {
+        name: 'getcookie',
+        description: '获取 Cookie 值',
+        returnType: 'String - Cookie 值',
+        params: [
+          { name: 'name', type: 'String', required: true, desc: 'Cookie 名称' }
+        ],
+        example: `s token = getcookie("token")`
+      },
+      {
+        name: 'setcookie',
+        description: '设置 Cookie',
+        returnType: 'Boolean - 是否设置成功',
+        params: [
+          { name: 'name', type: 'String', required: true, desc: 'Cookie 名称' },
+          { name: 'value', type: 'String', required: true, desc: 'Cookie 值' },
+          { name: 'maxAge', type: 'Number', required: false, desc: '有效期（秒）' }
+        ],
+        example: `setcookie("token", token, 86400)`
+      },
+      {
+        name: 'delcookie',
+        description: '删除 Cookie',
+        returnType: 'Boolean - 是否删除成功',
+        params: [
+          { name: 'name', type: 'String', required: true, desc: 'Cookie 名称' }
+        ],
+        example: `delcookie("token")`
+      },
+      {
+        name: 'redirect',
+        description: '重定向到指定 URL',
+        returnType: '无返回值',
+        params: [
+          { name: 'url', type: 'String', required: true, desc: '目标 URL' }
+        ],
+        example: `redirect("/login")
+redirect("https://example.com")`
       }
     ]
   },
@@ -139,6 +188,19 @@ s user2 = dbone("users", map("username =", "admin"))`
         example: `s users = dball("users", map("status", "active"))`
       },
       {
+        name: 'dbsearch',
+        description: '分页搜索记录',
+        returnType: 'Map - 包含 records、total、page、size 字段',
+        params: [
+          { name: 'table', type: 'String', required: true, desc: '表名' },
+          { name: 'fields', type: 'String', required: true, desc: '查询字段' },
+          { name: 'keyword', type: 'String', required: true, desc: '搜索关键词' },
+          { name: 'page', type: 'Number', required: true, desc: '页码' },
+          { name: 'size', type: 'Number', required: true, desc: '每页数量' }
+        ],
+        example: `s result = dbsearch("posts", "title,content", "关键词", 1, 10)`
+      },
+      {
         name: 'dbinsert',
         description: '插入记录',
         returnType: 'Number - 插入记录的 ID',
@@ -171,6 +233,88 @@ s user2 = dbone("users", map("username =", "admin"))`
           { name: 'condition', type: 'Object', required: true, desc: '删除条件' }
         ],
         example: `n rows = dbdelete("users", map("id", 1))`
+      },
+      {
+        name: 'dbexec',
+        description: '执行原生 SQL',
+        returnType: 'Boolean - 是否执行成功',
+        params: [
+          { name: 'sql', type: 'String', required: true, desc: 'SQL 语句' }
+        ],
+        example: `dbexec("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, username TEXT)")`
+      }
+    ]
+  },
+  {
+    id: 'file',
+    name: '文件上传函数',
+    apis: [
+      {
+        name: 'file',
+        description: '获取上传的文件',
+        returnType: 'UploadedFile - 文件对象',
+        params: [
+          { name: 'name', type: 'String', required: true, desc: '表单字段名' }
+        ],
+        example: `s avatar = file("avatar")`
+      },
+      {
+        name: 'files',
+        description: '获取所有上传的文件',
+        returnType: 'Map<String, UploadedFile> - 文件对象映射',
+        params: []
+      },
+      {
+        name: 'gfn',
+        description: '获取文件名',
+        returnType: 'String - 原始文件名',
+        params: [
+          { name: 'fileObj', type: 'UploadedFile', required: true, desc: '文件对象' }
+        ],
+        example: `s filename = gfn(avatar)`
+      },
+      {
+        name: 'gfs',
+        description: '获取文件大小',
+        returnType: 'Number - 文件大小（字节）',
+        params: [
+          { name: 'fileObj', type: 'UploadedFile', required: true, desc: '文件对象' }
+        ],
+        example: `n size = gfs(avatar)`
+      },
+      {
+        name: 'gft',
+        description: '获取文件类型',
+        returnType: 'String - MIME 类型',
+        params: [
+          { name: 'fileObj', type: 'UploadedFile', required: true, desc: '文件对象' }
+        ],
+        example: `s type = gft(avatar)`
+      },
+      {
+        name: 'gfe',
+        description: '获取文件扩展名',
+        returnType: 'String - 文件扩展名（如 .jpg）',
+        params: [
+          { name: 'fileObj', type: 'UploadedFile', required: true, desc: '文件对象' }
+        ],
+        example: `s ext = gfe(avatar)`
+      },
+      {
+        name: 'sf',
+        description: '保存文件',
+        returnType: 'Map - 保存结果',
+        params: [
+          { name: 'fileObj', type: 'UploadedFile', required: true, desc: '文件对象' },
+          { name: 'savePath', type: 'String', required: true, desc: '保存目录' },
+          { name: 'generateName', type: 'Boolean', required: false, desc: '是否生成随机文件名' }
+        ],
+        example: `s result = sf(avatar, "./uploads/avatar", true)
+
+f(mget(result, "success") == true)
+{
+    json(map("code", 0, "msg", "上传成功", "path", mget(result, "path")))
+}`
       }
     ]
   },
@@ -222,6 +366,39 @@ f(mget(v, "valid") != true)
     redirect("/login")
     endcode
 }`
+      },
+      {
+        name: 'logout',
+        description: '退出登录',
+        returnType: 'Boolean - 是否成功',
+        params: [
+          { name: 'token', type: 'String', required: true, desc: '要注销的 Token' }
+        ],
+        example: `s token = getcookie("token")
+logout(token)
+delcookie("token")`
+      },
+      {
+        name: 'hashpassword',
+        description: '密码加密',
+        returnType: 'String - 加密后的密码',
+        params: [
+          { name: 'password', type: 'String', required: true, desc: '明文密码' }
+        ],
+        example: `s hashed = hashpassword("123456")`
+      },
+      {
+        name: 'verifypassword',
+        description: '验证密码',
+        returnType: 'Boolean - 是否匹配',
+        params: [
+          { name: 'password', type: 'String', required: true, desc: '明文密码' },
+          { name: 'hash', type: 'String', required: true, desc: '加密后的密码' }
+        ],
+        example: `f(verifypassword(password, storedHash))
+{
+    syso("密码正确")
+}`
       }
     ]
   },
@@ -249,6 +426,59 @@ f(mget(v, "valid") != true)
         example: `s name = mget(user, "name")`
       },
       {
+        name: 'mset',
+        description: '设置 Map 中的值',
+        returnType: '无',
+        params: [
+          { name: 'map', type: 'Map', required: true, desc: 'Map 对象' },
+          { name: 'key', type: 'String', required: true, desc: '键名' },
+          { name: 'value', type: 'Object', required: true, desc: '值' }
+        ],
+        example: `mset(user, "age", 26)`
+      },
+      {
+        name: 'mkeys',
+        description: '获取 Map 的所有键',
+        returnType: 'List<String> - 键名列表',
+        params: [
+          { name: 'map', type: 'Map', required: true, desc: 'Map 对象' }
+        ],
+        example: `s keys = mkeys(user)`
+      },
+      {
+        name: 'mhas',
+        description: '检查 Map 是否包含某个键',
+        returnType: 'Boolean - 是否包含',
+        params: [
+          { name: 'map', type: 'Map', required: true, desc: 'Map 对象' },
+          { name: 'key', type: 'String', required: true, desc: '键名' }
+        ],
+        example: `f(mhas(user, "email"))
+{
+    syso("有邮箱")
+}`
+      },
+      {
+        name: 'arr',
+        description: '创建数组',
+        returnType: 'List<Object> - 数组',
+        params: [
+          { name: 'elements', type: 'Object', required: false, desc: '数组元素' }
+        ],
+        example: `s list = arr("a", "b", "c")`
+      },
+      {
+        name: 'arrpush',
+        description: '向数组添加元素',
+        returnType: 'List - 新数组',
+        params: [
+          { name: 'array', type: 'List', required: true, desc: '数组' },
+          { name: 'element', type: 'Object', required: true, desc: '要添加的元素' }
+        ],
+        example: `s list = arr("a", "b")
+s newList = arrpush(list, "c")`
+      },
+      {
         name: 'length',
         description: '获取长度',
         returnType: 'Number - 长度',
@@ -257,6 +487,316 @@ f(mget(v, "valid") != true)
         ],
         example: `n len = length("hello")
 n arrLen = length(arr(1, 2, 3))`
+      }
+    ]
+  },
+  {
+    id: 'crypto',
+    name: '加密函数',
+    apis: [
+      {
+        name: 'md5',
+        description: '计算 MD5 哈希值',
+        returnType: 'String - 32位十六进制哈希值',
+        params: [
+          { name: 'data', type: 'String', required: true, desc: '要哈希的数据' }
+        ],
+        example: `s hash = md5("hello world")`
+      },
+      {
+        name: 'sha256',
+        description: '计算 SHA-256 哈希值',
+        returnType: 'String - 64位十六进制哈希值',
+        params: [
+          { name: 'data', type: 'String', required: true, desc: '要哈希的数据' }
+        ],
+        example: `s hash = sha256("hello world")`
+      },
+      {
+        name: 'hmacsha256',
+        description: '计算 HMAC-SHA256 哈希值',
+        returnType: 'String - 64位十六进制哈希值',
+        params: [
+          { name: 'data', type: 'String', required: true, desc: '要哈希的数据' },
+          { name: 'key', type: 'String', required: true, desc: '密钥' }
+        ],
+        example: `s signature = hmacsha256("message", "secret_key")`
+      },
+      {
+        name: 'base64encode',
+        description: 'Base64 编码',
+        returnType: 'String - Base64 编码字符串',
+        params: [
+          { name: 'data', type: 'String', required: true, desc: '要编码的数据' }
+        ],
+        example: `s encoded = base64encode("hello world")`
+      },
+      {
+        name: 'base64decode',
+        description: 'Base64 解码',
+        returnType: 'String - 解码后的字符串',
+        params: [
+          { name: 'data', type: 'String', required: true, desc: 'Base64 编码字符串' }
+        ],
+        example: `s decoded = base64decode("aGVsbG8gd29ybGQ=")`
+      },
+      {
+        name: 'aesencrypt',
+        description: 'AES 加密',
+        returnType: 'String - Base64 编码的加密数据',
+        params: [
+          { name: 'data', type: 'String', required: true, desc: '要加密的数据' },
+          { name: 'key', type: 'String', required: true, desc: '加密密钥（16字节）' }
+        ],
+        example: `s encrypted = aesencrypt("敏感数据", "mysecretkey12345")`
+      },
+      {
+        name: 'aesdecrypt',
+        description: 'AES 解密',
+        returnType: 'String - 解密后的原始数据',
+        params: [
+          { name: 'data', type: 'String', required: true, desc: '加密数据（Base64编码）' },
+          { name: 'key', type: 'String', required: true, desc: '加密密钥（16字节）' }
+        ],
+        example: `s decrypted = aesdecrypt(encrypted, "mysecretkey12345")`
+      }
+    ]
+  },
+  {
+    id: 'jwt',
+    name: 'JWT 函数',
+    apis: [
+      {
+        name: 'jwtencode',
+        description: '生成 JWT Token',
+        returnType: 'String - JWT Token',
+        params: [
+          { name: 'payload', type: 'Map', required: true, desc: 'JWT 载荷数据' },
+          { name: 'secret', type: 'String', required: true, desc: '签名密钥' }
+        ],
+        example: `s token = jwtencode(map("userId", 1, "username", "admin"), "my_secret_key")`
+      },
+      {
+        name: 'jwtdecode',
+        description: '解码 JWT Token（不验证签名）',
+        returnType: 'Map - 解码后的载荷数据',
+        params: [
+          { name: 'token', type: 'String', required: true, desc: 'JWT Token' }
+        ],
+        example: `s payload = jwtdecode(token)
+s userId = mget(payload, "userId")`
+      },
+      {
+        name: 'jwtverify',
+        description: '验证并解码 JWT Token',
+        returnType: 'Map - 验证成功返回载荷数据',
+        params: [
+          { name: 'token', type: 'String', required: true, desc: 'JWT Token' },
+          { name: 'secret', type: 'String', required: true, desc: '签名密钥' }
+        ],
+        example: `s payload = jwtverify(token, "my_secret_key")
+s userId = mget(payload, "userId")`
+      }
+    ]
+  },
+  {
+    id: 'session',
+    name: 'Session 函数',
+    apis: [
+      {
+        name: 'session',
+        description: '获取 Session 值',
+        returnType: 'Object - Session 值',
+        params: [
+          { name: 'key', type: 'String', required: true, desc: 'Session 键名' }
+        ],
+        example: `s userId = session("userId")`
+      },
+      {
+        name: 'setsession',
+        description: '设置 Session 值',
+        returnType: 'Boolean - 是否设置成功',
+        params: [
+          { name: 'key', type: 'String', required: true, desc: 'Session 键名' },
+          { name: 'value', type: 'Object', required: true, desc: 'Session 值' },
+          { name: 'ttl', type: 'Number', required: false, desc: '有效期（秒），默认1800秒' }
+        ],
+        example: `setsession("userId", 1)
+setsession("cart", map("items", arr()), 3600)`
+      },
+      {
+        name: 'delsession',
+        description: '删除 Session 值',
+        returnType: 'Boolean - 是否删除成功',
+        params: [
+          { name: 'key', type: 'String', required: true, desc: 'Session 键名' }
+        ],
+        example: `delsession("userId")`
+      },
+      {
+        name: 'hassession',
+        description: '检查 Session 是否存在',
+        returnType: 'Boolean - 是否存在',
+        params: [
+          { name: 'key', type: 'String', required: true, desc: 'Session 键名' }
+        ],
+        example: `f(hassession("userId"))
+{
+    s userId = session("userId")
+}`
+      }
+    ]
+  },
+  {
+    id: 'mail',
+    name: '邮件函数',
+    apis: [
+      {
+        name: 'mailconfig',
+        description: '配置邮件服务器',
+        returnType: 'Boolean - 是否配置成功',
+        params: [
+          { name: 'host', type: 'String', required: true, desc: 'SMTP 服务器地址' },
+          { name: 'port', type: 'Number', required: true, desc: 'SMTP 端口' },
+          { name: 'username', type: 'String', required: true, desc: '用户名' },
+          { name: 'password', type: 'String', required: true, desc: '密码' },
+          { name: 'ssl', type: 'Boolean', required: false, desc: '是否启用SSL' }
+        ],
+        example: `mailconfig("smtp.example.com", 587, "user@example.com", "password", true)`
+      },
+      {
+        name: 'sendmail',
+        description: '发送邮件',
+        returnType: 'Boolean - 是否发送成功',
+        params: [
+          { name: 'to', type: 'String', required: true, desc: '收件人邮箱' },
+          { name: 'subject', type: 'String', required: true, desc: '邮件主题' },
+          { name: 'body', type: 'String', required: true, desc: '邮件内容' },
+          { name: 'html', type: 'Boolean', required: false, desc: '是否HTML格式' }
+        ],
+        example: `s result = sendmail("user@example.com", "欢迎注册", "<h1>欢迎</h1><p>感谢注册</p>", true)`
+      }
+    ]
+  },
+  {
+    id: 'env',
+    name: '环境变量函数',
+    apis: [
+      {
+        name: 'env',
+        description: '获取环境变量',
+        returnType: 'String - 环境变量值或默认值',
+        params: [
+          { name: 'key', type: 'String', required: true, desc: '环境变量名' },
+          { name: 'default', type: 'String', required: false, desc: '默认值' }
+        ],
+        example: `s dbHost = env("DB_HOST", "localhost")
+s dbPort = env("DB_PORT", "3306")`
+      },
+      {
+        name: 'loadenv',
+        description: '加载 .env 文件',
+        returnType: 'Boolean - 是否加载成功',
+        params: [
+          { name: 'path', type: 'String', required: false, desc: '.env 文件路径，默认项目根目录' }
+        ],
+        example: `loadenv()
+loadenv("./config/.env")`
+      }
+    ]
+  },
+  {
+    id: 'cors',
+    name: 'CORS 函数',
+    apis: [
+      {
+        name: 'cors',
+        description: '配置 CORS 跨域',
+        returnType: 'Boolean - 是否配置成功',
+        params: [
+          { name: 'config', type: 'Map', required: true, desc: 'CORS 配置' }
+        ],
+        example: `cors(map(
+    "origins", arr("http://localhost:3000", "https://example.com"),
+    "methods", arr("GET", "POST", "PUT", "DELETE"),
+    "headers", arr("Content-Type", "Authorization"),
+    "credentials", true,
+    "maxAge", 3600
+))`
+      }
+    ]
+  },
+  {
+    id: 'server',
+    name: '服务器配置函数',
+    apis: [
+      {
+        name: 'port',
+        description: '设置服务器端口',
+        returnType: '无',
+        params: [
+          { name: 'port', type: 'Number', required: true, desc: '端口号（1-65535）' }
+        ],
+        example: `port(8080)`
+      },
+      {
+        name: 'config',
+        description: '设置服务器配置',
+        returnType: 'Boolean - 是否设置成功',
+        params: [
+          { name: 'key', type: 'String', required: true, desc: '配置项名称' },
+          { name: 'value', type: 'Object', required: true, desc: '配置值' }
+        ],
+        example: `config("port", 8080)
+config("debug", true)
+config("poolsize", 100)
+config("compression", true)`
+      },
+      {
+        name: 'upc',
+        description: '配置文件上传',
+        returnType: 'Boolean - 是否设置成功',
+        params: [
+          { name: 'action', type: 'String', required: true, desc: '操作类型' },
+          { name: 'value', type: 'Object', required: false, desc: '配置值' }
+        ],
+        example: `upc("extensions", arr(".jpg", ".png", ".gif"))
+upc("maxsize", 10 * 1024 * 1024)
+upc("add_extensions", arr(".pdf", ".doc"))
+upc("reset")`
+      },
+      {
+        name: 'info',
+        description: '显示服务器信息页面',
+        returnType: '无（直接输出HTML页面）',
+        params: [],
+        example: `info()`
+      }
+    ]
+  },
+  {
+    id: 'async',
+    name: '异步函数',
+    apis: [
+      {
+        name: 'async',
+        description: '执行异步任务',
+        returnType: 'Number - 任务ID',
+        params: [
+          { name: 'task', type: 'Object', required: true, desc: '任务对象' },
+          { name: 'timeout', type: 'Number', required: false, desc: '超时时间（毫秒）' }
+        ],
+        example: `s taskId = async(task, 60000)`
+      },
+      {
+        name: 'asyncwait',
+        description: '等待异步任务完成',
+        returnType: 'Object - 任务结果',
+        params: [
+          { name: 'taskId', type: 'Number', required: true, desc: '任务ID' },
+          { name: 'timeout', type: 'Number', required: false, desc: '超时时间（毫秒）' }
+        ],
+        example: `s result = asyncwait(taskId, 60000)`
       }
     ]
   }
@@ -315,6 +855,8 @@ onUnmounted(() => {
   position: sticky;
   top: calc(var(--header-height) + var(--navbar-margin) * 2 + 2rem);
   height: fit-content;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
 }
 
 .api-nav ul {

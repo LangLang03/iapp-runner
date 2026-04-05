@@ -110,7 +110,7 @@
         <p class="mt-3">访问 <code>http://localhost:8080/</code> 即可看到结果：</p>
         <CodeBlock
           language="json"
-          :code='{"code": 0, "msg": "Hello World"}'
+          :code='jsonResult'
         />
       </div>
     </section>
@@ -262,6 +262,8 @@ mkdir webroot data
 echo 'json(map("code", 0, "msg", "Hello World"))' > webroot/index.iapp`
 
 const helloWorld = `json(map("code", 0, "msg", "Hello World"))`
+
+const jsonResult = `{"code": 0, "msg": "Hello World"}`
 </script>
 
 <style scoped>
