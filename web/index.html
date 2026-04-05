@@ -1,10 +1,20 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>web</title>
+    <meta name="description" content="YuWeb - 基于裕语言(IApp)的轻量级 Web 后端框架" />
+    <meta name="theme-color" content="#0F172A" />
+    <title>YuWeb - 轻量级 Web 后端框架</title>
+    <script>
+      (function() {
+        const stored = localStorage.getItem('yuweb-theme');
+        if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="app"></div>

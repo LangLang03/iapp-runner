@@ -2,7 +2,14 @@
   <footer class="footer">
     <div class="container footer-content">
       <div class="footer-info">
-        <div class="footer-brand">YuWeb</div>
+        <div class="footer-brand">
+          <svg class="footer-logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          YuWeb
+        </div>
         <p class="footer-desc">基于裕语言(IApp)的轻量级 Web 后端框架</p>
       </div>
       <div class="footer-links">
@@ -18,7 +25,14 @@
         </div>
         <div class="footer-section">
           <h4>社区</h4>
-          <a href="https://qm.qq.com/q/xxx" target="_blank" rel="noopener">QQ交流群：1067354882</a>
+          <a href="https://qm.qq.com/q/xxx" target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+            QQ群：1067354882
+          </a>
         </div>
       </div>
     </div>
@@ -45,10 +59,19 @@
 }
 
 .footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 0.5rem;
+}
+
+.footer-logo {
+  width: 24px;
+  height: 24px;
+  color: var(--cta);
 }
 
 .footer-desc {
@@ -71,15 +94,18 @@
 }
 
 .footer-section a {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
   color: var(--text-secondary);
   font-size: 0.875rem;
   margin-bottom: 0.5rem;
-  transition: color 0.2s ease;
+  transition: color var(--transition-fast) ease;
+  cursor: pointer;
 }
 
 .footer-section a:hover {
-  color: var(--primary);
+  color: var(--cta);
 }
 
 .footer-bottom {

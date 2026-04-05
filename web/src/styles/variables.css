@@ -1,32 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
 :root {
-  --primary: #2563eb;
-  --primary-light: #3b82f6;
-  --primary-dark: #1d4ed8;
-  --text-primary: #1f2937;
-  --text-secondary: #6b7280;
-  --text-muted: #9ca3af;
-  --bg-primary: #ffffff;
-  --bg-secondary: #f9fafb;
-  --bg-tertiary: #f3f4f6;
-  --border: #e5e7eb;
-  --code-bg: #1e293b;
-  --code-text: #e2e8f0;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --error: #ef4444;
+  color-scheme: light;
   
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: 'Fira Code', 'Consolas', 'Monaco', monospace;
+  --primary: #1E293B;
+  --primary-light: #334155;
+  --primary-dark: #0F172A;
+  --cta: #22C55E;
+  --cta-hover: #16A34A;
+  --text-primary: #1E293B;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F8FAFC;
+  --bg-tertiary: #F1F5F9;
+  --border: #E2E8F0;
+  --border-hover: #94A3B8;
+  --code-bg: #1E293B;
+  --code-text: #E2E8F0;
+  --code-header-bg: #0F172A;
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --error: #EF4444;
+  
+  --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
   
   --max-width: 1200px;
   --header-height: 64px;
   --section-gap: 80px;
   --content-padding: 24px;
+  --navbar-margin: 16px;
+  --navbar-radius: 12px;
+  --transition-fast: 150ms;
+  --transition-normal: 200ms;
+  --transition-slow: 300ms;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  
+  --primary: #F8FAFC;
+  --primary-light: #E2E8F0;
+  --primary-dark: #CBD5E1;
+  --cta: #22C55E;
+  --cta-hover: #4ADE80;
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --bg-primary: #0F172A;
+  --bg-secondary: #1E293B;
+  --bg-tertiary: #334155;
+  --border: #334155;
+  --border-hover: #64748B;
+  --code-bg: #0F172A;
+  --code-text: #E2E8F0;
+  --code-header-bg: #1E293B;
+  --success: #4ADE80;
+  --warning: #FBBF24;
+  --error: #F87171;
 }
 
 @media (max-width: 768px) {
   :root {
     --section-gap: 48px;
     --content-padding: 16px;
+    --navbar-margin: 8px;
+    --navbar-radius: 8px;
   }
 }

@@ -20,16 +20,18 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--transition-normal) ease,
+              color var(--transition-normal) ease;
 }
 
 a {
-  color: var(--primary);
+  color: var(--cta);
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: color var(--transition-fast) ease;
 }
 
 a:hover {
-  color: var(--primary-dark);
+  color: var(--cta-hover);
 }
 
 img {
@@ -58,9 +60,10 @@ code, pre {
 
 .section-title {
   font-size: 2rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.5px;
 }
 
 .section-subtitle {
@@ -94,33 +97,35 @@ code, pre {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
   font-weight: 500;
-  border-radius: 4px;
+  border-radius: 8px;
   border: none;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast) ease;
+  cursor: pointer;
 }
 
 .btn-primary {
-  background-color: var(--primary);
+  background-color: var(--cta);
   color: white;
 }
 
 .btn-primary:hover {
-  background-color: var(--primary-dark);
+  background-color: var(--cta-hover);
   color: white;
 }
 
 .btn-outline {
   background-color: transparent;
-  color: var(--primary);
-  border: 1px solid var(--primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
 }
 
 .btn-outline:hover {
-  background-color: var(--primary);
-  color: white;
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-hover);
 }
 
 .table-container {
@@ -134,7 +139,7 @@ table {
 }
 
 th, td {
-  padding: 0.75rem 1rem;
+  padding: 0.875rem 1rem;
   text-align: left;
   border-bottom: 1px solid var(--border);
 }
@@ -154,92 +159,44 @@ tr:hover {
 }
 
 code:not(pre code) {
-  padding: 0.125rem 0.375rem;
+  padding: 0.125rem 0.5rem;
   background-color: var(--bg-tertiary);
-  border-radius: 3px;
+  border-radius: 4px;
   font-size: 0.875em;
-  color: var(--primary-dark);
+  color: var(--cta);
+  font-family: var(--font-mono);
 }
 
-pre {
-  background-color: #282c34;
-  color: #abb2bf;
-  padding: 1rem 1.25rem;
-  border-radius: 8px;
-  overflow-x: auto;
-  font-size: 0.875rem;
-  line-height: 1.7;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+.page-header {
+  padding: 100px 0 60px;
+  background-color: var(--bg-secondary);
 }
 
-pre code {
-  background: none;
-  padding: 0;
+.page-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  letter-spacing: -1px;
 }
 
-.hljs-comment,
-.hljs-quote {
-  color: #5c6370;
-  font-style: italic;
+.page-desc {
+  font-size: 1.125rem;
+  color: var(--text-secondary);
 }
 
-.hljs-keyword,
-.hljs-selector-tag,
-.hljs-addition {
-  color: #c678dd;
-}
-
-.hljs-number,
-.hljs-string,
-.hljs-meta .hljs-meta-string,
-.hljs-literal,
-.hljs-doctag,
-.hljs-regexp {
-  color: #98c379;
-}
-
-.hljs-title,
-.hljs-section,
-.hljs-name,
-.hljs-selector-id,
-.hljs-selector-class {
-  color: #e06c75;
-}
-
-.hljs-attribute,
-.hljs-attr,
-.hljs-variable,
-.hljs-template-variable,
-.hljs-class .hljs-title,
-.hljs-type {
-  color: #d19a66;
-}
-
-.hljs-symbol,
-.hljs-bullet,
-.hljs-subst,
-.hljs-meta,
-.hljs-meta .hljs-keyword,
-.hljs-selector-attr,
-.hljs-selector-pseudo,
-.hljs-link {
-  color: #61afef;
-}
-
-.hljs-built_in {
-  color: #61afef;
-}
-
-.hljs-deletion {
-  color: #e06c75;
-}
-
-.hljs-emphasis {
-  font-style: italic;
-}
-
-.hljs-strong {
-  font-weight: bold;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 @media (max-width: 768px) {
@@ -249,5 +206,13 @@ pre code {
   
   .section-subtitle {
     font-size: 1rem;
+  }
+  
+  .page-header {
+    padding: 80px 0 40px;
+  }
+  
+  .page-title {
+    font-size: 2rem;
   }
 }

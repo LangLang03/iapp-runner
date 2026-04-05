@@ -1,6 +1,14 @@
 <script setup>
+import { onMounted } from 'vue'
 import Navbar from './components/Navbar.vue'
 import Footer from './components/Footer.vue'
+import { useTheme } from './composables/useTheme'
+
+const { initTheme } = useTheme()
+
+onMounted(() => {
+  initTheme()
+})
 </script>
 
 <template>
@@ -22,6 +30,6 @@ import Footer from './components/Footer.vue'
 
 .main-content {
   flex: 1;
-  padding-top: var(--header-height);
+  padding-top: calc(var(--header-height) + var(--navbar-margin) * 2);
 }
 </style>

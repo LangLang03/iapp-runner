@@ -16,7 +16,14 @@
             <div class="step-content">
               <h3>下载 YuWeb</h3>
               <p>如果需要收费，请登录后免费不限速下载</p>
-              <a href="https://www.123865.com/s/gbWqjv-GmYa3" class="btn btn-primary">立即下载</a>
+              <a href="https://www.123865.com/s/gbWqjv-GmYa3" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                立即下载
+              </a>
             </div>
           </div>
           <div class="step">
@@ -24,7 +31,15 @@
             <div class="step-content">
               <h3>加入交流群</h3>
               <p>QQ群：1067354882，获取帮助与交流</p>
-              <a href="https://qm.qq.com/q/xxx" target="_blank" class="btn btn-outline">加入群聊</a>
+              <a href="https://qm.qq.com/q/xxx" target="_blank" class="btn btn-outline">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                加入群聊
+              </a>
             </div>
           </div>
         </div>
@@ -190,14 +205,34 @@
         <h2 class="section-title">下一步</h2>
         <div class="next-steps">
           <router-link to="/api" class="next-step-card">
+            <div class="next-step-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+              </svg>
+            </div>
             <h3>API 文档</h3>
             <p>了解所有可用的函数和用法</p>
           </router-link>
           <router-link to="/config" class="next-step-card">
+            <div class="next-step-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+            </div>
             <h3>配置指南</h3>
             <p>学习如何配置服务器和数据库</p>
           </router-link>
           <router-link to="/examples" class="next-step-card">
+            <div class="next-step-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="16 18 22 12 16 6"></polyline>
+                <polyline points="8 6 2 12 8 18"></polyline>
+              </svg>
+            </div>
             <h3>示例代码</h3>
             <p>查看完整的示例项目</p>
           </router-link>
@@ -231,7 +266,7 @@ const helloWorld = `json(map("code", 0, "msg", "Hello World"))`
 
 <style scoped>
 .page-header {
-  padding: 60px 0 40px;
+  padding: 100px 0 60px;
   background-color: var(--bg-secondary);
 }
 
@@ -240,6 +275,7 @@ const helloWorld = `json(map("code", 0, "msg", "Hello World"))`
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 0.5rem;
+  letter-spacing: -1px;
 }
 
 .page-desc {
@@ -260,16 +296,16 @@ const helloWorld = `json(map("code", 0, "msg", "Hello World"))`
 
 .step-number {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--primary);
+  background-color: var(--cta);
   color: white;
   font-weight: 600;
-  font-size: 1.125rem;
-  border-radius: 50%;
+  font-size: 1.25rem;
+  border-radius: 12px;
 }
 
 .step-content h3 {
@@ -290,6 +326,13 @@ const helloWorld = `json(map("code", 0, "msg", "Hello World"))`
   gap: 1.5rem;
 }
 
+.example-item {
+  padding: 1.25rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
 .example-item h4 {
   font-size: 0.9375rem;
   font-weight: 600;
@@ -304,15 +347,34 @@ const helloWorld = `json(map("code", 0, "msg", "Hello World"))`
 }
 
 .next-step-card {
-  display: block;
-  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem 1.5rem;
   background-color: var(--bg-primary);
   border: 1px solid var(--border);
-  transition: border-color 0.2s ease;
+  border-radius: 12px;
+  transition: border-color var(--transition-normal) ease,
+              box-shadow var(--transition-normal) ease;
+  cursor: pointer;
 }
 
 .next-step-card:hover {
-  border-color: var(--primary);
+  border-color: var(--cta);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.next-step-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background-color: var(--bg-tertiary);
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  color: var(--cta);
 }
 
 .next-step-card h3 {

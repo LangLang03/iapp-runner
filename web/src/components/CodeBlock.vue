@@ -5,7 +5,12 @@
         <span class="code-title" v-if="title">{{ title }}</span>
         <span class="code-language" v-if="language">{{ language }}</span>
       </div>
-      <button class="copy-btn" @click="copyCode" :title="copySuccess ? '已复制' : '复制代码'">
+      <button 
+        class="copy-btn" 
+        @click="copyCode" 
+        :title="copySuccess ? '已复制' : '复制代码'"
+        :aria-label="copySuccess ? '已复制' : '复制代码'"
+      >
         <svg v-if="!copySuccess" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -88,9 +93,10 @@ watch(() => props.code, () => {
 <style scoped>
 .code-block {
   margin: 1rem 0;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  background-color: #282c34;
+  background-color: var(--code-bg);
+  border: 1px solid var(--border);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
@@ -99,8 +105,8 @@ watch(() => props.code, () => {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
-  background-color: #21252b;
-  border-bottom: 1px solid #3e4451;
+  background-color: var(--code-header-bg);
+  border-bottom: 1px solid var(--border);
 }
 
 .code-header-left {
@@ -111,17 +117,20 @@ watch(() => props.code, () => {
 
 .code-title {
   font-size: 0.8125rem;
-  color: #abb2bf;
+  color: var(--code-text);
   font-weight: 500;
+  opacity: 0.9;
 }
 
 .code-language {
   font-size: 0.6875rem;
-  color: #5c6370;
+  color: var(--code-text);
   text-transform: uppercase;
-  background-color: #3e4451;
+  background-color: var(--cta);
   padding: 0.125rem 0.5rem;
-  border-radius: 3px;
+  border-radius: 4px;
+  font-weight: 600;
+  opacity: 0.9;
 }
 
 .copy-btn {
@@ -130,17 +139,18 @@ watch(() => props.code, () => {
   gap: 0.375rem;
   padding: 0.375rem 0.75rem;
   background-color: transparent;
-  border: 1px solid #3e4451;
-  border-radius: 4px;
-  color: #abb2bf;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--code-text);
   font-size: 0.75rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast) ease;
+  opacity: 0.7;
 }
 
 .copy-btn:hover {
-  background-color: #3e4451;
-  color: #e5c07b;
+  background-color: var(--bg-tertiary);
+  opacity: 1;
 }
 
 .copy-btn svg {
@@ -158,7 +168,7 @@ watch(() => props.code, () => {
 .code-block pre {
   margin: 0;
   padding: 1rem 1.25rem;
-  background-color: #282c34;
+  background-color: var(--code-bg);
   border-radius: 0;
   min-height: 60px;
   font-size: 0.875rem;
@@ -168,7 +178,7 @@ watch(() => props.code, () => {
 .code-block pre code {
   background: none;
   padding: 0;
-  color: #abb2bf;
+  color: var(--code-text);
   font-family: var(--font-mono);
 }
 
